@@ -108,12 +108,6 @@ def edit_profile():
             })
         else:
             flash("Email Already Taken, Use Another")
-        
-    if form_info['role'] != old_user_info['role'] or old_user_info['role'] != 'Manager':
-        if form_info["role"] == "Manager" and old_user_info["role"] != "Manager":
-            db.Users.update_one({"_id": ObjectId(session.get("userid"))}, {
-                "$set": {"role": form_info["role"]}
-            })
 
     if request.form.getlist("branches") != old_user_info["branch_ids"]:
         db.Organizations.update_one({"_id": old_organization_info["_id"]}, {

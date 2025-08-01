@@ -144,20 +144,11 @@
                    value="{{ user['email'] }}">
           </div>
 
-          {% if user['role'] == 'Manager' %}
+        {% if user['role'] == 'Manager' %}
           <div class="mb-2">
             <label for="organization" class="form-label fw-semibold" style="color: indigo;">Organization</label>
             <input type="text" class="form-control form-control-sm" id="organization" name="organization"
                    value="{{ organization['organization'] }}" required>
-          </div>
-
-          <div class="mb-2">
-            <label for="role" class="form-label fw-semibold" style="color: indigo;">Role</label>
-            <select id="role" name="role" class="form-select form-select-sm">
-              <option value="Manager" {% if user['role'] == 'Manager' %}selected{% endif %}>Manager</option>
-              <option value="Branch Manager" {% if user['role'] == 'Branch Manager' %}selected{% endif %}>Branch Manager</option>
-              <option value="Sales person" {% if user['role'] == 'Sales person' %}selected{% endif %}>Sales person</option>
-            </select>
           </div>
 
           <div class="mb-2">
@@ -184,7 +175,7 @@
               + Add another branch
             </button>
           </div>
-          {% endif %}
+        {% endif %}
         </div>
 
         <div class="modal-footer py-2">
