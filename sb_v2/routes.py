@@ -8,6 +8,7 @@ from bson.objectid import ObjectId
 def home():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     organization = db.Organizations.find_one({"_id": user["organization_id"]})
+    employees = db.Users.find({"organization_id": user["organization_id"]})
 
     branches = []
     for k in user["branch_ids"]:
@@ -19,7 +20,8 @@ def home():
                            year = datetime.datetime.today().year,
                            user = user,
                            organization = organization,
-                           branches = branches)
+                           branches = branches,
+                           employees = list(employees))
 
 @app.route("/register_owner", methods=["GET", "POST"])
 def register_owner():
@@ -43,7 +45,7 @@ def register_owner():
                         "password": bcrypt.generate_password_hash(form_info["password"]).decode("utf-8"),
                         "role": "Manager",
                         "organization_id": org["_id"],
-                        "branch_ids": [i["_id"] for i in org["branches"] ] 
+                        "branch_ids": [] 
                     })
                     flash("You have been registered successfully!", "success")
                     return redirect(url_for("login"))
@@ -90,9 +92,11 @@ def logout():
 @app.route('/edit_profile', methods=['POST'])
 def edit_profile():
     form_info = request.form
+    # getting initial user and organization info
     old_user_info = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     old_organization_info = db.Organizations.find_one({"_id": old_user_info["organization_id"]})
 
+    # updating user name
     if form_info['username'] != old_user_info['username']:
         if db.Users.find_one({"username": form_info["username"]}) is None:
             db.Users.update_one({"_id": ObjectId(session.get("userid"))}, {
@@ -101,19 +105,33 @@ def edit_profile():
         else:
             flash("User Name Already Taken, Use Another")
     
+    # updating email
     if form_info['email'] != old_user_info['email']:
         if db.Users.find_one({"email": form_info["email"]}) is None:
-            db.User.update_one({"_id": ObjectId(session.get("userid"))}, {
+            db.Users.update_one({"_id": ObjectId(session.get("userid"))}, {
                 "$set": {"email": form_info["email"]}
             })
         else:
             flash("Email Already Taken, Use Another")
 
-    if request.form.getlist("branches") != old_user_info["branch_ids"]:
-        db.Organizations.update_one({"_id": old_organization_info["_id"]}, {
-            "$set": {"branch_ids": [b for b in request.form.getlist("branches") if b != ""]}
+    #updating branches
+    # Extracting submitted/updated branches
+    branches = []
+    i = 0
+    while f'branches[{i}][_id]' in request.form:
+        branch_id = request.form.get(f'branches[{i}][_id]')
+        branch_name = request.form.get(f'branches[{i}][branch]')
+        branches.append({
+            '_id': branch_id,
+            'branch': branch_name
         })
+        i += 1
     
+    db.Organizations.update_one({"_id": old_organization_info["_id"]}, {
+        "$set": {"branches": branches}
+    })
+
+    #updating organization name
     if form_info['organization'] != old_organization_info['organization']:
         if db.Organizations.find_one({"organization": form_info["organization"]}) is None:
             db.Organizations.update_one({"_id": old_organization_info["_id"]}, {
@@ -122,4 +140,14 @@ def edit_profile():
         else:
             flash("Organization Name Already Taken, Use Another")
     
+    return redirect(url_for("home"))
+
+@app.route("/update_organization_branches", methods=['POST'])
+def update_organization_branches():
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    organization = db.Organizations.find_one({"_id": user["organization_id"]})
+    new_branches = request.form.getlist("branches")
+    db.Organizations.update_one({"_id": organization["_id"]}, {"$push": {
+        "branches": {"$each": [{"_id": secrets.token_hex(32), "branch": k} for k in new_branches]}
+    }})
     return redirect(url_for("home"))
