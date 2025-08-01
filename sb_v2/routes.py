@@ -1,11 +1,25 @@
 from sb_v2 import app, db, bcrypt
 from flask import render_template, request, flash, redirect, url_for, session
-import json, secrets
+import json, secrets, datetime
+from bson.objectid import ObjectId
 
 
 @app.route('/home')
 def home():
-    return render_template("home.html")
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    organization = db.Organizations.find_one({"_id": user["organization_id"]})
+
+    branches = []
+    for k in user["branch_ids"]:
+        for j in organization["branches"]:
+            if k == j["_id"]:
+                branches.append(j)
+
+    return render_template("home.html", 
+                           year = datetime.datetime.today().year,
+                           user = user,
+                           organization = organization,
+                           branches = branches)
 
 @app.route("/register_owner", methods=["GET", "POST"])
 def register_owner():
@@ -72,3 +86,46 @@ def logout():
     session.clear()
     flash("Log out successfull!", "info")
     return redirect(url_for("login"))
+
+@app.route('/edit_profile', methods=['POST'])
+def edit_profile():
+    form_info = request.form
+    old_user_info = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    old_organization_info = db.Organizations.find_one({"_id": old_user_info["organization_id"]})
+
+    if form_info['username'] != old_user_info['username']:
+        if db.Users.find_one({"username": form_info["username"]}) is None:
+            db.Users.update_one({"_id": ObjectId(session.get("userid"))}, {
+                "$set": {"username": form_info["username"]}
+            })
+        else:
+            flash("User Name Already Taken, Use Another")
+    
+    if form_info['email'] != old_user_info['email']:
+        if db.Users.find_one({"email": form_info["email"]}) is None:
+            db.User.update_one({"_id": ObjectId(session.get("userid"))}, {
+                "$set": {"email": form_info["email"]}
+            })
+        else:
+            flash("Email Already Taken, Use Another")
+        
+    if form_info['role'] != old_user_info['role'] or old_user_info['role'] != 'Manager':
+        if form_info["role"] == "Manager" and old_user_info["role"] != "Manager":
+            db.Users.update_one({"_id": ObjectId(session.get("userid"))}, {
+                "$set": {"role": form_info["role"]}
+            })
+
+    if request.form.getlist("branches") != old_user_info["branch_ids"]:
+        db.Organizations.update_one({"_id": old_organization_info["_id"]}, {
+            "$set": {"branch_ids": [b for b in request.form.getlist("branches") if b != ""]}
+        })
+    
+    if form_info['organization'] != old_organization_info['organization']:
+        if db.Organizations.find_one({"organization": form_info["organization"]}) is None:
+            db.Organizations.update_one({"_id": old_organization_info["_id"]}, {
+                "$set": {"organization": form_info["organization"]}
+            })
+        else:
+            flash("Organization Name Already Taken, Use Another")
+    
+    return redirect(url_for("home"))
