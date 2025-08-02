@@ -16,9 +16,7 @@ def home():
             for m in organization["branches"]:
                 if m["_id"] == j:
                     branch_objects.append(m)
-        i["branches"] = branch_objects
-        print(employees)
-    
+        i["branches"] = branch_objects    
 
     branches = []
     for k in user["branch_ids"]:
@@ -55,7 +53,8 @@ def register_owner():
                         "password": bcrypt.generate_password_hash(form_info["password"]).decode("utf-8"),
                         "role": "Manager",
                         "organization_id": org["_id"],
-                        "branch_ids": [] 
+                        "branch_ids": [],
+                        "active_status": True
                     })
                     flash("You have been registered successfully!", "success")
                     return redirect(url_for("login"))
@@ -78,17 +77,22 @@ def login():
     if request.method == "POST":
         form_info = request.form
         user = db.Users.find_one({"username": form_info["username"]})
-        if user:
-            if bcrypt.check_password_hash(user["password"], form_info["password"]):
-                session["userid"] = str(user["_id"])
-                flash("Successful login!", "success")
-                return redirect(url_for('home'))
+        if user["active_status"] == True:
+            if user:
+                if bcrypt.check_password_hash(user["password"], form_info["password"]):
+                    session["userid"] = str(user["_id"])
+                    flash("Successful login!", "success")
+                    return redirect(url_for('home'))
+                else:
+                    flash("Incorrect password!", "error")
+                    return redirect(url_for('login'))
             else:
-                flash("Incorrect password!", "error")
-                return redirect(url_for('login'))
+                flash("That user name is not registered, try again!", "error")
+            return redirect(url_for('login')) 
         else:
-            flash("That user name is not registered, try again!", "error")
-        return redirect(url_for('login')) 
+            flash("Account was deactivated, contact your manager!")
+            return redirect(url_for("login"))
+            
     else:  
         return render_template("login.html")
 
@@ -165,10 +169,57 @@ def update_organization_branches():
 
 @app.route("/edit_employee)", methods=['POST'])
 def edit_employee():
-    pass
+    form_info = request.form
+    # getting initial user and organization info
+    user_info = db.Users.find_one({"_id": ObjectId(form_info["employee_id"])})
+    organization_info = db.Organizations.find_one({"_id": user_info["organization_id"]})
+    
+    # updating user name
+    if form_info['username'] != user_info['username']:
+        if db.Users.find_one({"username": form_info["username"]}) is None:
+            db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
+                "$set": {"username": form_info["username"]}
+            })
+        else:
+            flash("User Name Already Taken, Use Another")
+            
+    # updating email
+    if form_info['email'] != user_info['email']:
+        if db.Users.find_one({"email": form_info["email"]}) is None:
+            db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
+                "$set": {"email": form_info["email"]}
+            })
+        else:
+            flash("Email Already Taken, Use Another")
+    
+    
+    # updating role
+    if user_info["role"] != "Manager":
+        if form_info["role"] != user_info["role"]:
+            db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
+                    "$set": {"role": form_info["role"]}
+                })
+
+    # updating branch id
+    if user_info["role"] != "Manager":   
+        db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
+                "$set": {"branch_ids": [form_info["branch_id"]]}
+            })    
+    
     return redirect(url_for("home"))
 
 @app.route("/deactivate_employee)", methods=['POST'])
 def deactivate_employee():
-    pass
+    form_info = request.form
+    db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
+            "$set": {"active_status": False}
+        })
+    return redirect(url_for("home"))
+
+@app.route("/activate_employee)", methods=['POST'])
+def activate_employee():
+    form_info = request.form
+    db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
+            "$set": {"active_status": True}
+        })
     return redirect(url_for("home"))
