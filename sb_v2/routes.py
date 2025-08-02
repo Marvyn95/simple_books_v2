@@ -223,3 +223,9 @@ def activate_employee():
             "$set": {"active_status": True}
         })
     return redirect(url_for("home"))
+
+@app.route("/add_employee)", methods=['POST'])
+def add_employee():
+    form_info = request.form
+    pass
+    return redirect(url_for("home"))
