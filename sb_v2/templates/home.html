@@ -55,27 +55,38 @@
 </ul>
 
 <!-- Offcanvas -->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="employeeOffcanvas" aria-labelledby="employeeOffcanvasLabel" style="background-color: #f8f9ff; width: 400px;">
-  <div class="offcanvas-header border-bottom">
-    <h5 class="offcanvas-title fw-semibold" id="employeeOffcanvasLabel" style="color: indigo;">
+<div class="offcanvas offcanvas-end" tabindex="-1" id="employeeOffcanvas" aria-labelledby="employeeOffcanvasLabel"
+  style="background-color: #f8f9ff; width: 400px; font-size: 0.875rem;"> <!-- Small font size -->
+  
+  <div class="offcanvas-header border-bottom py-2">
+    <h6 class="offcanvas-title fw-semibold mb-0" id="employeeOffcanvasLabel" style="color: indigo;">
       <i class="bi bi-people-fill me-2"></i>Employee Management
-    </h5>
+    </h6>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
 
-  <div class="offcanvas-body px-3 py-3">
+  <div class="offcanvas-body px-3 py-2 overflow-auto">
     {% for employee in employees %}
-      <div class="card shadow-sm mb-3 border-0 rounded-4">
-        <div class="card-body p-3">
-          <h6 class="fw-bold text-indigo mb-1">{{ employee.username }}</h6>
-          <p class="mb-1"><i class="bi bi-person-badge me-2 text-muted"></i>{{ employee.role }}</p>
-          <p class="mb-1"><i class="bi bi-envelope-fill me-2 text-muted"></i>{{ employee.email }}</p>
-          <p class="mb-2"><i class="bi bi-geo-alt-fill me-2 text-muted"></i>{{ employee.branch_ids }}</p>
-          <div class="d-flex justify-content-end gap-2">
-            <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#editEmployeeModal_{{ employee._id }}">
+      <div class="card shadow-sm mb-2 border-0 rounded-3">
+        <div class="card-body py-2 px-3">
+          <div class="mb-1">
+            <strong class="text-indigo">{{ employee.username }}</strong>
+          </div>
+          <div class="text-muted small mb-1">
+            <i class="bi bi-person-badge me-1"></i>{{ employee.role }}
+          </div>
+          <div class="text-muted small mb-1">
+            <i class="bi bi-envelope-fill me-1"></i>{{ employee.email }}
+          </div>
+          <div class="text-muted small mb-2">
+            <i class="bi bi-geo-alt-fill me-1"></i>
+            {{ employee.branches | map(attribute='branch') | join(', ') }}
+          </div>
+          <div class="d-flex justify-content-end gap-1">
+            <button class="btn btn-sm btn-outline-primary px-2 py-1" data-bs-toggle="modal" data-bs-target="#editEmployeeModal_{{ employee._id }}">
               <i class="bi bi-pencil"></i>
             </button>
-            <button class="btn btn-sm btn-outline-danger" data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal_{{ employee._id }}">
+            <button class="btn btn-sm btn-outline-danger px-2 py-1" data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal_{{ employee._id }}">
               <i class="bi bi-trash"></i>
             </button>
           </div>
@@ -85,12 +96,13 @@
   </div>
 </div>
 
+
 <!-- Modals (placed outside offcanvas for proper Bootstrap stacking) -->
 {% for employee in employees %}
   <!-- Edit Modal -->
   <div class="modal fade" id="editEmployeeModal_{{ employee._id }}" tabindex="-1" aria-labelledby="editEmployeeLabel_{{ employee._id }}" aria-hidden="true">
     <div class="modal-dialog">
-      <form method="POST" action="">
+      <form method="POST" action="{{ url_for('edit_employee') }}">
         <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
           <div class="modal-header border-bottom">
             <h6 class="modal-title" id="editEmployeeLabel_{{ employee._id }}" style="color: indigo; font-size: 1rem;">
@@ -98,6 +110,7 @@
             </h6>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.8);"></button>
           </div>
+
           <div class="modal-body px-3 py-2">
             <div class="mb-2">
               <label class="form-label fw-semibold" style="color: indigo;">Username</label>
@@ -109,17 +122,48 @@
             </div>
             <div class="mb-2">
               <label class="form-label fw-semibold" style="color: indigo;">Role</label>
-              <select name="role" class="form-select form-select-sm" required>
+              <select name="role" class="form-select form-select-sm" required {% if employee.role == 'Manager' %}disabled{% endif %}>
                 <option value="Manager" {% if employee.role == 'Manager' %}selected{% endif %}>Manager</option>
                 <option value="Branch Manager" {% if employee.role == 'Branch Manager' %}selected{% endif %}>Branch Manager</option>
                 <option value="Sales person" {% if employee.role == 'Sales person' %}selected{% endif %}>Sales person</option>
               </select>
             </div>
+
             <div class="mb-2">
-              <label class="form-label fw-semibold" style="color: indigo;">Branch</label>
-              <input type="text" name="branch" class="form-control form-control-sm" value="{{ employee.branch }}" required>
+              <label class="form-label fw-semibold" style="color: indigo;">Branches</label>
+
+              {% if employee.role == 'Manager' %}
+                {% for branch in employee.branches %}
+                  <input type="text" class="form-control form-control-sm mb-1" value="{{ branch.branch }}" disabled>
+                {% endfor %}
+              {% else %}
+                <!-- Container for selected branches -->
+                <div id="selectedBranches_{{ employee._id }}">
+                  {% for branch in employee.branches %}
+                    <div class="input-group input-group-sm mb-1 branch-entry">
+                      <input type="text" class="form-control" value="{{ branch.branch }}" disabled>
+                      <input type="hidden" name="branch_ids[]" value="{{ branch._id }}">
+                      <button type="button" class="btn btn-outline-danger btn-sm remove-branch"><i class="bi bi-x"></i></button>
+                    </div>
+                  {% endfor %}
+                </div>
+
+                <!-- Dropdown to add new branch -->
+                <div class="input-group input-group-sm mt-2">
+                  <select class="form-select" id="branchSelect_{{ employee._id }}">
+                    <option selected disabled>Select branch to add</option>
+                    {% for org_branch in organization.branches %}
+                      <option value="{{ org_branch._id }}|{{ org_branch.branch }}">{{ org_branch.branch }}</option>
+                    {% endfor %}
+                  </select>
+                  <button class="btn btn-outline-primary btn-sm" type="button" onclick="addBranch('{{ employee._id }}')">
+                    Add
+                  </button>
+                </div>
+              {% endif %}
             </div>
           </div>
+
           <div class="modal-footer py-2">
             <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
             <button type="submit" class="btn btn-sm" style="background-color: indigo; color: white;">Save Changes</button>
@@ -129,29 +173,81 @@
     </div>
   </div>
 
-  <!-- Delete Modal -->
-  <div class="modal fade" id="deleteEmployeeModal_{{ employee._id }}" tabindex="-1" aria-labelledby="deleteEmployeeLabel_{{ employee._id }}" aria-hidden="true">
-    <div class="modal-dialog">
-      <form method="POST" action="">
-        <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
-          <div class="modal-header border-bottom">
-            <h6 class="modal-title text-danger" id="deleteEmployeeLabel_{{ employee._id }}" style="font-size: 1rem;">
-              <i class="bi bi-trash3-fill me-2"></i>Confirm Deletion
-            </h6>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.8);"></button>
-          </div>
-          <div class="modal-body px-3 py-2">
-            Are you sure you want to delete <strong>{{ employee.username }}</strong>?
-          </div>
-          <div class="modal-footer py-2">
-            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-sm btn-danger">Delete</button>
-          </div>
+<!-- Delete Modal -->
+<!-- Deactivate Modal -->
+<div class="modal fade" id="deleteEmployeeModal_{{ employee._id }}" tabindex="-1" aria-labelledby="deleteEmployeeLabel_{{ employee._id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('deactivate_employee') }}">
+      <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
+        
+        <!-- Modal Header -->
+        <div class="modal-header border-bottom py-2">
+          <h6 class="modal-title fw-semibold" id="deleteEmployeeLabel_{{ employee._id }}" style="color: #c82333; font-size: 1rem;">
+            <i class="bi bi-person-dash-fill me-2"></i>Deactivate Employee
+          </h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.8);"></button>
         </div>
-      </form>
-    </div>
+        
+        <!-- Modal Body -->
+        <div class="modal-body px-3 py-2 text-dark">
+          Are you sure you want to <strong>deactivate</strong> <strong>{{ employee.username }}</strong>?<br>
+          This employee will no longer have access to the system.
+        </div>
+        
+        <!-- Modal Footer -->
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-danger">Deactivate</button>
+        </div>
+        
+      </div>
+    </form>
   </div>
+</div>
+
+
 {% endfor %}
+
+<script>
+  function addBranch(empId) {
+    const select = document.getElementById('branchSelect_' + empId);
+    const selectedValue = select.value;
+
+    if (!selectedValue || selectedValue === "Select branch to add") return;
+
+    const [branchId, branchName] = selectedValue.split('|');
+    const container = document.getElementById('selectedBranches_' + empId);
+
+    // Prevent duplicates
+    const existing = container.querySelector(`input[value="${branchId}"]`);
+    if (existing) return;
+
+    // Create new branch input group
+    const entry = document.createElement('div');
+    entry.className = 'input-group input-group-sm mb-1 branch-entry';
+    entry.innerHTML = `
+      <input type="text" class="form-control" value="${branchName}" disabled>
+      <input type="hidden" name="branch_ids[]" value="${branchId}">
+      <button type="button" class="btn btn-outline-danger btn-sm remove-branch">
+        <i class="bi bi-x"></i>
+      </button>
+    `;
+
+    container.appendChild(entry);
+
+    // Reset the select
+    select.selectedIndex = 0;
+  }
+
+  // Event delegation for removing branch entries
+  document.addEventListener('click', function (e) {
+    if (e.target.closest('.remove-branch')) {
+      const entry = e.target.closest('.branch-entry');
+      entry.remove();
+    }
+  });
+</script>
+
 
       </div>
       <div class="text-center mt-auto pt-3 border-top border-secondary">

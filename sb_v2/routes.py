@@ -8,7 +8,17 @@ from bson.objectid import ObjectId
 def home():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     organization = db.Organizations.find_one({"_id": user["organization_id"]})
-    employees = db.Users.find({"organization_id": user["organization_id"]})
+    employees = list(db.Users.find({"organization_id": user["organization_id"]}))
+    
+    for i in employees:
+        branch_objects = []
+        for j in i["branch_ids"]:
+            for m in organization["branches"]:
+                if m["_id"] == j:
+                    branch_objects.append(m)
+        i["branches"] = branch_objects
+        print(employees)
+    
 
     branches = []
     for k in user["branch_ids"]:
@@ -150,4 +160,15 @@ def update_organization_branches():
     db.Organizations.update_one({"_id": organization["_id"]}, {"$push": {
         "branches": {"$each": [{"_id": secrets.token_hex(32), "branch": k} for k in new_branches]}
     }})
+    return redirect(url_for("home"))
+
+
+@app.route("/edit_employee)", methods=['POST'])
+def edit_employee():
+    pass
+    return redirect(url_for("home"))
+
+@app.route("/deactivate_employee)", methods=['POST'])
+def deactivate_employee():
+    pass
     return redirect(url_for("home"))
