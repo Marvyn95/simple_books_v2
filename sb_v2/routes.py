@@ -7,8 +7,15 @@ from bson.objectid import ObjectId
 @app.route('/home')
 def home():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    user["_id"] = str(user["_id"])
     organization = db.Organizations.find_one({"_id": user["organization_id"]})
     employees = list(db.Users.find({"organization_id": user["organization_id"]}))
+    stock_items = list(db.Stock.find({"organization_id": user["organization_id"]}))
+    
+    for k in stock_items:
+        for j in organization["branches"]:
+            if k["branch_id"] == j["_id"]:
+                k["branch"] = j["branch"]
     
     for i in employees:
         branch_objects = []
@@ -29,7 +36,8 @@ def home():
                            user = user,
                            organization = organization,
                            branches = branches,
-                           employees = list(employees))
+                           employees = list(employees),
+                           stock_items = stock_items)
 
 @app.route("/register_owner", methods=["GET", "POST"])
 def register_owner():
@@ -172,40 +180,39 @@ def edit_employee():
     form_info = request.form
     # getting initial user and organization info
     user_info = db.Users.find_one({"_id": ObjectId(form_info["employee_id"])})
-    
-    # updating user name
-    if form_info['username'] != user_info['username']:
-        if db.Users.find_one({"username": form_info["username"]}) is None:
-            db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
-                "$set": {"username": form_info["username"]}
-            })
-        else:
-            flash("User Name Already Taken, Use Another")
-            
-    # updating email
-    if form_info['email'] != user_info['email']:
-        if db.Users.find_one({"email": form_info["email"]}) is None:
-            db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
-                "$set": {"email": form_info["email"]}
-            })
-        else:
-            flash("Email Already Taken, Use Another")
-    
-    
-    # updating role
-    if str(user_info["_id"]) != str(session.get("userid")):
+    if db.Users.find_one({"_id": ObjectId(session.get("userid"))})["role"] == "Manager":
+        # updating user name
+        if form_info['username'] != user_info['username']:
+            if db.Users.find_one({"username": form_info["username"]}) is None:
+                db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
+                    "$set": {"username": form_info["username"]}
+                })
+            else:
+                flash("User Name Already Taken, Use Another")
+                
+        # updating email
+        if form_info['email'] != user_info['email']:
+            if db.Users.find_one({"email": form_info["email"]}) is None:
+                db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
+                    "$set": {"email": form_info["email"]}
+                })
+            else:
+                flash("Email Already Taken, Use Another")
+        
+        # updating role
         db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
                 "$set": {"role": form_info.get("role")}
             })
 
-    # updating branch id
-    if str(user_info["_id"]) != str(session.get("userid")):
+        # updating branch id
         if user_info["role"] != "Manager":   
             db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
-                    "$set": {"branch_ids": [form_info["branch_id"]]}
+                    "$set": {"branch_ids": [form_info.get("branch_id")]}
                 })    
-    
-    return redirect(url_for("home"))
+        return redirect(url_for("home"))
+    else:
+        flash("Only Managers can update these details", "error")
+        return redirect(url_for("home"))
 
 @app.route("/deactivate_employee)", methods=['POST'])
 def deactivate_employee():
@@ -241,8 +248,58 @@ def add_employee():
             flash("Employee registered successfully!", "success")
             return redirect(url_for("home"))
         else:
-            flash("Password mismatch!")
+            flash("Password mismatch!", "error")
             return redirect(url_for("home"))
     else:
         flash("User name already taken, use another!", "error")
-        return redirect(url_for("register_owner"))
+        return redirect(url_for("home"))
+    s
+    
+@app.route("/add_stock_item)", methods=['POST'])
+def add_stock_item():
+    form_info = request.form
+    user = db.Users.find_one({"_id": ObjectId(form_info["user_id"])})
+    if user["role"] == "Manager" or user["role"] == "Branch Manager":
+        db.Stock.insert_one({
+            "name": form_info["name"],
+            "quantity": 0,
+            "price": 0,
+            "branch_id": form_info["branch_id"],
+            "organization_id": user["organization_id"]
+        })
+        flash("Item added successfully!", "success")
+        return redirect(url_for("home"))
+    else:
+        flash("Only Managers and Branch Managers can add new stock")
+        return redirect(url_for("home"))
+    
+
+@app.route("/edit_stock_item)", methods=['POST'])
+def edit_stock_item():
+    form_info = request.form
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    if user["role"] == "Manager":
+        db.Stock.update_one({"_id": ObjectId(form_info["item_id"])}, {
+            "$set": {"name": form_info["name"], "price": form_info["price"]}
+        })
+    elif user["role"] == "Branch Manager":
+        db.Stock.update_one({"_id": ObjectId(form_info["item_id"])}, {
+            "$set": {"name": form_info["name"]}
+        })
+    return redirect(url_for("home"))
+
+
+@app.route("/update_stock_quantity)", methods=['POST'])
+def update_stock_quantity():
+    form_info = request.form
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    if user["role"] == "Manager" or user["role"] == "Branch Manager":
+        db.Stock.update_one({"_id": ObjectId(form_info["item_id"])}, {
+            "$inc": {"quantity": int(form_info["quantity"])}
+        })
+        flash("Quantity updated successfully!", "success")
+        return redirect(url_for("home"))
+    else:
+        flash("Sales Personnel cannot update stock", "error")
+        return redirect(url_for("home"))
+        
