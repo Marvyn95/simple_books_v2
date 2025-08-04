@@ -148,7 +148,8 @@
 
           <div class="mb-2">
             <label class="form-label fw-semibold" style="color: indigo;">Role</label>
-            <select name="role" class="form-select form-select-sm" required {% if employee.role == 'Manager' %}disabled{% endif %}>
+            <select name="role" class="form-select form-select-sm" required 
+              {% if employee._id == user._id %}disabled{% endif %}>
               <option value="Manager" {% if employee.role == 'Manager' %}selected{% endif %}>Manager</option>
               <option value="Branch Manager" {% if employee.role == 'Branch Manager' %}selected{% endif %}>Branch Manager</option>
               <option value="Sales person" {% if employee.role == 'Sales person' %}selected{% endif %}>Sales person</option>

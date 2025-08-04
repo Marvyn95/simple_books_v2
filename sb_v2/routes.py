@@ -172,7 +172,6 @@ def edit_employee():
     form_info = request.form
     # getting initial user and organization info
     user_info = db.Users.find_one({"_id": ObjectId(form_info["employee_id"])})
-    organization_info = db.Organizations.find_one({"_id": user_info["organization_id"]})
     
     # updating user name
     if form_info['username'] != user_info['username']:
@@ -194,17 +193,17 @@ def edit_employee():
     
     
     # updating role
-    if user_info["role"] != "Manager":
-        if form_info["role"] != user_info["role"]:
-            db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
-                    "$set": {"role": form_info["role"]}
-                })
+    if str(user_info["_id"]) != str(session.get("userid")):
+        db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
+                "$set": {"role": form_info.get("role")}
+            })
 
     # updating branch id
-    if user_info["role"] != "Manager":   
-        db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
-                "$set": {"branch_ids": [form_info["branch_id"]]}
-            })    
+    if str(user_info["_id"]) != str(session.get("userid")):
+        if user_info["role"] != "Manager":   
+            db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
+                    "$set": {"branch_ids": [form_info["branch_id"]]}
+                })    
     
     return redirect(url_for("home"))
 
@@ -226,6 +225,24 @@ def activate_employee():
 
 @app.route("/add_employee)", methods=['POST'])
 def add_employee():
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     form_info = request.form
-    pass
-    return redirect(url_for("home"))
+    if db.Users.find_one({"username": form_info["username"]}) is None:
+        if form_info["password"] == form_info["confirm_password"]:
+            db.Users.insert_one({
+                "username": form_info["username"],
+                "email": form_info["email"],
+                "password": bcrypt.generate_password_hash(form_info["password"]).decode("utf-8"),
+                "role": form_info["role"],
+                "organization_id": user["organization_id"],
+                "branch_ids": [form_info.get("branch_id")],
+                "active_status": True
+            })
+            flash("Employee registered successfully!", "success")
+            return redirect(url_for("home"))
+        else:
+            flash("Password mismatch!")
+            return redirect(url_for("home"))
+    else:
+        flash("User name already taken, use another!", "error")
+        return redirect(url_for("register_owner"))
