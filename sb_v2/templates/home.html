@@ -543,9 +543,11 @@
                         <div class="text-muted small mb-1">
                             <i class="bi bi-person-badge me-1"></i>{{ employee.role }}
                         </div>
+                        {% if employee.email %}
                         <div class="text-muted small mb-1">
                             <i class="bi bi-envelope-fill me-1"></i>{{ employee.email }}
                         </div>
+                        {% endif %}
                         <div class="text-muted small mb-1">
                             <i class="bi bi-geo-alt-fill me-1"></i>
                             {% if employee.role == 'Manager' %}
@@ -583,60 +585,153 @@
             </div>
         </div>
 
-        <!-- Inventory Offcanvas -->
-        <div class="offcanvas offcanvas-end" tabindex="-1" id="inventoryOffcanvas" 
-             aria-labelledby="inventoryOffcanvasLabel" style="background-color: #f8f9ff; width: 450px; font-size: 0.875rem;">
-            <div class="offcanvas-header border-bottom py-2">
-                <h6 class="offcanvas-title fw-semibold mb-0" id="inventoryOffcanvasLabel" style="color: indigo;">
-                    <i class="bi bi-box-seam me-2"></i>Inventory Management
-                </h6>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-            </div>
-            <div class="offcanvas-body px-3 py-2 overflow-auto">
-                <!-- Add New Stock Item Button -->
-                <div class="d-grid mb-3">
-                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addStockItemModal">
-                        <i class="bi bi-plus-circle me-1"></i> Add Stock Item
-                    </button>
-                </div>
-                <!-- Inventory Table -->
-                <table class="table table-sm align-middle" style="font-size: 0.82rem;">
-                    <thead class="table-light">
-                        <tr class="text-muted">
-                            <th>Item</th>
-                            <th>Qty</th>
-                            <th>Branch</th>
-                            <th>Price</th>
-                            <th>Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        {% for item in stock_items %}
-                        <tr>
-                            <td class="fw-semibold text-indigo">{{ item.name }}</td>
-                            <td>{{ item.quantity }}</td>
-                            <td>{{ item.branch }}</td>
-                            <td>{{ item.price }}</td>
-                            <td>
-                                <div class="d-flex gap-1">
-                                    <button class="btn btn-sm btn-outline-primary px-2 py-1"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#editItemModal_{{ item._id }}">
-                                        <i class="bi bi-pencil"></i>
-                                    </button>
-                                    <button class="btn btn-sm btn-outline-warning px-2 py-1"
-                                            data-bs-toggle="modal"
-                                            data-bs-target="#updateQuantityModal_{{ item._id }}">
-                                        <i class="bi bi-plus-slash-minus"></i>
-                                    </button>
-                                </div>
-                            </td>
-                        </tr>
-                        {% endfor %}
-                    </tbody>
-                </table>
-            </div>
+<!-- Inventory Offcanvas -->
+<div class="offcanvas offcanvas-end" tabindex="-1" id="inventoryOffcanvas" 
+     aria-labelledby="inventoryOffcanvasLabel" style="background-color: #f8f9ff; width: 450px; font-size: 0.875rem;">
+    <div class="offcanvas-header border-bottom py-2">
+        <h6 class="offcanvas-title fw-semibold mb-0" id="inventoryOffcanvasLabel" style="color: indigo;">
+            <i class="bi bi-box-seam me-2"></i>Inventory Management
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+    </div>
+
+    <div class="offcanvas-body px-3 py-2 overflow-auto">
+        <!-- Add New Stock Item Button -->
+        <div class="d-grid mb-3">
+            <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addStockItemModal">
+                <i class="bi bi-plus-circle me-1"></i> Add Stock Item
+            </button>
         </div>
+
+        <!-- Inventory Table -->
+        <table class="table table-sm align-middle" style="font-size: 0.82rem;">
+            <thead class="table-light">
+                <tr class="text-muted">
+                    <th>Item</th>
+                    <th>Qty</th>
+                    <th>Branch</th>
+                    <th>Price</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for item in stock_items %}
+                <tr>
+                    <!-- Item name is a modal trigger -->
+                    <td>
+                        <a href="#" class="fw-semibold text-decoration-none text-indigo"
+                           data-bs-toggle="modal" data-bs-target="#itemDetailsModal_{{ item._id }}">
+                            {{ item.name }}
+                        </a>
+                    </td>
+                    <td>{{ item.quantity }}</td>
+                    <td>{{ item.branch }}</td>
+                    <td>{{ item.price }}</td>
+                    <td>
+                        <div class="d-flex gap-1">
+                            <button class="btn btn-sm btn-outline-primary px-2 py-1"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#editItemModal_{{ item._id }}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            <button class="btn btn-sm btn-outline-warning px-2 py-1"
+                                    data-bs-toggle="modal"
+                                    data-bs-target="#updateQuantityModal_{{ item._id }}">
+                                <i class="bi bi-plus-slash-minus"></i>
+                            </button>
+                        </div>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<!-- Item Details Modals -->
+{% for item in stock_items %}
+<div class="modal fade" id="itemDetailsModal_{{ item._id }}" tabindex="-1" 
+     aria-labelledby="itemDetailsModalLabel_{{ item._id }}" aria-hidden="true">
+  <div class="modal-dialog" style="max-width: 600px;">
+    <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.8rem; border-radius: 0.75rem;">
+      
+      <!-- Modal Header -->
+      <div class="modal-header border-bottom py-2">
+        <h6 class="modal-title fw-semibold" id="itemDetailsModalLabel_{{ item._id }}" style="color: indigo;">
+          <i class="bi bi-info-circle-fill me-2" style="color: indigo;"></i>Stock Details – {{ item.name }}
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.8);"></button>
+      </div>
+
+      <!-- Modal Body -->
+      <div class="modal-body px-3 py-2">
+        <!-- Item Information -->
+        <div class="mb-3">
+          <div class="mb-2">
+            <small style="color: indigo;">Item Name</small><br>
+            <span class="fw-semibold text-dark">{{ item.name }}</span>
+          </div>
+          <div class="d-flex flex-wrap gap-3">
+            <div>
+              <small style="color: indigo;">Quantity</small><br>
+              <span class="fw-semibold" >{{ item.quantity }}</span>
+            </div>
+            <div>
+              <small style="color: indigo;">Unit Price</small><br>
+              <span class="fw-semibold" >{{ item.price }}</span>
+            </div>
+            <div>
+              <small style="color: indigo;">Branch</small><br>
+              <span class="fw-semibold" >{{ item.branch }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- History Table -->
+        <div class="mt-3">
+          <h6 class="fw-semibold mb-2" style="font-size: 0.8rem; color: indigo;">
+            <i class="bi bi-clock-history me-1" style="color: indigo;"></i>Re-stocking History
+          </h6>
+          <div class="table-responsive">
+            <table class="table table-sm table-borderless mb-0">
+              <thead class="border-bottom" style="color: indigo;">
+                <tr>
+                  <th style="width: 30%; color: indigo;">Date</th>
+                  <th style="width: 30%; color: indigo;">Updated By</th>
+                  <th style="width: 20%; color: indigo;">Qty</th>
+                  <th style="width: 20%; color: indigo;">Unit Cost</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for entry in stock_history %}
+                  <tr style="border-bottom: 1px solid #e2e6ea;">
+                    <td>{{ entry.date }}</td>
+                    <td>{{ entry.updater }}</td>
+                    <td >{{ entry.quantity }}</td>
+                    <td >{{ entry.unit_cost }}</td>
+                  </tr>
+                {% else %}
+                  <tr>
+                    <td colspan="4" class="text-center text-muted fst-italic py-2">No history available.</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="modal-footer py-2">
+        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+
+{% endfor %}
+
 
         <!-- Modals -->
         <!-- Add Employee Modal -->
@@ -864,72 +959,104 @@
 
         <!-- Edit Stock Item Modals -->
         {% for item in stock_items %}
-        <div class="modal fade" id="editItemModal_{{ item._id }}" tabindex="-1" 
-             aria-labelledby="editItemLabel_{{ item._id }}" aria-hidden="true">
-            <div class="modal-dialog">
-                <form method="POST" action="{{ url_for('edit_stock_item') }}">
-                    <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
-                        <div class="modal-header border-bottom py-2">
-                            <h6 class="modal-title" id="editItemLabel_{{ item._id }}" 
-                                style="color: indigo; font-size: 1rem;">
-                                <i class="bi bi-pencil me-2"></i>Edit Item Details
-                            </h6>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" 
-                                    style="transform: scale(0.85);"></button>
-                        </div>
-                        <div class="modal-body px-3 py-2">
-                            <input type="hidden" name="item_id" value="{{ item._id }}">
-                            <div class="mb-2">
-                                <label class="form-label fw-semibold" style="color: indigo;">Item Name</label>
-                                <input type="text" name="name" value="{{ item.name }}" 
-                                       class="form-control form-control-sm" required>
-                            </div>
-                            {% if user.role == 'Manager' %}
-                            <div class="mb-2">
-                                <label class="form-label fw-semibold" style="color: indigo;">Price</label>
-                                <input type="number" name="price" value="{{ item.price }}" step="0.01" 
-                                       class="form-control form-control-sm" required>
-                            </div>
-                            {% endif %}
-                        </div>
-                        <div class="modal-footer py-2">
-                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-sm" style="background-color: indigo; color: white;">Save Changes</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+<div class="modal fade" id="editItemModal_{{ item._id }}" tabindex="-1" 
+     aria-labelledby="editItemLabel_{{ item._id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('edit_stock_item') }}">
+      <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
+        <div class="modal-header border-bottom py-2">
+          <h6 class="modal-title" id="editItemLabel_{{ item._id }}" 
+              style="color: indigo; font-size: 1rem;">
+            <i class="bi bi-pencil me-2"></i>Edit Item Details
+          </h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" 
+                  style="transform: scale(0.85);"></button>
         </div>
-        <!-- Update Quantity Modal -->
-        <div class="modal fade" id="updateQuantityModal_{{ item._id }}" tabindex="-1" 
-             aria-labelledby="updateQuantityLabel_{{ item._id }}" aria-hidden="true">
-            <div class="modal-dialog">
-                <form method="POST" action="{{ url_for('update_stock_quantity') }}">
-                    <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
-                        <div class="modal-header border-bottom py-2">
-                            <h6 class="modal-title" id="updateQuantityLabel_{{ item._id }}" 
-                                style="color: indigo; font-size: 1rem;">
-                                <i class="bi bi-plus-slash-minus me-2"></i>Update Quantity
-                            </h6>
-                            <button type="button" class="btn-close" data-bs-dismiss="modal" 
-                                    style="transform: scale(0.85);"></button>
-                        </div>
-                        <div class="modal-body px-3 py-2">
-                            <input type="hidden" name="item_id" value="{{ item._id }}">
-                            <div class="mb-2">
-                                <label class="form-label fw-semibold" style="color: indigo;">New Quantity</label>
-                                <input type="number" name="quantity" value="{{ item.quantity }}" min="0" step="1" 
-                                       class="form-control form-control-sm" required>
-                            </div>
-                        </div>
-                        <div class="modal-footer py-2">
-                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                            <button type="submit" class="btn btn-sm btn-warning">Update</button>
-                        </div>
-                    </div>
-                </form>
-            </div>
+
+        <div class="modal-body px-3 py-2">
+          <input type="hidden" name="item_id" value="{{ item._id }}">
+
+          <!-- Item Name -->
+          <div class="mb-2">
+            <label class="form-label fw-semibold" style="color: indigo;">Item Name</label>
+            <input type="text" name="name" value="{{ item.name }}" 
+                   class="form-control form-control-sm" required>
+          </div>
+
+          {% if user.role == 'Manager' %}
+          <!-- Price Field -->
+          <div class="mb-2">
+            <label class="form-label fw-semibold" style="color: indigo;">Price</label>
+            <input type="number" name="price" value="{{ item.price }}" step="0.01" 
+                   class="form-control form-control-sm" required>
+          </div>
+
+          <!-- Branch Dropdown -->
+<div class="mb-2">
+  <label class="form-label fw-semibold" style="color: indigo;">Branch</label>
+  <select name="branch_id" class="form-select form-select-sm" required>
+    {% for branch in organization.branches %}
+    <option value="{{ branch._id }}" {% if branch._id == item.branch_id %}selected{% endif %}>
+      {{ branch.branch }}
+    </option>
+    {% endfor %}
+  </select>
+</div>
+          {% endif %}
         </div>
+
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm" style="background-color: indigo; color: white;">Save Changes</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Update Stock Modal -->
+<div class="modal fade" id="updateQuantityModal_{{ item._id }}" tabindex="-1" 
+     aria-labelledby="updateQuantityLabel_{{ item._id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('update_stock_quantity') }}">
+      <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
+        
+        <!-- Modal Header -->
+        <div class="modal-header border-bottom py-2">
+          <h6 class="modal-title" id="updateQuantityLabel_{{ item._id }}" style="color: indigo; font-size: 1rem;">
+            <i class="bi bi-box-seam me-2"></i>Update <span class="fw-semibold">{{ item.name }}</span> Stock
+          </h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" style="transform: scale(0.85);"></button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="modal-body px-3 py-2">
+          <input type="hidden" name="item_id" value="{{ item._id }}">
+
+          <div class="mb-2">
+            <label class="form-label fw-semibold" style="color: indigo;">Quantity to Add</label>
+            <input type="number" name="quantity" min="1" step="1"
+                   class="form-control form-control-sm" required>
+          </div>
+
+          <div class="mb-2">
+            <label class="form-label fw-semibold" style="color: indigo;">Unit Cost (UGX)</label>
+            <input type="number" name="unit_cost" min="0" step="0.01"
+                   class="form-control form-control-sm" required>
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-warning">Add Stock</button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+</div>
+
         {% endfor %}
 
         <!-- Add Branch Modal -->

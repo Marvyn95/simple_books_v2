@@ -10,11 +10,18 @@ def home():
     user["_id"] = str(user["_id"])
     organization = db.Organizations.find_one({"_id": user["organization_id"]})
     employees = list(db.Users.find({"organization_id": user["organization_id"]}))
-    stock_items = list(db.Stock.find({"organization_id": user["organization_id"]}))
+    stock_items = list(db.Stock.find({"organization_id": user["organization_id"]}).sort("quantity", -1))
+    stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"]}).sort("date", -1))
+    
+    for m in stock_history:
+        m["date"] = m["date"].strftime("%B %d, %Y")
+        m["updater"] = db.Users.find_one({"_id": m["updater_id"]})["username"]
+        m["quantity"] = m["quantity_updated"]
     
     for k in stock_items:
-        for j in organization["branches"]:
-            if k["branch_id"] == j["_id"]:
+        print(k["branch_id"])
+        for j in list(organization["branches"]):
+            if str(k["branch_id"]) == str(j["_id"]):
                 k["branch"] = j["branch"]
     
     for i in employees:
@@ -37,7 +44,8 @@ def home():
                            organization = organization,
                            branches = branches,
                            employees = list(employees),
-                           stock_items = stock_items)
+                           stock_items = stock_items,
+                           stock_history = stock_history)
 
 @app.route("/register_owner", methods=["GET", "POST"])
 def register_owner():
@@ -189,7 +197,7 @@ def edit_employee():
                 
         # updating email
         if form_info['email'] != user_info['email']:
-            if db.Users.find_one({"email": form_info["email"]}) is None:
+            if db.Users.find_one({"email": form_info["email"]}) or form_info.get("email") == "":
                 db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
                     "$set": {"email": form_info["email"]}
                 })
@@ -202,10 +210,9 @@ def edit_employee():
             })
 
         # updating branch id
-        if user_info["role"] != "Manager":   
-            db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
-                    "$set": {"branch_ids": [form_info.get("branch_id")]}
-                })    
+        db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
+                "$set": {"branch_ids": [form_info.get("branch_id")]}
+            })    
         return redirect(url_for("home"))
     else:
         flash("Only Managers can update these details", "error")
@@ -277,7 +284,7 @@ def edit_stock_item():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     if user["role"] == "Manager":
         db.Stock.update_one({"_id": ObjectId(form_info["item_id"])}, {
-            "$set": {"name": form_info["name"], "price": form_info["price"]}
+            "$set": {"name": form_info["name"], "price": form_info["price"], "branch_id": form_info["branch_id"]}
         })
     elif user["role"] == "Branch Manager":
         db.Stock.update_one({"_id": ObjectId(form_info["item_id"])}, {
@@ -290,9 +297,20 @@ def edit_stock_item():
 def update_stock_quantity():
     form_info = request.form
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    item = db.Stock.find_one({"_id": ObjectId(form_info["item_id"])})
     if user["role"] == "Manager" or user["role"] == "Branch Manager":
         db.Stock.update_one({"_id": ObjectId(form_info["item_id"])}, {
             "$inc": {"quantity": int(form_info["quantity"])}
+        })
+        
+        db.Stock_movement.insert_one({
+            "date": datetime.datetime.now(),
+            "organization_id": item["organization_id"],
+            "branch_id": item["branch_id"],
+            "updater_id": user["_id"],
+            "item_id": form_info["item_id"],
+            "quantity_updated": int(form_info["quantity"]),
+            "unit_cost": int(form_info["unit_cost"])
         })
         flash("Quantity updated successfully!", "success")
         return redirect(url_for("home"))
