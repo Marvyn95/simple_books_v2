@@ -1,1128 +1,1134 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>Simple Books</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+    <!-- Meta tags for character encoding and responsive viewport -->
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Simple Books</title>
+    <!-- Bootstrap CSS and Icons -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
 </head>
 <body class="bg-light h-100">
-  <!-- Full Page Container -->
-  <div class="container-fluid vh-100 py-3 d-flex flex-wrap justify-content-center align-items-stretch gap-3">
-    <!-- Column 1: Sidebar -->
-    <div class="text-white rounded-4 shadow-lg p-4 d-flex flex-column justify-content-between h-100"
-         style="background-color: indigo; flex-grow: 1; flex-basis: 0; min-width: 0;">
-      <div>
-        <h5 class="text-center mb-4">Simple Books</h5>
-<ul class="nav flex-column gap-3">
-  <li class="nav-item">
-    <a href="#" class="nav-link text-white text-center">
-      <i class="bi bi-house-fill fs-6 d-block"></i>
-      <small>Home</small>
-    </a>
-  </li>
-  <li class="nav-item">
-    <a href="#" class="nav-link text-white text-center" data-bs-toggle="offcanvas" data-bs-target="#profileOffcanvas" role="button">
-      <i class="bi bi-person-fill fs-6 d-block"></i>
-      <small>Profile</small>
-    </a>
-  </li>
-  <li class="nav-item">
-    <a href="#" class="nav-link text-white text-center">
-      <i class="bi bi-cash-stack fs-6 d-block"></i>
-      <small>Sales</small>
-    </a>
-  </li>
-  <li class="nav-item">
-    <a href="#" class="nav-link text-white text-center">
-      <i class="bi bi-receipt fs-6 d-block"></i>
-      <small>Expenses</small>
-    </a>
-  </li>
-  <!-- Inventory Nav Item (Triggers Offcanvas) -->
-  <li class="nav-item">
-    <a class="nav-link text-white text-center" data-bs-toggle="offcanvas" href="#inventoryOffcanvas" role="button" aria-controls="inventoryOffcanvas">
-      <i class="bi bi-box-seam fs-6 d-block"></i>
-      <small>Inventory</small>
-    </a>
-  </li>
-  <li class="nav-item">
-    <a href="#" class="nav-link text-white text-center" data-bs-toggle="offcanvas" data-bs-target="#employeeOffcanvas" role="button">
-      <i class="bi bi-people-fill fs-6 d-block"></i>
-      <small>Employees</small>
-    </a>
-  </li>
-</ul>
-
-<!-- Employee Offcanvas -->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="employeeOffcanvas" aria-labelledby="employeeOffcanvasLabel"
-  style="background-color: #f8f9ff; width: 400px; font-size: 0.875rem;">
-
-  <div class="offcanvas-header border-bottom py-2">
-    <h6 class="offcanvas-title fw-semibold mb-0" id="employeeOffcanvasLabel" style="color: indigo;">
-      <i class="bi bi-people-fill me-2"></i>Employee Management
-    </h6>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-  </div>
-
-  <div class="offcanvas-body px-3 py-2 overflow-auto">
-
-    <!-- Add New Employee Button -->
-    <div class="d-grid mb-3">
-      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
-        <i class="bi bi-person-plus-fill me-1"></i> Add New Employee
-      </button>
-    </div>
-
-    {% for employee in employees %}
-    <div class="card shadow-sm mb-2 border-0 rounded-3">
-      <div class="card-body py-2 px-3">
-        <div class="mb-1">
-          <strong class="text-indigo">{{ employee.username }}</strong>
-        </div>
-        <div class="text-muted small mb-1">
-          <i class="bi bi-person-badge me-1"></i>{{ employee.role }}
-        </div>
-        <div class="text-muted small mb-1">
-          <i class="bi bi-envelope-fill me-1"></i>{{ employee.email }}
-        </div>
-        <div class="text-muted small mb-1">
-          <i class="bi bi-geo-alt-fill me-1"></i>
-          {% if employee.role == 'Manager' %}
-            {{ organization.branches | map(attribute='branch') | join(', ') }}
-          {% else %}
-            {{ employee.branches | map(attribute='branch') | join(', ') }}
-          {% endif %}
-        </div>
-        <div class="small mb-2" style="color: {{ 'green' if employee.active_status else 'crimson' }};">
-          <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
-          {{ 'Active' if employee.active_status else 'Deactivated' }}
-        </div>
-{% if user.role == 'Manager' %}
-<div class="d-flex justify-content-end gap-1">
-  <button class="btn btn-sm btn-outline-primary px-2 py-1" data-bs-toggle="modal" data-bs-target="#editEmployeeModal_{{ employee._id }}">
-    <i class="bi bi-pencil"></i>
-  </button>
-
-  {% if employee.active_status %}
-  <button class="btn btn-sm btn-outline-danger px-2 py-1" data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal_{{ employee._id }}">
-    <i class="bi bi-trash"></i>
-  </button>
-  {% else %}
-  <button class="btn btn-sm btn-outline-success px-2 py-1" data-bs-toggle="modal" data-bs-target="#activateEmployeeModal_{{ employee._id }}">
-    <i class="bi bi-person-check-fill"></i>
-  </button>
-  {% endif %}
-</div>
-{% endif %}
-
-      </div>
-    </div>
-    {% endfor %}
-  </div>
-</div>
-
-<!-- Modals -->
-{% for employee in employees %}
-<!-- Edit Employee Modal -->
-<div class="modal fade" id="editEmployeeModal_{{ employee._id }}" tabindex="-1" aria-labelledby="editEmployeeLabel_{{ employee._id }}" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="POST" action="{{ url_for('edit_employee') }}">
-      <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
-        <div class="modal-header border-bottom">
-          <h6 class="modal-title" id="editEmployeeLabel_{{ employee._id }}" style="color: indigo; font-size: 1rem;">
-            <i class="bi bi-pencil-square me-2"></i>Edit Employee
-          </h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.8);"></button>
-        </div>
-
-        <div class="modal-body px-3 py-2">
-          <input type="hidden" name="employee_id" value="{{ employee._id }}">
-
-          <div class="mb-2">
-            <label class="form-label fw-semibold" style="color: indigo;">Username</label>
-            <input type="text" name="username" class="form-control form-control-sm" value="{{ employee.username }}" required>
-          </div>
-
-          <div class="mb-2">
-            <label class="form-label fw-semibold" style="color: indigo;">Email</label>
-            <input type="email" name="email" class="form-control form-control-sm" value="{{ employee.email }}" required>
-          </div>
-
-          {% if employee._id|string != user._id|string %}
-          <!-- Role dropdown for other employees -->
-          <div class="mb-2">
-            <label class="form-label fw-semibold" style="color: indigo;">Role</label>
-            <select name="role" id="editRoleSelect_{{ employee._id }}" class="form-select form-select-sm" required onchange="toggleBranchField('{{ employee._id }}')">
-              <option value="Manager" {% if employee.role == 'Manager' %}selected{% endif %}>Manager</option>
-              <option value="Branch Manager" {% if employee.role == 'Branch Manager' %}selected{% endif %}>Branch Manager</option>
-              <option value="Sales person" {% if employee.role == 'Sales person' %}selected{% endif %}>Sales person</option>
-            </select>
-          </div>
-          {% else %}
-          <!-- Hidden role input for self-edit -->
-          <input type="hidden" name="role" value="Manager">
-          {% endif %}
-
-          <!-- Branch Field Wrapper -->
-<div class="mb-2" id="branchFieldWrapper_{{ employee._id }}" {% if employee.role == 'Manager' %}style="display: none;"{% endif %}>
-  <label class="form-label fw-semibold" style="color: indigo;">Branch</label>
-  <select
-    id="branchSelect_{{ employee._id }}"
-    class="form-select form-select-sm"
-    {% if employee.role != 'Manager' %}name="branch_id" required{% endif %}
-  >
-    <option value="" disabled {% if not employee.branches %}selected{% endif %}>Select branch</option>
-    {% for org_branch in organization.branches %}
-    <option value="{{ org_branch._id }}" {% if employee.branches and org_branch._id == employee.branches[0]._id %}selected{% endif %}>
-      {{ org_branch.branch }}
-    </option>
-    {% endfor %}
-  </select>
-</div>
-
-        </div>
-
-        <div class="modal-footer py-2">
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-sm" style="background-color: indigo; color: white;">Save Changes</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-<script>
-  function toggleBranchField(id) {
-    const roleSelect = document.getElementById(`editRoleSelect_${id}`);
-    const branchWrapper = document.getElementById(`branchFieldWrapper_${id}`);
-    const branchSelect = document.getElementById(`branchSelect_${id}`);
-
-    if (roleSelect.value === 'Manager') {
-      branchWrapper.style.display = 'none';
-      branchSelect.removeAttribute('required');
-      branchSelect.removeAttribute('name');
-    } else {
-      branchWrapper.style.display = 'block';
-      branchSelect.setAttribute('name', 'branch_id');
-      branchSelect.setAttribute('required', 'required');
-    }
-  }
-
-  document.addEventListener('DOMContentLoaded', () => {
-    {% for employee in employees %}
-    toggleBranchField('{{ employee._id }}');
-    {% endfor %}
-  });
-</script>
-
-<!-- Deactivate Modal (only if active) -->
-{% if employee.active_status %}
-<div class="modal fade" id="deleteEmployeeModal_{{ employee._id }}" tabindex="-1" aria-labelledby="deleteEmployeeLabel_{{ employee._id }}" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="POST" action="{{ url_for('deactivate_employee') }}">
-      <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
-        <div class="modal-header border-bottom py-2">
-          <h6 class="modal-title fw-semibold" id="deleteEmployeeLabel_{{ employee._id }}" style="color: #c82333; font-size: 1rem;">
-            <i class="bi bi-person-dash-fill me-2"></i>Deactivate Employee
-          </h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.8);"></button>
-        </div>
-        <div class="modal-body px-3 py-2 text-dark">
-          <input type="hidden" name="employee_id" value="{{ employee._id }}">
-          Are you sure you want to <strong>deactivate</strong> <strong>{{ employee.username }}</strong>?<br>
-          This employee will no longer have access to the system.
-        </div>
-        <div class="modal-footer py-2">
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-sm btn-danger">Deactivate</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-{% endif %}
-
-<!-- Activate Modal (only if inactive) -->
-{% if not employee.active_status %}
-<div class="modal fade" id="activateEmployeeModal_{{ employee._id }}" tabindex="-1" aria-labelledby="activateEmployeeLabel_{{ employee._id }}" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="POST" action="{{ url_for('activate_employee') }}">
-      <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
-        <div class="modal-header border-bottom py-2">
-          <h6 class="modal-title fw-semibold" id="activateEmployeeLabel_{{ employee._id }}" style="color: green; font-size: 1rem;">
-            <i class="bi bi-person-check-fill me-2"></i>Activate Employee
-          </h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.8);"></button>
-        </div>
-        <div class="modal-body px-3 py-2 text-dark">
-          <input type="hidden" name="employee_id" value="{{ employee._id }}">
-          Are you sure you want to <strong>activate</strong> <strong>{{ employee.username }}</strong>?
-        </div>
-        <div class="modal-footer py-2">
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-sm btn-success">Activate</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-{% endif %}
-{% endfor %}
-
-<!-- Add New Employee Modal -->
-<div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="POST" action="{{ url_for('add_employee') }}">
-      <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
-        <div class="modal-header border-bottom">
-          <h6 class="modal-title" id="addEmployeeModalLabel" style="color: indigo; font-size: 1rem;">
-            <i class="bi bi-person-plus-fill me-2"></i>Add New Employee
-          </h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.8);"></button>
-        </div>
-
-        <div class="modal-body px-3 py-2">
-          <div class="mb-2">
-            <label class="form-label fw-semibold" style="color: indigo;">Username</label>
-            <input type="text" name="username" class="form-control form-control-sm" required>
-          </div>
-
-          <div class="mb-2">
-            <label class="form-label fw-semibold" style="color: indigo;">Email (optional)</label>
-            <input type="email" name="email" class="form-control form-control-sm">
-          </div>
-
-          <div class="mb-2">
-            <label class="form-label fw-semibold" style="color: indigo;">Password</label>
-            <input type="password" name="password" class="form-control form-control-sm" required>
-          </div>
-
-          <div class="mb-2">
-            <label class="form-label fw-semibold" style="color: indigo;">Confirm Password</label>
-            <input type="password" name="confirm_password" class="form-control form-control-sm" required>
-          </div>
-
-          <div class="mb-2">
-            <label class="form-label fw-semibold" style="color: indigo;">Role</label>
-            <select id="addRoleSelect" name="role" class="form-select form-select-sm" required>
-              <option disabled selected>Select role</option>
-              <option value="Manager">Manager</option>
-              <option value="Branch Manager">Branch Manager</option>
-              <option value="Sales person">Sales person</option>
-            </select>
-          </div>
-
-          <div class="mb-2" id="branchSelectContainer">
-            <label class="form-label fw-semibold" style="color: indigo;">Branch</label>
-            <select name="branch_id" class="form-select form-select-sm" required>
-              <option disabled selected>Select branch</option>
-              {% for org_branch in organization.branches %}
-              <option value="{{ org_branch._id }}">{{ org_branch.branch }}</option>
-              {% endfor %}
-            </select>
-          </div>
-        </div>
-
-        <div class="modal-footer py-2">
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-sm" style="background-color: indigo; color: white;">Add Employee</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-<script>
-  document.addEventListener('DOMContentLoaded', function () {
-    const roleSelect = document.getElementById('addRoleSelect');
-    const branchContainer = document.getElementById('branchSelectContainer');
-
-    function toggleBranchVisibility() {
-      if (roleSelect.value === 'Manager') {
-        branchContainer.style.display = 'none';
-        branchContainer.querySelector('select').removeAttribute('required');
-      } else {
-        branchContainer.style.display = 'block';
-        branchContainer.querySelector('select').setAttribute('required', 'required');
-      }
-    }
-
-    // Initial toggle on modal open
-    const addEmployeeModal = document.getElementById('addEmployeeModal');
-    addEmployeeModal.addEventListener('show.bs.modal', () => {
-      toggleBranchVisibility();
-    });
-
-    // Toggle on role change
-    roleSelect.addEventListener('change', toggleBranchVisibility);
-  });
-</script>
-
-
-</div>
-
-<!-- Inventory Offcanvas -->
-<!-- Inventory Offcanvas -->
-<div class="offcanvas offcanvas-end" tabindex="-1" id="inventoryOffcanvas" aria-labelledby="inventoryOffcanvasLabel"
-  style="background-color: #f8f9ff; width: 450px; font-size: 0.875rem;">
-
-  <div class="offcanvas-header border-bottom py-2">
-    <h6 class="offcanvas-title fw-semibold mb-0" id="inventoryOffcanvasLabel" style="color: indigo;">
-      <i class="bi bi-box-seam me-2"></i>Inventory Management
-    </h6>
-    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-  </div>
-
-  <div class="offcanvas-body px-3 py-2 overflow-auto">
-
-    <!-- Add New Stock Item Button -->
-    <div class="d-grid mb-3">
-      <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addStockItemModal">
-        <i class="bi bi-plus-circle me-1"></i> Add Stock Item
-      </button>
-    </div>
-
-<table class="table table-sm align-middle" style="font-size: 0.82rem;">
-  <thead class="table-light">
-    <tr class="text-muted">
-      <th>Item</th>
-      <th>Qty</th>
-      <th>Branch</th>
-      <th>Price</th>
-      <th>Actions</th>
-    </tr>
-  </thead>
-  <tbody>
-    {% for item in stock_items %}
-    <tr>
-      <td class="fw-semibold text-indigo">{{ item.name }}</td>
-      <td>{{ item.quantity }}</td>
-      <td>{{ item.branch }}</td>
-      <td>{{ item.price }}</td>
-      <td>
-        <div class="d-flex gap-1">
-          <button class="btn btn-sm btn-outline-primary px-2 py-1"
-                  data-bs-toggle="modal"
-                  data-bs-target="#editItemModal_{{ item._id }}">
-            <i class="bi bi-pencil"></i>
-          </button>
-          <button class="btn btn-sm btn-outline-warning px-2 py-1"
-                  data-bs-toggle="modal"
-                  data-bs-target="#updateQuantityModal_{{ item._id }}">
-            <i class="bi bi-plus-slash-minus"></i>
-          </button>
-        </div>
-      </td>
-    </tr>
-    {% endfor %}
-  </tbody>
-</table>
-
-  </div>
-</div>
-
-
-
-<!-- Add Stock Item Modal -->
-<div class="modal fade" id="addStockItemModal" tabindex="-1" aria-labelledby="addStockItemLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="POST" action="{{ url_for('add_stock_item') }}">
-      <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
-        <div class="modal-header border-bottom">
-          <h6 class="modal-title fw-semibold" id="addStockItemLabel" style="color: indigo; font-size: 1rem;">
-            <i class="bi bi-plus-circle me-2"></i>Add Stock Item
-          </h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.8);"></button>
-        </div>
-
-        <div class="modal-body px-3 py-2">
-          <!-- Hidden field for submitting user's ID -->
-          <input type="hidden" name="user_id" value="{{ user._id }}">
-
-          <div class="mb-2">
-            <label class="form-label fw-semibold" style="color: indigo;">Item Name</label>
-            <input type="text" name="name" class="form-control form-control-sm" required>
-          </div>
-
-          {% if user.role == 'Manager' %}
-          <div class="mb-2">
-            <label class="form-label fw-semibold" style="color: indigo;">Branch</label>
-            <select name="branch_id" class="form-select form-select-sm" required>
-              <option value="" disabled selected hidden>Select branch</option>
-              {% for branch in organization.branches %}
-              <option value="{{ branch._id }}">{{ branch.branch }}</option>
-              {% endfor %}
-            </select>
-          </div>
-          {% elif user.role == 'Branch Manager' %}
-          <input type="hidden" name="branch_id" value="{{ user.branch_ids[0]._id }}">
-          {% endif %}
-
-        </div>
-
-        <div class="modal-footer py-2">
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-sm" style="background-color: indigo; color: white;">Add Item</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-
-
-{% for item in stock_items %}
-<!-- Edit Item Modal -->
-<div class="modal fade" id="editItemModal_{{ item._id }}" tabindex="-1" aria-labelledby="editItemLabel_{{ item._id }}" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="POST" action="{{ url_for('edit_stock_item') }}">
-      <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
-        <div class="modal-header border-bottom py-2">
-          <h6 class="modal-title" id="editItemLabel_{{ item._id }}" style="color: indigo; font-size: 1rem;">
-            <i class="bi bi-pencil me-2"></i>Edit Item Details
-          </h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" style="transform: scale(0.85);"></button>
-        </div>
-        <div class="modal-body px-3 py-2">
-          <input type="hidden" name="item_id" value="{{ item._id }}">
-          <div class="mb-2">
-            <label class="form-label fw-semibold" style="color: indigo;">Item Name</label>
-            <input type="text" name="name" value="{{ item.name }}" class="form-control form-control-sm" required>
-          </div>
-          {% if user.role == 'Manager' %}
-          <div class="mb-2">
-            <label class="form-label fw-semibold" style="color: indigo;">Price</label>
-            <input type="number" name="price" value="{{ item.price }}" step="0.01" class="form-control form-control-sm" required>
-          </div>
-          {% endif %}
-        </div>
-        <div class="modal-footer py-2">
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-sm" style="background-color: indigo; color: white;">Save Changes</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-
-<!-- Update Quantity Modal -->
-<div class="modal fade" id="updateQuantityModal_{{ item._id }}" tabindex="-1" aria-labelledby="updateQuantityLabel_{{ item._id }}" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="POST" action="{{ url_for('update_stock_quantity') }}">
-      <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
-        <div class="modal-header border-bottom py-2">
-          <h6 class="modal-title" id="updateQuantityLabel_{{ item._id }}" style="color: indigo; font-size: 1rem;">
-            <i class="bi bi-plus-slash-minus me-2"></i>Update Quantity
-          </h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" style="transform: scale(0.85);"></button>
-        </div>
-        <div class="modal-body px-3 py-2">
-          <input type="hidden" name="item_id" value="{{ item._id }}">
-          <div class="mb-2">
-            <label class="form-label fw-semibold" style="color: indigo;">New Quantity</label>
-            <input type="number" name="quantity" value="{{ item.quantity }}" min="0" step="1" class="form-control form-control-sm" required>
-          </div>
-        </div>
-        <div class="modal-footer py-2">
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-sm btn-warning">Update</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-{% endfor %}
-
-  
-      <div class="text-center mt-auto pt-3 border-top border-secondary">
-        <a href="{{ url_for('logout') }}" class="nav-link text-white">
-          <i class="bi bi-box-arrow-right fs-6 d-block"></i>
-          <small>Logout</small>
-        </a>
-      </div>
-      <!-- Profile Offcanvas -->
-      <div class="offcanvas offcanvas-start shadow" tabindex="-1" id="profileOffcanvas" aria-labelledby="profileOffcanvasLabel"
-           style="background-color: #f4f5ff; min-width: 280px;">
-        <div class="offcanvas-header border-bottom">
-          <h5 class="offcanvas-title fw-semibold d-flex align-items-center" id="profileOffcanvasLabel" style="color: indigo;">
-            <i class="bi bi-person-circle me-2 fs-4" style="color: indigo;"></i> My Profile
-          </h5>
-          <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-        </div>
-        <div class="offcanvas-body px-3 py-4">
-          <div class="mb-4">
-            <div class="d-flex align-items-center mb-3">
-              <i class="bi bi-person-fill fs-5 me-2" style="color: indigo;"></i>
-              <div>
-                <div class="small text-muted">Username</div>
-                <div class="fw-semibold" style="color: indigo;">{{ user['username'] }}</div>
-              </div>
-            </div>
-            <div class="d-flex align-items-center mb-3">
-              <i class="bi bi-envelope-fill fs-5 me-2" style="color: indigo;"></i>
-              <div>
-                <div class="small text-muted">Email</div>
-                <div class="fw-semibold" style="color: indigo;">{{ user['email'] }}</div>
-              </div>
-            </div>
-            <div class="d-flex align-items-center mb-3">
-              <i class="bi bi-building fs-5 me-2" style="color: indigo;"></i>
-              <div>
-                <div class="small text-muted">Organization</div>
-                <div class="fw-semibold" style="color: indigo;">{{ organization['organization'] }}</div>
-              </div>
-            </div>
-            <div class="d-flex align-items-center mb-3">
-              <i class="bi bi-award-fill fs-5 me-2" style="color: indigo;"></i>
-              <div>
-                <div class="small text-muted">Role</div>
-                <div class="fw-semibold" style="color: indigo;">{{ user['role'] }}</div>
-              </div>
-            </div>
-            <div class="d-flex align-items-start mb-3">
-              <i class="bi bi-geo-alt-fill fs-5 me-2 mt-1" style="color: indigo;"></i>
-              <div>
-                <div class="small text-muted">Branches</div>
-                <ul class="mb-0 ps-3 fw-semibold small" style="color: indigo;">
-                  {% for branch in branches %}
-                    <li>{{ branch["branch"] }}</li>
-                  {% endfor %}
+    <!-- Main container with full height and flexible layout -->
+    <div class="container-fluid vh-100 py-3 d-flex flex-wrap justify-content-center align-items-stretch gap-3">
+        <!-- Sidebar Column -->
+        <div class="text-white rounded-4 shadow-lg p-4 d-flex flex-column justify-content-between h-100"
+             style="background-color: indigo; flex-grow: 1; flex-basis: 0; min-width: 0;">
+            <!-- Sidebar Header -->
+            <div>
+                <h5 class="text-center mb-4">Simple Books</h5>
+                <!-- Navigation Menu -->
+                <ul class="nav flex-column gap-3">
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-white text-center">
+                            <i class="bi bi-house-fill fs-6 d-block"></i>
+                            <small>Home</small>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-white text-center" data-bs-toggle="offcanvas" 
+                           data-bs-target="#profileOffcanvas" role="button">
+                            <i class="bi bi-person-fill fs-6 d-block"></i>
+                            <small>Profile</small>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-white text-center">
+                            <i class="bi bi-cash-stack fs-6 d-block"></i>
+                            <small>Sales</small>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-white text-center">
+                            <i class="bi bi-receipt fs-6 d-block"></i>
+                            <small>Expenses</small>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link text-white text-center" data-bs-toggle="offcanvas" 
+                           href="#inventoryOffcanvas" role="button" aria-controls="inventoryOffcanvas">
+                            <i class="bi bi-box-seam fs-6 d-block"></i>
+                            <small>Inventory</small>
+                        </a>
+                    </li>
+                    <li class="nav-item">
+                        <a href="#" class="nav-link text-white text-center" data-bs-toggle="offcanvas" 
+                           data-bs-target="#employeeOffcanvas" role="button">
+                            <i class="bi bi-people-fill fs-6 d-block"></i>
+                            <small>Employees</small>
+                        </a>
+                    </li>
                 </ul>
-              </div>
             </div>
-          </div>
-          <div class="border-top pt-3 text-end">
-            <button class="btn btn-sm" style="border: 1px solid indigo; color: indigo;" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-              <i class="bi bi-pencil-square me-1"></i>Edit Profile
-            </button>
-            {% if user['role'] == 'Manager' %}
-              <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" data-bs-target="#manageBranchesModal">
-                <i class="bi bi-plus-lg me-1"></i>Manage Branches
-              </button>
-            {% endif %}
-          </div>
+            <!-- Logout Link -->
+            <div class="text-center mt-auto pt-3 border-top border-secondary">
+                <a href="{{ url_for('logout') }}" class="nav-link text-white">
+                    <i class="bi bi-box-arrow-right fs-6 d-block"></i>
+                    <small>Logout</small>
+                </a>
+            </div>
         </div>
-      </div>
-      <!-- Edit Profile Modal -->
-      <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-          <form method="POST" action="{{ url_for('edit_profile') }}">
-            <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
-              <div class="modal-header border-bottom">
-                <h6 class="modal-title" id="editProfileModalLabel" style="color: indigo; font-size: 1rem;">
-                  <i class="bi bi-pencil-square me-2"></i>Edit Profile
-                </h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.8);"></button>
-              </div>
-              <div class="modal-body px-3 py-2">
-                <div class="mb-2">
-                  <label for="username" class="form-label fw-semibold" style="color: indigo;">Username</label>
-                  <input type="text" class="form-control form-control-sm" id="username" name="username"
-                         value="{{ user['username'] }}" required>
-                </div>
-                <div class="mb-2">
-                  <label for="email" class="form-label fw-semibold" style="color: indigo;">Email</label>
-                  <input type="email" class="form-control form-control-sm" id="email" name="email"
-                         value="{{ user['email'] }}">
-                </div>
-                {% if user['role'] == 'Manager' %}
-                  <div class="mb-2">
-                    <label for="organization" class="form-label fw-semibold" style="color: indigo;">Organization</label>
-                    <input type="text" class="form-control form-control-sm" id="organization" name="organization"
-                           value="{{ organization['organization'] }}" required>
-                  </div>
-                  {% if branches and branches|length > 0 %}
-                    <div class="mb-2">
-                      <label class="form-label fw-semibold" style="color: indigo;">Branches</label>
-                      <div id="branchFields" class="d-grid gap-2">
-                        {% for branch in branches %}
-                          <div class="input-group input-group-sm">
-                            <input type="hidden" name="branches[{{ loop.index0 }}][_id]" value="{{ branch['_id'] }}">
-                            <input type="text" name="branches[{{ loop.index0 }}][branch]" class="form-control"
-                                   value="{{ branch['branch'] }}" required />
-                          </div>
-                        {% endfor %}
-                      </div>
+
+        <!-- Main Content Column -->
+        <div class="text-dark p-4 h-100 d-flex flex-column"
+             style="flex-grow: 6; flex-basis: 0; min-width: 0;">
+            <!-- Greeting Card -->
+            <div class="card mb-4 border shadow-lg bg-secondary-subtle rounded-4">
+                <div class="card-body d-flex justify-content-between align-items-center p-3">
+                    <div>
+                        <h6 class="card-title mb-1">Hello <strong style="color: indigo;">{{ user["username"] }}</strong></h6>
+                        <p class="card-text mb-0 text-muted">It's good to see you again</p>
                     </div>
-                  {% endif %}
-                {% endif %}
-              </div>
-              <div class="modal-footer py-2">
-                <button type="submit" class="btn btn-sm" style="background-color: indigo; color: white;">Save Changes</button>
-              </div>
+                    <img src="https://cdn-icons-png.flaticon.com/512/1946/1946429.png" alt="Hello icon" 
+                         style="width: 40px; height: 40px;" />
+                </div>
             </div>
-          </form>
+            <!-- User Info Card -->
+            <div class="card mb-3 border shadow-lg bg-secondary-subtle rounded-4">
+                <div class="card-body p-3">
+                    <div class="row">
+                        <div class="col-md-4 d-flex align-items-start">
+                            <i class="bi bi-building me-2 text-primary mt-1"></i>
+                            <div>
+                                <div class="fw-semibold">Company/Business</div>
+                                <small style="color: indigo;">{{ organization["organization"] }}</small>
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-start">
+                            <i class="bi bi-geo-alt-fill me-2 text-danger mt-1"></i>
+                            <div class="text-start">
+                                <div class="fw-semibold mb-1">Branch</div>
+                                <div class="dropdown">
+                                    {% set branch_list = organization['branches'] if user['role'] == 'Manager' else branches %}
+                                    <button class="btn btn-sm dropdown-toggle px-0 py-0 text-start" type="button"
+                                            id="branchDropdown" data-bs-toggle="dropdown" aria-expanded="false"
+                                            style="border: none; background-color: transparent; color: indigo;">
+                                        {{ branch_list[0]['branch'] if branch_list }}
+                                    </button>
+                                    <ul class="dropdown-menu border-0 shadow-sm" aria-labelledby="branchDropdown">
+                                        {% for branch in branch_list %}
+                                            <li><a class="dropdown-item" href="#">{{ branch['branch'] }}</a></li>
+                                        {% endfor %}
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 d-flex align-items-start">
+                            <i class="bi bi-person-badge-fill me-2 text-secondary mt-1"></i>
+                            <div>
+                                <div class="fw-semibold">Role</div>
+                                <small style="color: indigo;">{{ user['role'] }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <!-- Transactions Table Card -->
+            <div class="card shadow-sm rounded-4 flex-grow-1 d-flex flex-column overflow-hidden">
+                <div class="card-body d-flex flex-column p-0" style="font-size: 0.75rem; overflow: hidden;">
+                    <div class="px-3 pt-3 pb-2">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-list-columns-reverse me-2 text-dark"></i>Recent Transactions
+                        </h6>
+                    </div>
+                    <div class="table-responsive flex-grow-1 overflow-auto p-3">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tbody>
+                                <tr><td colspan="6" class="text-muted small pt-2 pb-1 border-bottom"><strong>Today - Jul 28, 2025</strong></td></tr>
+                                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Grace K.</td><td>Water Bottle</td><td>20</td><td>40,000</td><td class="text-success">Paid</td></tr>
+                                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Paul M.</td><td>Fuel</td><td>–</td><td>25,000</td><td class="text-secondary">Recorded</td></tr>
+                                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Asha B.</td><td>Tank Installation</td><td>1</td><td>350,000</td><td class="text-success">Paid</td></tr>
+                                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Ronald N.</td><td>Lunch Meeting</td><td>–</td><td>18,000</td><td class="text-secondary">Recorded</td></tr>
+                                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Stella J.</td><td>Pipe</td><td>15</td><td>75,000</td><td class="text-warning">Debt</td></tr>
+                                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Brian M.</td><td>Chlorine</td><td>5</td><td>10,000</td><td class="text-success">Paid</td></tr>
+                                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Grace K.</td><td>Transport</td><td>–</td><td>12,000</td><td class="text-secondary">Recorded</td></tr>
+                                <tr><td colspan="6" class="text-muted small pt-3 pb-1 border-bottom"><strong>Yesterday - Jul 27, 2025</strong></td></tr>
+                                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Josephine A.</td><td>Tap Installation</td><td>3</td><td>150,000</td><td class="text-warning">Debt</td></tr>
+                                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Paul M.</td><td>Motor Oil</td><td>–</td><td>30,000</td><td class="text-secondary">Recorded</td></tr>
+                                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Peter N.</td><td>Connection Kit</td><td>8</td><td>64,000</td><td class="text-success">Paid</td></tr>
+                                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Alice T.</td><td>Inspection</td><td>1</td><td>20,000</td><td class="text-success">Paid</td></tr>
+                                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Emma K.</td><td>Stationery</td><td>–</td><td>7,000</td><td class="text-secondary">Recorded</td></tr>
+                                <tr><td colspan="6" class="text-muted small pt-3 pb-1 border-bottom"><strong>Jul 26, 2025</strong></td></tr>
+                                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Lucy P.</td><td>Pipe Repair</td><td>2</td><td>60,000</td><td class="text-success">Paid</td></tr>
+                                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Tom L.</td><td>Filter Kit</td><td>1</td><td>120,000</td><td class="text-warning">Debt</td></tr>
+                                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Stella J.</td><td>Office Tea</td><td>–</td><td>8,000</td><td class="text-secondary">Recorded</td></tr>
+                                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Ronald N.</td><td>Phone Airtime</td><td>–</td><td>5,000</td><td class="text-secondary">Recorded</td></tr>
+                                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Brian M.</td><td>Valve</td><td>4</td><td>32,000</td><td class="text-success">Paid</td></tr>
+                                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Emma K.</td><td>Household Tap</td><td>6</td><td>60,000</td><td class="text-warning">Debt</td></tr>
+                                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Peter N.</td><td>Photocopies</td><td>–</td><td>3,000</td><td class="text-secondary">Recorded</td></tr>
+                                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Josephine A.</td><td>Connection Kit</td><td>10</td><td>80,000</td><td class="text-success">Paid</td></tr>
+                                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Tom L.</td><td>Tank Inspection</td><td>1</td><td>50,000</td><td class="text-success">Paid</td></tr>
+                                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Lucy P.</td><td>Cleaning Supplies</td><td>–</td><td>10,000</td><td class="text-secondary">Recorded</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-      <!-- Manage Branches Modal -->
-      <div class="modal fade" id="manageBranchesModal" tabindex="-1" aria-labelledby="manageBranchesModalLabel" aria-hidden="true">
-        <div class="modal-dialog">
-          <form method="POST" action="{{ url_for('update_organization_branches') }}">
-            <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
-              <div class="modal-header border-bottom">
-                <h6 class="modal-title" id="manageBranchesModalLabel" style="color: indigo; font-size: 1rem;">
-                  <i class="bi bi-building-add me-2"></i>Add Branches
-                </h6>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.8);"></button>
-              </div>
-              <div class="modal-body px-3 py-2">
-                {% if organization['branches'] and organization['branches']|length > 0 %}
-                  <div class="mb-3">
-                    <label class="form-label fw-semibold" style="color: indigo;">Existing Branches</label>
-                    <ul class="list-group list-group-flush">
-                      {% for branch in organization['branches'] %}
-                        <li class="list-group-item py-1" style="font-size: 0.9rem; color: indigo;">{{ branch['branch'] }}</li>
-                      {% endfor %}
-                    </ul>
-                  </div>
-                {% endif %}
-                <div id="orgBranchFields" class="d-grid gap-2"></div>
-                <button type="button" onclick="addOrgBranchField()" class="btn btn-link px-0 mt-2 text-decoration-none text-primary">
-                  + Add another branch
+
+        <!-- Right Sidebar Column -->
+        <div class="bg-light text-dark rounded-4 shadow p-4 h-100"
+             style="flex-grow: 3; flex-basis: 0; min-width: 0; display: flex; flex-direction: column;">
+            <!-- Action Buttons -->
+            <div class="d-flex gap-3 mb-4">
+                <button type="button" class="card flex-fill shadow-sm rounded-4 p-2 text-center bg-secondary-subtle border-0"
+                        data-bs-toggle="modal" data-bs-target="#newSaleModal" style="cursor: pointer;">
+                    <i class="bi bi-cash-stack fs-3 text-success mb-1"></i>
+                    <h6 class="mb-0">New Sale</h6>
                 </button>
-              </div>
-              <div class="modal-footer py-2">
-                <button type="submit" class="btn btn-sm" style="background-color: indigo; color: white;">Add Branches</button>
-              </div>
+                <button type="button" class="card flex-fill shadow-sm rounded-4 p-2 text-center bg-secondary-subtle border-0"
+                        data-bs-toggle="modal" data-bs-target="#newExpenseModal" style="cursor: pointer;">
+                    <i class="bi bi-receipt fs-3 text-danger mb-1"></i>
+                    <h6 class="mb-0">New Expense</h6>
+                </button>
             </div>
-          </form>
+            <!-- Performance Section -->
+            <div class="mt-4">
+                <h6 class="fw-bold mb-3">Performance</h6>
+                <!-- Performance Tabs -->
+                <ul class="nav nav-tabs nav-fill mb-3 rounded-3 overflow-hidden" id="performanceTabs" role="tablist">
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link active" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" 
+                                type="button" role="tab" style="color: indigo;">Sales</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="expenses-tab" data-bs-toggle="tab" data-bs-target="#expenses" 
+                                type="button" role="tab" style="color: indigo;">Expenses</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="profit-tab" data-bs-toggle="tab" data-bs-target="#profit" 
+                                type="button" role="tab" style="color: indigo;">Profit</button>
+                    </li>
+                    <li class="nav-item" role="presentation">
+                        <button class="nav-link" id="debts-tab" data-bs-toggle="tab" data-bs-target="#debts" 
+                                type="button" role="tab" style="color: indigo;">Debts</button>
+                    </li>
+                </ul>
+                <div class="tab-content" id="performanceTabsContent" style="min-height: 300px;">
+                    <!-- Sales Tab Content -->
+                    <div class="tab-pane fade show active" id="sales" role="tabpanel" aria-labelledby="sales-tab">
+                        <div class="card shadow-sm rounded-4 p-3 bg-white">
+                            <h6 class="mb-3 fw-bold">Sales - Last 6 Months</h6>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Feb</span><strong>UGX 550,000</strong>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 55%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Mar</span><strong>UGX 720,000</strong>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 72%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Apr</span><strong>UGX 690,000</strong>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 69%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>May</span><strong>UGX 860,000</strong>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 86%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between">
+                                    <span>Jun</span><strong>UGX 780,000</strong>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 78%;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="d-flex justify-content-between">
+                                    <span>Jul</span><strong>UGX 920,000</strong>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 92%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Expenses Tab Content -->
+                    <div class="tab-pane fade" id="expenses" role="tabpanel" aria-labelledby="expenses-tab">
+                        <div class="card shadow-sm rounded-4 p-3 bg-white">
+                            <h6 class="mb-3 fw-bold">Monthly Expense Trend (Last 6 Months)</h6>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>March 2025</span>
+                                    <span>UGX 180,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 60%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>April 2025</span>
+                                    <span>UGX 150,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 50%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>May 2025</span>
+                                    <span>UGX 220,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 75%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>June 2025</span>
+                                    <span>UGX 100,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 35%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>July 2025</span>
+                                    <span>UGX 260,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 90%;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>August 2025</span>
+                                    <span>UGX 140,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 45%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Profit Tab Content -->
+                    <div class="tab-pane fade" id="profit" role="tabpanel" aria-labelledby="profit-tab">
+                        <div class="card shadow-sm rounded-4 p-3 bg-white">
+                            <h6 class="mb-3 fw-bold">Monthly Profit Trend (Last 6 Months)</h6>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>March 2025</span>
+                                    <span>UGX 220,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 60%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>April 2025</span>
+                                    <span>UGX 180,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 50%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>May 2025</span>
+                                    <span>UGX 250,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 70%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>June 2025</span>
+                                    <span>UGX 120,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 35%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>July 2025</span>
+                                    <span>UGX 310,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 85%;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>August 2025</span>
+                                    <span>UGX 160,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 45%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Debts Tab Content -->
+                    <div class="tab-pane fade" id="debts" role="tabpanel" aria-labelledby="debts-tab">
+                        <div class="card shadow-sm rounded-4 p-3 bg-white">
+                            <h6 class="mb-3 fw-bold">Debts Outstanding (Last 6 Months)</h6>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>March 2025</span>
+                                    <span>UGX 90,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 25%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>April 2025</span>
+                                    <span>UGX 130,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 40%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>May 2025</span>
+                                    <span>UGX 50,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 15%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>June 2025</span>
+                                    <span>UGX 180,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 55%;"></div>
+                                </div>
+                            </div>
+                            <div class="mb-3">
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>July 2025</span>
+                                    <span>UGX 210,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 65%;"></div>
+                                </div>
+                            </div>
+                            <div>
+                                <div class="d-flex justify-content-between small fw-semibold mb-1">
+                                    <span>August 2025</span>
+                                    <span>UGX 75,000</span>
+                                </div>
+                                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
+                                    <div class="progress-bar bg-secondary" style="width: 20%;"></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
-      </div>
-      <script>
-        function removeBranchField(button) {
-          const div = button.closest('.input-group');
-          if (div) {
-            div.remove();
-          }
+
+        <!-- Profile Offcanvas -->
+        <div class="offcanvas offcanvas-start shadow" tabindex="-1" id="profileOffcanvas" 
+             aria-labelledby="profileOffcanvasLabel" style="background-color: #f4f5ff; min-width: 280px;">
+            <div class="offcanvas-header border-bottom">
+                <h5 class="offcanvas-title fw-semibold d-flex align-items-center" id="profileOffcanvasLabel" 
+                    style="color: indigo;">
+                    <i class="bi bi-person-circle me-2 fs-4" style="color: indigo;"></i> My Profile
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body px-3 py-4">
+                <div class="mb-4">
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-person-fill fs-5 me-2" style="color: indigo;"></i>
+                        <div>
+                            <div class="small text-muted">Username</div>
+                            <div class="fw-semibold" style="color: indigo;">{{ user['username'] }}</div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-envelope-fill fs-5 me-2" style="color: indigo;"></i>
+                        <div>
+                            <div class="small text-muted">Email</div>
+                            <div class="fw-semibold" style="color: indigo;">{{ user['email'] }}</div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-building fs-5 me-2" style="color: indigo;"></i>
+                        <div>
+                            <div class="small text-muted">Organization</div>
+                            <div class="fw-semibold" style="color: indigo;">{{ organization['organization'] }}</div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center mb-3">
+                        <i class="bi bi-award-fill fs-5 me-2" style="color: indigo;"></i>
+                        <div>
+                            <div class="small text-muted">Role</div>
+                            <div class="fw-semibold" style="color: indigo;">{{ user['role'] }}</div>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-start mb-3">
+                        <i class="bi bi-geo-alt-fill fs-5 me-2 mt-1" style="color: indigo;"></i>
+                        <div class="flex-grow-1">
+                            <div class="small text-muted">Branches</div>
+                            <ul class="list-group list-group-flush small">
+                                {% for branch in organization.branches %}
+                                <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-1 border-0">
+                                    <span class="fw-semibold" style="color: indigo;">{{ branch.branch }}</span>
+                                    <button class="btn btn-sm btn-outline-primary px-2 py-0" 
+                                            data-bs-toggle="modal" data-bs-target="#editBranchModal_{{ branch._id }}">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                </li>
+                                {% endfor %}
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+                <div class="border-top pt-3 text-end">
+                    <button class="btn btn-sm" style="border: 1px solid indigo; color: indigo;" 
+                            data-bs-toggle="modal" data-bs-target="#editProfileModal">
+                        <i class="bi bi-pencil-square me-1"></i>Edit Profile
+                    </button>
+                    {% if user['role'] == 'Manager' %}
+                    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" 
+                            data-bs-target="#addBranchModal">
+                        <i class="bi bi-plus-circle me-1"></i>Add Branch
+                    </button>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Employee Offcanvas -->
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="employeeOffcanvas" 
+             aria-labelledby="employeeOffcanvasLabel" style="background-color: #f8f9ff; width: 400px; font-size: 0.875rem;">
+            <div class="offcanvas-header border-bottom py-2">
+                <h6 class="offcanvas-title fw-semibold mb-0" id="employeeOffcanvasLabel" style="color: indigo;">
+                    <i class="bi bi-people-fill me-2"></i>Employee Management
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body px-3 py-2 overflow-auto">
+                <!-- Add New Employee Button -->
+                <div class="d-grid mb-3">
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+                        <i class="bi bi-person-plus-fill me-1"></i> Add New Employee
+                    </button>
+                </div>
+                <!-- Employee List -->
+                {% for employee in employees %}
+                <div class="card shadow-sm mb-2 border-0 rounded-3">
+                    <div class="card-body py-2 px-3">
+                        <div class="mb-1">
+                            <strong class="text-indigo">{{ employee.username }}</strong>
+                        </div>
+                        <div class="text-muted small mb-1">
+                            <i class="bi bi-person-badge me-1"></i>{{ employee.role }}
+                        </div>
+                        <div class="text-muted small mb-1">
+                            <i class="bi bi-envelope-fill me-1"></i>{{ employee.email }}
+                        </div>
+                        <div class="text-muted small mb-1">
+                            <i class="bi bi-geo-alt-fill me-1"></i>
+                            {% if employee.role == 'Manager' %}
+                                {{ organization.branches | map(attribute='branch') | join(', ') }}
+                            {% else %}
+                                {{ employee.branches | map(attribute='branch') | join(', ') }}
+                            {% endif %}
+                        </div>
+                        <div class="small mb-2" style="color: {{ 'green' if employee.active_status else 'crimson' }};">
+                            <i class="bi bi-circle-fill me-1" style="font-size: 0.5rem;"></i>
+                            {{ 'Active' if employee.active_status else 'Deactivated' }}
+                        </div>
+                        {% if user.role == 'Manager' %}
+                        <div class="d-flex justify-content-end gap-1">
+                            <button class="btn btn-sm btn-outline-primary px-2 py-1" 
+                                    data-bs-toggle="modal" data-bs-target="#editEmployeeModal_{{ employee._id }}">
+                                <i class="bi bi-pencil"></i>
+                            </button>
+                            {% if employee.active_status %}
+                            <button class="btn btn-sm btn-outline-danger px-2 py-1" 
+                                    data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal_{{ employee._id }}">
+                                <i class="bi bi-trash"></i>
+                            </button>
+                            {% else %}
+                            <button class="btn btn-sm btn-outline-success px-2 py-1" 
+                                    data-bs-toggle="modal" data-bs-target="#activateEmployeeModal_{{ employee._id }}">
+                                <i class="bi bi-person-check-fill"></i>
+                            </button>
+                            {% endif %}
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <!-- Inventory Offcanvas -->
+        <div class="offcanvas offcanvas-end" tabindex="-1" id="inventoryOffcanvas" 
+             aria-labelledby="inventoryOffcanvasLabel" style="background-color: #f8f9ff; width: 450px; font-size: 0.875rem;">
+            <div class="offcanvas-header border-bottom py-2">
+                <h6 class="offcanvas-title fw-semibold mb-0" id="inventoryOffcanvasLabel" style="color: indigo;">
+                    <i class="bi bi-box-seam me-2"></i>Inventory Management
+                </h6>
+                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+            </div>
+            <div class="offcanvas-body px-3 py-2 overflow-auto">
+                <!-- Add New Stock Item Button -->
+                <div class="d-grid mb-3">
+                    <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#addStockItemModal">
+                        <i class="bi bi-plus-circle me-1"></i> Add Stock Item
+                    </button>
+                </div>
+                <!-- Inventory Table -->
+                <table class="table table-sm align-middle" style="font-size: 0.82rem;">
+                    <thead class="table-light">
+                        <tr class="text-muted">
+                            <th>Item</th>
+                            <th>Qty</th>
+                            <th>Branch</th>
+                            <th>Price</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for item in stock_items %}
+                        <tr>
+                            <td class="fw-semibold text-indigo">{{ item.name }}</td>
+                            <td>{{ item.quantity }}</td>
+                            <td>{{ item.branch }}</td>
+                            <td>{{ item.price }}</td>
+                            <td>
+                                <div class="d-flex gap-1">
+                                    <button class="btn btn-sm btn-outline-primary px-2 py-1"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#editItemModal_{{ item._id }}">
+                                        <i class="bi bi-pencil"></i>
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-warning px-2 py-1"
+                                            data-bs-toggle="modal"
+                                            data-bs-target="#updateQuantityModal_{{ item._id }}">
+                                        <i class="bi bi-plus-slash-minus"></i>
+                                    </button>
+                                </div>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- Modals -->
+        <!-- Add Employee Modal -->
+        <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ url_for('add_employee') }}">
+                    <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
+                        <div class="modal-header border-bottom">
+                            <h6 class="modal-title" id="addEmployeeModalLabel" style="color: indigo; font-size: 1rem;">
+                                <i class="bi bi-person-plus-fill me-2"></i>Add New Employee
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" 
+                                    style="transform: scale(0.8);"></button>
+                        </div>
+                        <div class="modal-body px-3 py-2">
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold" style="color: indigo;">Username</label>
+                                <input type="text" name="username" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold" style="color: indigo;">Email (optional)</label>
+                                <input type="email" name="email" class="form-control form-control-sm">
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold" style="color: indigo;">Password</label>
+                                <input type="password" name="password" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold" style="color: indigo;">Confirm Password</label>
+                                <input type="password" name="confirm_password" class="form-control form-control-sm" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold" style="color: indigo;">Role</label>
+                                <select id="addRoleSelect" name="role" class="form-select form-select-sm" required>
+                                    <option disabled selected>Select role</option>
+                                    <option value="Manager">Manager</option>
+                                    <option value="Branch Manager">Branch Manager</option>
+                                    <option value="Sales person">Sales person</option>
+                                </select>
+                            </div>
+                            <div class="mb-2" id="branchSelectContainer">
+                                <label class="form-label fw-semibold" style="color: indigo;">Branch</label>
+                                <select name="branch_id" class="form-select form-select-sm" required>
+                                    <option disabled selected>Select branch</option>
+                                    {% for org_branch in organization.branches %}
+                                    <option value="{{ org_branch._id }}">{{ org_branch.branch }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer py-2">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-sm" style="background-color: indigo; color: white;">Add Employee</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Employee Modals -->
+        {% for employee in employees %}
+        <div class="modal fade" id="editEmployeeModal_{{ employee._id }}" tabindex="-1" 
+             aria-labelledby="editEmployeeLabel_{{ employee._id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ url_for('edit_employee') }}">
+                    <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
+                        <div class="modal-header border-bottom">
+                            <h6 class="modal-title" id="editEmployeeLabel_{{ employee._id }}" 
+                                style="color: indigo; font-size: 1rem;">
+                                <i class="bi bi-pencil-square me-2"></i>Edit Employee
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" 
+                                    aria-label="Close" style="transform: scale(0.8);"></button>
+                        </div>
+                        <div class="modal-body px-3 py-2">
+                            <input type="hidden" name="employee_id" value="{{ employee._id }}">
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold" style="color: indigo;">Username</label>
+                                <input type="text" name="username" class="form-control form-control-sm" 
+                                       value="{{ employee.username }}" required>
+                            </div>
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold" style="color: indigo;">Email</label>
+                                <input type="email" name="email" class="form-control form-control-sm" 
+                                       value="{{ employee.email }}" required>
+                            </div>
+                            {% if employee._id|string != user._id|string %}
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold" style="color: indigo;">Role</label>
+                                <select name="role" id="editRoleSelect_{{ employee._id }}" 
+                                        class="form-select form-select-sm" required 
+                                        onchange="toggleBranchField('{{ employee._id }}')">
+                                    <option value="Manager" {% if employee.role == 'Manager' %}selected{% endif %}>Manager</option>
+                                    <option value="Branch Manager" {% if employee.role == 'Branch Manager' %}selected{% endif %}>Branch Manager</option>
+                                    <option value="Sales person" {% if employee.role == 'Sales person' %}selected{% endif %}>Sales person</option>
+                                </select>
+                            </div>
+                            {% else %}
+                            <input type="hidden" name="role" value="Manager">
+                            {% endif %}
+                            <div class="mb-2" id="branchFieldWrapper_{{ employee._id }}" 
+                                 {% if employee.role == 'Manager' %}style="display: none;"{% endif %}>
+                                <label class="form-label fw-semibold" style="color: indigo;">Branch</label>
+                                <select id="branchSelect_{{ employee._id }}" class="form-select form-select-sm"
+                                        {% if employee.role != 'Manager' %}name="branch_id" required{% endif %}>
+                                    <option value="" disabled {% if not employee.branches %}selected{% endif %}>Select branch</option>
+                                    {% for org_branch in organization.branches %}
+                                    <option value="{{ org_branch._id }}" 
+                                            {% if employee.branches and org_branch._id == employee.branches[0]._id %}selected{% endif %}>
+                                        {{ org_branch.branch }}
+                                    </option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="modal-footer py-2">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-sm" style="background-color: indigo; color: white;">Save Changes</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Deactivate Employee Modal -->
+        {% if employee.active_status %}
+        <div class="modal fade" id="deleteEmployeeModal_{{ employee._id }}" tabindex="-1" 
+             aria-labelledby="deleteEmployeeLabel_{{ employee._id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ url_for('deactivate_employee') }}">
+                    <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
+                        <div class="modal-header border-bottom py-2">
+                            <h6 class="modal-title fw-semibold" id="deleteEmployeeLabel_{{ employee._id }}" 
+                                style="color: #c82333; font-size: 1rem;">
+                                <i class="bi bi-person-dash-fill me-2"></i>Deactivate Employee
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" 
+                                    aria-label="Close" style="transform: scale(0.8);"></button>
+                        </div>
+                        <div class="modal-body px-3 py-2 text-dark">
+                            <input type="hidden" name="employee_id" value="{{ employee._id }}">
+                            Are you sure you want to <strong>deactivate</strong> <strong>{{ employee.username }}</strong>?<br>
+                            This employee will no longer have access to the system.
+                        </div>
+                        <div class="modal-footer py-2">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-danger">Deactivate</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+
+        <!-- Activate Employee Modal -->
+        {% if not employee.active_status %}
+        <div class="modal fade" id="activateEmployeeModal_{{ employee._id }}" tabindex="-1" 
+             aria-labelledby="activateEmployeeLabel_{{ employee._id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ url_for('activate_employee') }}">
+                    <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
+                        <div class="modal-header border-bottom py-2">
+                            <h6 class="modal-title fw-semibold" id="activateEmployeeLabel_{{ employee._id }}" 
+                                style="color: green; font-size: 1rem;">
+                                <i class="bi bi-person-check-fill me-2"></i>Activate Employee
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" 
+                                    aria-label="Close" style="transform: scale(0.8);"></button>
+                        </div>
+                        <div class="modal-body px-3 py-2 text-dark">
+                            <input type="hidden" name="employee_id" value="{{ employee._id }}">
+                            Are you sure you want to <strong>activate</strong> <strong>{{ employee.username }}</strong>?
+                        </div>
+                        <div class="modal-footer py-2">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-success">Activate</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endif %}
+        {% endfor %}
+
+        <!-- Add Stock Item Modal -->
+        <div class="modal fade" id="addStockItemModal" tabindex="-1" aria-labelledby="addStockItemLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ url_for('add_stock_item') }}">
+                    <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
+                        <div class="modal-header border-bottom">
+                            <h6 class="modal-title fw-semibold" id="addStockItemLabel" style="color: indigo; font-size: 1rem;">
+                                <i class="bi bi-plus-circle me-2"></i>Add Stock Item
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" 
+                                    aria-label="Close" style="transform: scale(0.8);"></button>
+                        </div>
+                        <div class="modal-body px-3 py-2">
+                            <input type="hidden" name="user_id" value="{{ user._id }}">
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold" style="color: indigo;">Item Name</label>
+                                <input type="text" name="name" class="form-control form-control-sm" required>
+                            </div>
+                            {% if user.role == 'Manager' %}
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold" style="color: indigo;">Branch</label>
+                                <select name="branch_id" class="form-select form-select-sm" required>
+                                    <option value="" disabled selected hidden>Select branch</option>
+                                    {% for branch in organization.branches %}
+                                    <option value="{{ branch._id }}">{{ branch.branch }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            {% elif user.role == 'Branch Manager' %}
+                            <input type="hidden" name="branch_id" value="{{ user.branch_ids[0]._id }}">
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer py-2">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-sm" style="background-color: indigo; color: white;">Add Item</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Stock Item Modals -->
+        {% for item in stock_items %}
+        <div class="modal fade" id="editItemModal_{{ item._id }}" tabindex="-1" 
+             aria-labelledby="editItemLabel_{{ item._id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ url_for('edit_stock_item') }}">
+                    <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
+                        <div class="modal-header border-bottom py-2">
+                            <h6 class="modal-title" id="editItemLabel_{{ item._id }}" 
+                                style="color: indigo; font-size: 1rem;">
+                                <i class="bi bi-pencil me-2"></i>Edit Item Details
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" 
+                                    style="transform: scale(0.85);"></button>
+                        </div>
+                        <div class="modal-body px-3 py-2">
+                            <input type="hidden" name="item_id" value="{{ item._id }}">
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold" style="color: indigo;">Item Name</label>
+                                <input type="text" name="name" value="{{ item.name }}" 
+                                       class="form-control form-control-sm" required>
+                            </div>
+                            {% if user.role == 'Manager' %}
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold" style="color: indigo;">Price</label>
+                                <input type="number" name="price" value="{{ item.price }}" step="0.01" 
+                                       class="form-control form-control-sm" required>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer py-2">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-sm" style="background-color: indigo; color: white;">Save Changes</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        <!-- Update Quantity Modal -->
+        <div class="modal fade" id="updateQuantityModal_{{ item._id }}" tabindex="-1" 
+             aria-labelledby="updateQuantityLabel_{{ item._id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ url_for('update_stock_quantity') }}">
+                    <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
+                        <div class="modal-header border-bottom py-2">
+                            <h6 class="modal-title" id="updateQuantityLabel_{{ item._id }}" 
+                                style="color: indigo; font-size: 1rem;">
+                                <i class="bi bi-plus-slash-minus me-2"></i>Update Quantity
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" 
+                                    style="transform: scale(0.85);"></button>
+                        </div>
+                        <div class="modal-body px-3 py-2">
+                            <input type="hidden" name="item_id" value="{{ item._id }}">
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold" style="color: indigo;">New Quantity</label>
+                                <input type="number" name="quantity" value="{{ item.quantity }}" min="0" step="1" 
+                                       class="form-control form-control-sm" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer py-2">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-sm btn-warning">Update</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Add Branch Modal -->
+        <div class="modal fade" id="addBranchModal" tabindex="-1" aria-labelledby="addBranchLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ url_for('add_branch') }}">
+                    <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
+                        <div class="modal-header border-bottom py-2">
+                            <h6 class="modal-title fw-semibold mb-0" id="addBranchLabel" style="color: indigo;">
+                                <i class="bi bi-plus-circle me-2"></i>Add New Branch
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                        </div>
+                        <div class="modal-body px-3 py-2">
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold" style="color: indigo;">Branch Name</label>
+                                <input type="text" name="branch_name" class="form-control form-control-sm" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer py-2">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-sm" style="background-color: indigo; color: white;">Add Branch</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- Edit Branch Modals -->
+        {% for branch in organization.branches %}
+        <div class="modal fade" id="editBranchModal_{{ branch._id }}" tabindex="-1" 
+             aria-labelledby="editBranchLabel_{{ branch._id }}" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ url_for('edit_branch') }}">
+                    <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
+                        <div class="modal-header border-bottom py-2">
+                            <h6 class="modal-title fw-semibold" id="editBranchLabel_{{ branch._id }}" style="color: indigo;">
+                                <i class="bi bi-pencil-square me-2"></i>Edit Branch
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" 
+                                    aria-label="Close" style="transform: scale(0.9);"></button>
+                        </div>
+                        <div class="modal-body px-3 py-2">
+                            <input type="hidden" name="branch_id" value="{{ branch._id }}">
+                            <div class="mb-2">
+                                <label class="form-label fw-semibold" style="color: indigo;">Branch Name</label>
+                                <input type="text" name="branch_name" value="{{ branch.branch }}" 
+                                       class="form-control form-control-sm shadow-sm" required>
+                            </div>
+                        </div>
+                        <div class="modal-footer py-2 px-3 border-top">
+                            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-sm" style="background-color: indigo; color: white;">Save Changes</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+        {% endfor %}
+
+        <!-- Edit Profile Modal -->
+        <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <form method="POST" action="{{ url_for('edit_profile') }}">
+                    <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
+                        <div class="modal-header border-bottom">
+                            <h6 class="modal-title" id="editProfileModalLabel" style="color: indigo; font-size: 1rem;">
+                                <i class="bi bi-pencil-square me-2"></i>Edit Profile
+                            </h6>
+                            <button type="button" class="btn-close" data-bs-dismiss="modal" 
+                                    aria-label="Close" style="transform: scale(0.8);"></button>
+                        </div>
+                        <div class="modal-body px-3 py-2">
+                            <div class="mb-2">
+                                <label for="username" class="form-label fw-semibold" style="color: indigo;">Username</label>
+                                <input type="text" class="form-control form-control-sm" id="username" name="username"
+                                       value="{{ user['username'] }}" required>
+                            </div>
+                            <div class="mb-2">
+                                <label for="email" class="form-label fw-semibold" style="color: indigo;">Email</label>
+                                <input type="email" class="form-control form-control-sm" id="email" name="email"
+                                       value="{{ user['email'] }}">
+                            </div>
+                            {% if user['role'] == 'Manager' %}
+                            <div class="mb-2">
+                                <label for="organization" class="form-label fw-semibold" style="color: indigo;">Organization</label>
+                                <input type="text" class="form-control form-control-sm" id="organization" name="organization"
+                                       value="{{ organization['organization'] }}" required>
+                            </div>
+                            {% endif %}
+                        </div>
+                        <div class="modal-footer py-2">
+                            <button type="submit" class="btn btn-sm" style="background-color: indigo; color: white;">Save Changes</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <!-- New Sale Modal -->
+        <div class="modal fade" id="newSaleModal" tabindex="-1" aria-labelledby="newSaleModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="newSaleModalLabel">New Sale</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Form or inputs to add a new sale go here.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-success">Save Sale</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Expense Modal -->
+        <div class="modal fade" id="newExpenseModal" tabindex="-1" aria-labelledby="newExpenseModalLabel" aria-hidden="true">
+            <div class="modal-dialog">
+                <div class="modal-content">
+                    <div class="modal-header">
+                        <h5 class="modal-title" id="newExpenseModalLabel">New Expense</h5>
+                        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                    </div>
+                    <div class="modal-body">
+                        <p>Form or inputs to add a new expense go here.</p>
+                    </div>
+                    <div class="modal-footer">
+                        <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                        <button type="button" class="btn btn-danger">Save Expense</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JavaScript Dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Handle branch field visibility based on role selection
+        function toggleBranchField(id) {
+            const roleSelect = document.getElementById(`editRoleSelect_${id}`);
+            const branchWrapper = document.getElementById(`branchFieldWrapper_${id}`);
+            const branchSelect = document.getElementById(`branchSelect_${id}`);
+
+            if (roleSelect.value === 'Manager') {
+                branchWrapper.style.display = 'none';
+                branchSelect.removeAttribute('required');
+                branchSelect.removeAttribute('name');
+            } else {
+                branchWrapper.style.display = 'block';
+                branchSelect.setAttribute('name', 'branch_id');
+                branchSelect.setAttribute('required', 'required');
+            }
         }
-        function addOrgBranchField() {
-          const container = document.getElementById('orgBranchFields');
-          const div = document.createElement('div');
-          div.className = 'input-group input-group-sm mt-1';
-          div.innerHTML = `
-            <input type="text" name="branches" class="form-control" placeholder="New branch name" required />
-            <button type="button" class="btn btn-outline-danger btn-sm" onclick="removeBranchField(this)" aria-label="Remove branch field">
-              <i class="bi bi-x-lg" style="font-size: 0.75rem;"></i>
-            </button>
-          `;
-          container.appendChild(div);
-        }
-      </script>
-    </div>
-    <!-- Column 2: Main Area -->
-    <div class="text-dark p-4 h-100 d-flex flex-column"
-         style="flex-grow: 6; flex-basis: 0; min-width: 0;">
-      <!-- Card 1: Greeting -->
-      <div class="card mb-4 border shadow-lg bg-secondary-subtle rounded-4">
-        <div class="card-body d-flex justify-content-between align-items-center p-3">
-          <div>
-            <h6 class="card-title mb-1">Hello <strong style="color: indigo;">{{ user["username"] }}</strong></h6>
-            <p class="card-text mb-0 text-muted">It's good to see you again</p>
-          </div>
-          <img src="https://cdn-icons-png.flaticon.com/512/1946/1946429.png" alt="Hello icon" style="width: 40px; height: 40px;" />
-        </div>
-      </div>
-      <!-- Card 2: User Info -->
-      <div class="card mb-3 border shadow-lg bg-secondary-subtle rounded-4">
-        <div class="card-body p-3">
-          <div class="row">
-            <div class="col-md-4 d-flex align-items-start">
-              <i class="bi bi-building me-2 text-primary mt-1"></i>
-              <div>
-                <div class="fw-semibold">Company/Business</div>
-                <small style="color: indigo;">{{ organization["organization"] }}</small>
-              </div>
-            </div>
-            <div class="col-md-4 d-flex align-items-start">
-              <i class="bi bi-geo-alt-fill me-2 text-danger mt-1"></i>
-              <div class="text-start">
-                <div class="fw-semibold mb-1">Branch</div>
-                <div class="dropdown">
-                  {% set branch_list = organization['branches'] if user['role'] == 'Manager' else branches %}
-                  <button class="btn btn-sm dropdown-toggle px-0 py-0 text-start" type="button"
-                          id="branchDropdown" data-bs-toggle="dropdown" aria-expanded="false"
-                          style="border: none; background-color: transparent; color: indigo;">
-                    {{ branch_list[0]['branch'] if branch_list }}
-                  </button>
-                  <ul class="dropdown-menu border-0 shadow-sm" aria-labelledby="branchDropdown">
-                    {% for branch in branch_list %}
-                      <li><a class="dropdown-item" href="#">{{ branch['branch'] }}</a></li>
-                    {% endfor %}
-                  </ul>
-                </div>
-              </div>
-            </div>
-            <div class="col-md-4 d-flex align-items-start">
-              <i class="bi bi-person-badge-fill me-2 text-secondary mt-1"></i>
-              <div>
-                <div class="fw-semibold">Role</div>
-                <small style="color: indigo;">{{ user['role'] }}</small>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-      <!-- Card 3: Transactions Table -->
-      <div class="card shadow-sm rounded-4 flex-grow-1 d-flex flex-column overflow-hidden">
-        <div class="card-body d-flex flex-column p-0" style="font-size: 0.75rem; overflow: hidden;">
-          <div class="px-3 pt-3 pb-2">
-            <h6 class="card-title mb-0">
-              <i class="bi bi-list-columns-reverse me-2 text-dark"></i>Recent Transactions
-            </h6>
-          </div>
-          <div class="table-responsive flex-grow-1 overflow-auto p-3">
-            <table class="table table-sm table-borderless mb-0">
-              <tbody>
-                <tr><td colspan="6" class="text-muted small pt-2 pb-1 border-bottom"><strong>Today - Jul 28, 2025</strong></td></tr>
-                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Grace K.</td><td>Water Bottle</td><td>20</td><td>40,000</td><td class="text-success">Paid</td></tr>
-                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Paul M.</td><td>Fuel</td><td>–</td><td>25,000</td><td class="text-secondary">Recorded</td></tr>
-                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Asha B.</td><td>Tank Installation</td><td>1</td><td>350,000</td><td class="text-success">Paid</td></tr>
-                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Ronald N.</td><td>Lunch Meeting</td><td>–</td><td>18,000</td><td class="text-secondary">Recorded</td></tr>
-                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Stella J.</td><td>Pipe</td><td>15</td><td>75,000</td><td class="text-warning">Debt</td></tr>
-                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Brian M.</td><td>Chlorine</td><td>5</td><td>10,000</td><td class="text-success">Paid</td></tr>
-                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Grace K.</td><td>Transport</td><td>–</td><td>12,000</td><td class="text-secondary">Recorded</td></tr>
-                <tr><td colspan="6" class="text-muted small pt-3 pb-1 border-bottom"><strong>Yesterday - Jul 27, 2025</strong></td></tr>
-                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Josephine A.</td><td>Tap Installation</td><td>3</td><td>150,000</td><td class="text-warning">Debt</td></tr>
-                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Paul M.</td><td>Motor Oil</td><td>–</td><td>30,000</td><td class="text-secondary">Recorded</td></tr>
-                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Peter N.</td><td>Connection Kit</td><td>8</td><td>64,000</td><td class="text-success">Paid</td></tr>
-                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Alice T.</td><td>Inspection</td><td>1</td><td>20,000</td><td class="text-success">Paid</td></tr>
-                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Emma K.</td><td>Stationery</td><td>–</td><td>7,000</td><td class="text-secondary">Recorded</td></tr>
-                <tr><td colspan="6" class="text-muted small pt-3 pb-1 border-bottom"><strong>Jul 26, 2025</strong></td></tr>
-                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Lucy P.</td><td>Pipe Repair</td><td>2</td><td>60,000</td><td class="text-success">Paid</td></tr>
-                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Tom L.</td><td>Filter Kit</td><td>1</td><td>120,000</td><td class="text-warning">Debt</td></tr>
-                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Stella J.</td><td>Office Tea</td><td>–</td><td>8,000</td><td class="text-secondary">Recorded</td></tr>
-                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Ronald N.</td><td>Phone Airtime</td><td>–</td><td>5,000</td><td class="text-secondary">Recorded</td></tr>
-                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Brian M.</td><td>Valve</td><td>4</td><td>32,000</td><td class="text-success">Paid</td></tr>
-                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Emma K.</td><td>Household Tap</td><td>6</td><td>60,000</td><td class="text-warning">Debt</td></tr>
-                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Peter N.</td><td>Photocopies</td><td>–</td><td>3,000</td><td class="text-secondary">Recorded</td></tr>
-                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Josephine A.</td><td>Connection Kit</td><td>10</td><td>80,000</td><td class="text-success">Paid</td></tr>
-                <tr class="border-bottom"><td class="text-success">Sale</td><td class="text-muted">Tom L.</td><td>Tank Inspection</td><td>1</td><td>50,000</td><td class="text-success">Paid</td></tr>
-                <tr class="border-bottom"><td class="text-danger">Expense</td><td class="text-muted">Lucy P.</td><td>Cleaning Supplies</td><td>–</td><td>10,000</td><td class="text-secondary">Recorded</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- Column 3: Placeholder -->
-    <div class="bg-light text-dark rounded-4 shadow p-4 h-100"
-         style="flex-grow: 3; flex-basis: 0; min-width: 0; display: flex; flex-direction: column;">
-      <div class="d-flex gap-3 mb-4">
-        <button type="button" class="card flex-fill shadow-sm rounded-4 p-2 text-center bg-secondary-subtle border-0"
-                data-bs-toggle="modal" data-bs-target="#newSaleModal" style="cursor: pointer;">
-          <i class="bi bi-cash-stack fs-3 text-success mb-1"></i>
-          <h6 class="mb-0">New Sale</h6>
-        </button>
-        <button type="button" class="card flex-fill shadow-sm rounded-4 p-2 text-center bg-secondary-subtle border-0"
-                data-bs-toggle="modal" data-bs-target="#newExpenseModal" style="cursor: pointer;">
-          <i class="bi bi-receipt fs-3 text-danger mb-1"></i>
-          <h6 class="mb-0">New Expense</h6>
-        </button>
-      </div>
-      <!-- Performance Section -->
-      <div class="mt-4">
-        <h6 class="fw-bold mb-3">Performance</h6>
-        <ul class="nav nav-tabs nav-fill mb-3 rounded-3 overflow-hidden" id="performanceTabs" role="tablist">
-          <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales" type="button" role="tab" style="color: indigo;">Sales</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="expenses-tab" data-bs-toggle="tab" data-bs-target="#expenses" type="button" role="tab" style="color: indigo;">Expenses</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="profit-tab" data-bs-toggle="tab" data-bs-target="#profit" type="button" role="tab" style="color: indigo;">Profit</button>
-          </li>
-          <li class="nav-item" role="presentation">
-            <button class="nav-link" id="debts-tab" data-bs-toggle="tab" data-bs-target="#debts" type="button" role="tab" style="color: indigo;">Debts</button>
-          </li>
-        </ul>
-        <div class="tab-content" id="performanceTabsContent" style="min-height: 300px;">
-          <!-- Sales Tab -->
-          <div class="tab-pane fade show active" id="sales" role="tabpanel" aria-labelledby="sales-tab">
-            <div class="card shadow-sm rounded-4 p-3 bg-white">
-              <h6 class="mb-3 fw-bold">Sales - Last 6 Months</h6>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between">
-                  <span>Feb</span><strong>UGX 550,000</strong>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 55%;"></div>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between">
-                  <span>Mar</span><strong>UGX 720,000</strong>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 72%;"></div>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between">
-                  <span>Apr</span><strong>UGX 690,000</strong>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 69%;"></div>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between">
-                  <span>May</span><strong>UGX 860,000</strong>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 86%;"></div>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between">
-                  <span>Jun</span><strong>UGX 780,000</strong>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 78%;"></div>
-                </div>
-              </div>
-              <div>
-                <div class="d-flex justify-content-between">
-                  <span>Jul</span><strong>UGX 920,000</strong>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 92%;"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- Expenses Tab -->
-          <div class="tab-pane fade" id="expenses" role="tabpanel" aria-labelledby="expenses-tab">
-            <div class="card shadow-sm rounded-4 p-3 bg-white">
-              <h6 class="mb-3 fw-bold">Monthly Expense Trend (Last 6 Months)</h6>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>March 2025</span>
-                  <span>UGX 180,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 60%;"></div>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>April 2025</span>
-                  <span>UGX 150,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 50%;"></div>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>May 2025</span>
-                  <span>UGX 220,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 75%;"></div>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>June 2025</span>
-                  <span>UGX 100,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 35%;"></div>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>July 2025</span>
-                  <span>UGX 260,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 90%;"></div>
-                </div>
-              </div>
-              <div>
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>August 2025</span>
-                  <span>UGX 140,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 45%;"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- Profit Tab -->
-          <div class="tab-pane fade" id="profit" role="tabpanel" aria-labelledby="profit-tab">
-            <div class="card shadow-sm rounded-4 p-3 bg-white">
-              <h6 class="mb-3 fw-bold">Monthly Profit Trend (Last 6 Months)</h6>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>March 2025</span>
-                  <span>UGX 220,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 60%;"></div>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>April 2025</span>
-                  <span>UGX 180,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 50%;"></div>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>May 2025</span>
-                  <span>UGX 250,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 70%;"></div>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>June 2025</span>
-                  <span>UGX 120,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 35%;"></div>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>July 2025</span>
-                  <span>UGX 310,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 85%;"></div>
-                </div>
-              </div>
-              <div>
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>August 2025</span>
-                  <span>UGX 160,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 45%;"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-          <!-- Debts Tab -->
-          <div class="tab-pane fade" id="debts" role="tabpanel" aria-labelledby="debts-tab">
-            <div class="card shadow-sm rounded-4 p-3 bg-white">
-              <h6 class="mb-3 fw-bold">Debts Outstanding (Last 6 Months)</h6>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>March 2025</span>
-                  <span>UGX 90,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 25%;"></div>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>April 2025</span>
-                  <span>UGX 130,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 40%;"></div>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>May 2025</span>
-                  <span>UGX 50,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 15%;"></div>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>June 2025</span>
-                  <span>UGX 180,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 55%;"></div>
-                </div>
-              </div>
-              <div class="mb-3">
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>July 2025</span>
-                  <span>UGX 210,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 65%;"></div>
-                </div>
-              </div>
-              <div>
-                <div class="d-flex justify-content-between small fw-semibold mb-1">
-                  <span>August 2025</span>
-                  <span>UGX 75,000</span>
-                </div>
-                <div class="progress" style="height: 6px; background-color: var(--bs-secondary-bg);">
-                  <div class="progress-bar bg-secondary" style="width: 20%;"></div>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- New Sale Modal -->
-    <div class="modal fade" id="newSaleModal" tabindex="-1" aria-labelledby="newSaleModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="newSaleModalLabel">New Sale</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <p>Form or inputs to add a new sale go here.</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-success">Save Sale</button>
-          </div>
-        </div>
-      </div>
-    </div>
-    <!-- New Expense Modal -->
-    <div class="modal fade" id="newExpenseModal" tabindex="-1" aria-labelledby="newExpenseModalLabel" aria-hidden="true">
-      <div class="modal-dialog">
-        <div class="modal-content">
-          <div class="modal-header">
-            <h5 class="modal-title" id="newExpenseModalLabel">New Expense</h5>
-            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-          </div>
-          <div class="modal-body">
-            <p>Form or inputs to add a new expense go here.</p>
-          </div>
-          <div class="modal-footer">
-            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
-            <button type="button" class="btn btn-danger">Save Expense</button>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
-  <script>
-    document.querySelectorAll('.dropdown-menu .dropdown-item').forEach(item => {
-      item.addEventListener('click', function(e) {
-        e.preventDefault();
-        const selectedText = this.textContent.trim();
-        const btn = this.closest('.dropdown').querySelector('button.dropdown-toggle');
-        btn.textContent = selectedText;
-      });
-    });
-  </script>
+
+        // Initialize branch field visibility on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            {% for employee in employees %}
+            toggleBranchField('{{ employee._id }}');
+            {% endfor %}
+        });
+
+        // Handle branch selection visibility for adding new employee
+        document.addEventListener('DOMContentLoaded', function () {
+            const roleSelect = document.getElementById('addRoleSelect');
+            const branchContainer = document.getElementById('branchSelectContainer');
+
+            function toggleBranchVisibility() {
+                if (roleSelect.value === 'Manager') {
+                    branchContainer.style.display = 'none';
+                    branchContainer.querySelector('select').removeAttribute('required');
+                } else {
+                    branchContainer.style.display = 'block';
+                    branchContainer.querySelector('select').setAttribute('required', 'required');
+                }
+            }
+
+            // Initial toggle on modal open
+            const addEmployeeModal = document.getElementById('addEmployeeModal');
+            addEmployeeModal.addEventListener('show.bs.modal', () => {
+                toggleBranchVisibility();
+            });
+
+            // Toggle on role change
+            roleSelect.addEventListener('change', toggleBranchVisibility);
+        });
+
+        // Update dropdown button text on selection
+        document.querySelectorAll('.dropdown-menu .dropdown-item').forEach(item => {
+            item.addEventListener('click', function(e) {
+                e.preventDefault();
+                const selectedText = this.textContent.trim();
+                const btn = this.closest('.dropdown').querySelector('button.dropdown-toggle');
+                btn.textContent = selectedText;
+            });
+        });
+    </script>
 </body>
 </html>

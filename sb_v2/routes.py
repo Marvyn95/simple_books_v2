@@ -136,23 +136,6 @@ def edit_profile():
         else:
             flash("Email Already Taken, Use Another")
 
-    #updating branches
-    # Extracting submitted/updated branches
-    branches = []
-    i = 0
-    while f'branches[{i}][_id]' in request.form:
-        branch_id = request.form.get(f'branches[{i}][_id]')
-        branch_name = request.form.get(f'branches[{i}][branch]')
-        branches.append({
-            '_id': branch_id,
-            'branch': branch_name
-        })
-        i += 1
-    
-    db.Organizations.update_one({"_id": old_organization_info["_id"]}, {
-        "$set": {"branches": branches}
-    })
-
     #updating organization name
     if form_info['organization'] != old_organization_info['organization']:
         if db.Organizations.find_one({"organization": form_info["organization"]}) is None:
@@ -164,14 +147,28 @@ def edit_profile():
     
     return redirect(url_for("home"))
 
-@app.route("/update_organization_branches", methods=['POST'])
-def update_organization_branches():
+
+@app.route("/add_branch", methods=['POST'])
+def add_branch():
+    form_info = request.form
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
-    organization = db.Organizations.find_one({"_id": user["organization_id"]})
-    new_branches = request.form.getlist("branches")
-    db.Organizations.update_one({"_id": organization["_id"]}, {"$push": {
-        "branches": {"$each": [{"_id": secrets.token_hex(32), "branch": k} for k in new_branches]}
-    }})
+    if user["role"] == "Manager":
+        db.Organizations.update_one({"_id": user["organization_id"]}, {
+            "$push": {"branches": {
+                "_id": secrets.token_hex(32),
+                "branch": form_info["branch_name"]
+            }}
+        })
+    return redirect(url_for("home"))
+
+@app.route("/edit_branch", methods=['POST'])
+def edit_branch():
+    form_info = request.form
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    if user["role"] == "Manager":
+        db.Organizations.update_one({"_id": user["organization_id"], "branches._id": form_info["branch_id"]}, {
+            "$set": {"branches.$.branch": form_info["branch_name"]}
+        })
     return redirect(url_for("home"))
 
 
