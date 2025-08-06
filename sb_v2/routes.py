@@ -14,8 +14,6 @@ def home():
     stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"]}).sort("date", -1))
     sales = list(db.Sales.find({"organization_id": user["organization_id"]}).sort("date", -1))[:100]
     expenses = list(db.Expenses.find({"organization_id": user["organization_id"]}).sort("date", -1))[:100]
-    print(sales)
-    print(expenses)
     
     for i in sales:
         i["type"] = "Sale"
