@@ -12,6 +12,25 @@ def home():
     employees = list(db.Users.find({"organization_id": user["organization_id"]}))
     stock_items = list(db.Stock.find({"organization_id": user["organization_id"]}).sort("quantity", -1))
     stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"]}).sort("date", -1))
+    sales = list(db.Sales.find({"organization_id": user["organization_id"]}).sort("date", -1))[:100]
+    expenses = list(db.Expenses.find({"organization_id": user["organization_id"]}).sort("date", -1))[:100]
+    print(sales)
+    print(expenses)
+    
+    for i in sales:
+        i["type"] = "Sale"
+        i["user_name"] = db.Users.find_one({"_id": ObjectId(i["user_id"])})["username"]
+        i["description"] = db.Stock.find_one({"_id": ObjectId(i["item_id"])})["name"]
+        i["status"] = i["payment_details"]["status"]
+        i["amount"] = sum(k["amount_paid"] for k in  i["payment_details"]["clearance_history"])
+    for i in expenses:
+        i["type"] = "Expense"
+        i["user_name"] = db.Users.find_one({"_id": ObjectId(i["user_id"])})["username"]
+        i["description"] = i["purpose"]
+        i["quantity"] = "-"
+        i["status"] = "-"
+        
+    transactions = sales + expenses    
     
     for m in stock_history:
         m["date"] = m["date"].strftime("%B %d, %Y")
@@ -19,7 +38,6 @@ def home():
         m["quantity"] = m["quantity_updated"]
     
     for k in stock_items:
-        print(k["branch_id"])
         for j in list(organization["branches"]):
             if str(k["branch_id"]) == str(j["_id"]):
                 k["branch"] = j["branch"]
@@ -45,7 +63,9 @@ def home():
                            branches = branches,
                            employees = list(employees),
                            stock_items = stock_items,
-                           stock_history = stock_history)
+                           stock_history = stock_history,
+                           transactions = sorted(transactions, key=lambda t: t["date"], reverse=True),
+                           now=datetime.datetime.now())
 
 @app.route("/register_owner", methods=["GET", "POST"])
 def register_owner():
@@ -317,4 +337,50 @@ def update_stock_quantity():
     else:
         flash("Sales Personnel cannot update stock", "error")
         return redirect(url_for("home"))
-        
+
+
+@app.route("/new_sale)", methods=['POST'])
+def new_sale():
+    form_info = request.form
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    item = db.Stock.find_one({"_id": ObjectId(form_info["item_id"])})
+    db.Sales.insert_one({
+        "organization_id": user["organization_id"],
+        "branch_id": user["branch_ids"][0],
+        "user_id": form_info["user_id"],
+        "item_id": form_info["item_id"],
+        "branch_id": item["branch_id"],
+        "date": datetime.datetime.now(),
+        "quantity": int(form_info["quantity"]),
+        "unit_price": float(form_info["unit_price"]),
+        "client_name": form_info["client_name"],
+        "client_contact": form_info["client_contact"],
+        "payment_details": {
+            "status": "paid" if float(form_info["amount_paid"]) >= float(form_info["unit_price"])*int(form_info["quantity"]) else "credit",
+            "ammount_left": float(form_info["unit_price"])*int(form_info["quantity"]) - float(form_info["amount_paid"]),
+            "clearance_history": [{
+                "date": datetime.datetime.now(),
+                "amount_paid": float(form_info["amount_paid"])
+            }]
+        }
+    })
+    db.Stock.update_one({"_id": ObjectId(form_info["item_id"])}, {
+        "$inc": {"quantity": -1*int(form_info["quantity"])}
+    })
+    return redirect(url_for("home"))
+
+
+@app.route("/new_expense)", methods=['POST'])
+def new_expense():
+    form_info = request.form
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    db.Expenses.insert_one({
+        "organization_id": user["organization_id"],
+        "branch_id": user["branch_ids"][0],
+        "user_id": form_info["user_id"],
+        "authorized_by": form_info.get("authorized_by"),
+        "purpose": form_info["purpose"],
+        "amount": float(form_info["amount"]),
+        "date": datetime.datetime.now()
+    })
+    return redirect(url_for("home"))
