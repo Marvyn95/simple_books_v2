@@ -136,33 +136,40 @@
   {% endif %}
 </tr>
             {% if tx.type == 'Sale' and tx.status == 'credit' and (tx.user_id|string) == (user._id|string) %}
-            <!-- Clear Credit Modal -->
-            <div class="modal fade" id="clearCreditModal_{{ tx._id }}" tabindex="-1" aria-labelledby="clearCreditLabel_{{ tx._id }}" aria-hidden="true">
-              <div class="modal-dialog">
-                <form method="POST" action="{{ url_for('clear_credit', sale_id=tx._id) }}">
-                  <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.78rem;">
-                    <div class="modal-header border-bottom py-2">
-                      <h6 class="modal-title fw-semibold text-success" id="clearCreditLabel_{{ tx._id }}">
-                        <i class="bi bi-cash-coin me-2"></i>Clear Credit
-                      </h6>
-                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.85);"></button>
-                    </div>
-                    <div class="modal-body px-3 py-2">
-                      <input type="hidden" name="user_id" value="{{ user._id }}">
-                      <input type="hidden" name="item_id" value="{{ tx.item_id }}">
-                      <div class="mb-2">
-                        <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">Amount to Clear (UGX)</label>
-                        <input type="number" name="amount" min="1" step="0.01" class="form-control form-control-sm" style="font-size: 0.72rem;" required>
-                      </div>
-                    </div>
-                    <div class="modal-footer py-2">
-                      <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-                      <button type="submit" class="btn btn-sm btn-success">Clear Credit</button>
-                    </div>
-                  </div>
-                </form>
-              </div>
-            </div>
+<!-- Clear Credit Modal -->
+<div class="modal fade" id="clearCreditModal_{{ tx._id }}" tabindex="-1" aria-labelledby="clearCreditLabel_{{ tx._id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('clear_credit', sale_id=tx._id) }}">
+      <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.78rem;">
+        <div class="modal-header border-bottom py-2">
+          <h6 class="modal-title fw-semibold text-success" id="clearCreditLabel_{{ tx._id }}">
+            <i class="bi bi-cash-coin me-2"></i>
+            Clear Credit
+            <span class="text-danger fw-normal" style="font-size: 0.85em;">
+              ({{ "{:,.0f}".format(tx.payment_details.amount_left) }} UGX left)
+            </span>
+          </h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.85);"></button>
+        </div>
+        <div class="modal-body px-3 py-2">
+          <input type="hidden" name="user_id" value="{{ user._id }}">
+          <input type="hidden" name="item_id" value="{{ tx.item_id }}">
+          <input type="hidden" name="transaction_id" value="{{ tx._id }}">
+          <div class="mb-2">
+            <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">
+              Amount to Clear (UGX)
+            </label>
+            <input type="number" name="amount" min="1" step="0.01" class="form-control form-control-sm" style="font-size: 0.72rem;" required>
+          </div>
+        </div>
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-success">Clear Credit</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
             {% endif %}
           {% endfor %}
         </tbody>
@@ -356,35 +363,36 @@
           </div>
         </div>
         {% if (user._id|string) == (tx.user_id|string) %}
-        <form method="POST" action="{{ url_for('edit_expense', expense_id=tx._id) }}">
-          <input type="hidden" name="user_id" value="{{ tx.user_id }}">
-          <div class="mb-2" style="font-size: 0.72rem;">
-            <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">Purpose</label>
-            <input type="text" name="purpose" class="form-control form-control-sm" style="font-size: 0.72rem;" value="{{ tx.description }}" required>
-          </div>
-          <div class="mb-2" style="font-size: 0.72rem;">
-            <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">Amount (UGX)</label>
-            <input type="number" name="amount" min="0" step="0.01" class="form-control form-control-sm" style="font-size: 0.72rem;" value="{{ tx.amount }}" required>
-          </div>
-          <div class="mb-2" style="font-size: 0.72rem;">
-            <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">Authorized By</label>
-            <select name="authorized_by" class="form-select form-select-sm" style="font-size: 0.72rem;">
-              <option disabled value="None"
-                {% if not tx.authorized_by or tx.authorized_by == '' or tx.authorized_by is none %}selected{% endif %}>
-                Select Authorizer
-              </option>
-              {% for emp in employees %}
-                {% if emp.role == 'Branch Manager' %}
-                  <option value="{{ emp._id }}" {% if (tx.authorized_by|string) == (emp._id|string) %}selected{% endif %}>{{ emp.username }}</option>
-                {% endif %}
-              {% endfor %}
-            </select>
-          </div>
-          <div class="modal-footer py-2">
-            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-            <button type="submit" class="btn btn-sm btn-danger">Save Expense</button>
-          </div>
-        </form>
+<form method="POST" action="{{ url_for('edit_expense', expense_id=tx._id) }}">
+  <input type="hidden" name="user_id" value="{{ tx.user_id }}">
+  <input type="hidden" name="transaction_id" value="{{ tx._id }}">
+  <div class="mb-2" style="font-size: 0.72rem;">
+    <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">Purpose</label>
+    <input type="text" name="purpose" class="form-control form-control-sm" style="font-size: 0.72rem;" value="{{ tx.description }}" required>
+  </div>
+  <div class="mb-2" style="font-size: 0.72rem;">
+    <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">Amount (UGX)</label>
+    <input type="number" name="amount" min="0" step="0.01" class="form-control form-control-sm" style="font-size: 0.72rem;" value="{{ tx.amount }}" required>
+  </div>
+  <div class="mb-2" style="font-size: 0.72rem;">
+    <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">Authorized By</label>
+    <select name="authorized_by" class="form-select form-select-sm" style="font-size: 0.72rem;">
+      <option disabled value="None"
+        {% if not tx.authorized_by or tx.authorized_by == '' or tx.authorized_by is none %}selected{% endif %}>
+        Select Authorizer
+      </option>
+      {% for emp in employees %}
+        {% if emp.role == 'Branch Manager' %}
+          <option value="{{ emp._id }}" {% if (tx.authorized_by|string) == (emp._id|string) %}selected{% endif %}>{{ emp.username }}</option>
+        {% endif %}
+      {% endfor %}
+    </select>
+  </div>
+  <div class="modal-footer py-2">
+    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+    <button type="submit" class="btn btn-sm btn-danger">Save Expense</button>
+  </div>
+</form>
         {% else %}
         <div class="modal-footer py-2">
           <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
@@ -459,51 +467,47 @@
     <h6 class="fw-bold mb-3 text-dark">Performance Overview</h6>
 
     <!-- Performance Tabs -->
-<ul class="nav nav-tabs nav-fill mb-3 rounded-3 overflow-hidden" id="performanceTabs" role="tablist">
-  <li class="nav-item" role="presentation">
-    <button class="nav-link active" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales"
-      type="button" role="tab" style="color: indigo; font-weight: 600;">
-      Sales
-    </button>
-  </li>
-  <li class="nav-item" role="presentation">
-    <button class="nav-link" id="expenses-tab" data-bs-toggle="tab" data-bs-target="#expenses"
-      type="button" role="tab" style="color: indigo; font-weight: 600;">
-      Expenses
-    </button>
-  </li>
-  <li class="nav-item" role="presentation">
-    <button class="nav-link" id="profit-tab" data-bs-toggle="tab" data-bs-target="#profit"
-      type="button" role="tab" style="color: indigo; font-weight: 600;">
-      Profit
-    </button>
-  </li>
-  <li class="nav-item" role="presentation">
-    <button class="nav-link" id="debts-tab" data-bs-toggle="tab" data-bs-target="#debts"
-      type="button" role="tab" style="color: indigo; font-weight: 600;">
-      Debts
-    </button>
-  </li>
-</ul>
-<style>
-  #performanceTabs .nav-link.active {
-    background-color: transparent !important;
-    border-bottom: 3px solid indigo !important;
-    color: indigo !important;
-    font-weight: 700;
-  }
-  #performanceTabs .nav-link {
-    transition: background 0.2s, color 0.2s;
-  }
-</style>
+    <ul class="nav nav-tabs nav-fill mb-3 rounded-3 overflow-hidden" id="performanceTabs" role="tablist">
+      <li class="nav-item" role="presentation">
+        <button class="nav-link active" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales"
+          type="button" role="tab" style="color: indigo; font-weight: 600;">
+          Sales
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="expenses-tab" data-bs-toggle="tab" data-bs-target="#expenses"
+          type="button" role="tab" style="color: indigo; font-weight: 600;">
+          Expenses
+        </button>
+      </li>
+      <li class="nav-item" role="presentation">
+        <button class="nav-link" id="profit-tab" data-bs-toggle="tab" data-bs-target="#profit"
+          type="button" role="tab" style="color: indigo; font-weight: 600;">
+          Profit
+        </button>
+      </li>
+    </ul>
+
+    <!-- Tabs Style -->
+    <style>
+      #performanceTabs .nav-link.active {
+        background-color: transparent !important;
+        border-bottom: 3px solid indigo !important;
+        color: indigo !important;
+        font-weight: 700;
+      }
+      #performanceTabs .nav-link {
+        transition: background 0.2s, color 0.2s;
+      }
+    </style>
 
     <!-- Tab Contents -->
     <div class="tab-content" id="performanceTabsContent">
 
-      <!-- Tab Template -->
-      {% macro tab_table(data, color="text-dark") %}
+      <!-- Tab Table Macro -->
+      {% macro tab_table(data, key, color="text-dark") %}
         <div class="table-responsive">
-          <table class="table table-sm table-borderless bg-secondary-subtle rounded-4 shadow-sm overflow-hidden">
+          <table class="table table-sm overflow-hidden">
             <thead class="border-bottom text-muted">
               <tr>
                 <th>Month</th>
@@ -511,10 +515,10 @@
               </tr>
             </thead>
             <tbody>
-              {% for month, amount in data %}
+              {% for row in data %}
               <tr class="border-bottom">
-                <td>{{ month }}</td>
-                <td class="text-end fw-semibold {{ color }}">{{ amount }}</td>
+                <td>{{ row.month }}</td>
+                <td class="text-end fw-semibold {{ color }}">UGX {{ "{:,.0f}".format(row[key]) }}</td>
               </tr>
               {% endfor %}
             </tbody>
@@ -524,56 +528,23 @@
 
       <!-- Sales Tab -->
       <div class="tab-pane fade show active" id="sales" role="tabpanel" aria-labelledby="sales-tab">
-        {{ tab_table([
-          ("March", "UGX 550,000"),
-          ("April", "UGX 720,000"),
-          ("May", "UGX 690,000"),
-          ("June", "UGX 860,000"),
-          ("July", "UGX 780,000"),
-          ("August", "UGX 920,000")
-        ], "text-indigo") }}
+        {{ tab_table(monthly_sales_list, 'total_sales_revenue', "text-indigo") }}
       </div>
 
       <!-- Expenses Tab -->
       <div class="tab-pane fade" id="expenses" role="tabpanel" aria-labelledby="expenses-tab">
-        {{ tab_table([
-          ("March", "UGX 180,000"),
-          ("April", "UGX 150,000"),
-          ("May", "UGX 220,000"),
-          ("June", "UGX 100,000"),
-          ("July", "UGX 260,000"),
-          ("August", "UGX 140,000")
-        ], "text-danger") }}
+        {{ tab_table(monthly_expenses_list, 'total_expenses', "text-danger") }}
       </div>
 
       <!-- Profit Tab -->
       <div class="tab-pane fade" id="profit" role="tabpanel" aria-labelledby="profit-tab">
-        {{ tab_table([
-          ("March", "UGX 370,000"),
-          ("April", "UGX 570,000"),
-          ("May", "UGX 470,000"),
-          ("June", "UGX 760,000"),
-          ("July", "UGX 520,000"),
-          ("August", "UGX 780,000")
-        ], "text-success") }}
-      </div>
-
-      <!-- Debts Tab -->
-      <div class="tab-pane fade" id="debts" role="tabpanel" aria-labelledby="debts-tab">
-        {{ tab_table([
-          ("March", "UGX 90,000"),
-          ("April", "UGX 130,000"),
-          ("May", "UGX 50,000"),
-          ("June", "UGX 180,000"),
-          ("July", "UGX 210,000"),
-          ("August", "UGX 75,000")
-        ], "text-dark") }}
+        {{ tab_table(monthly_profit, 'profit', "text-success") }}
       </div>
 
     </div>
   </div>
+</div>
 
-        </div>
 
         <!-- Profile Offcanvas -->
         <div class="offcanvas offcanvas-start shadow" tabindex="-1" id="profileOffcanvas" 

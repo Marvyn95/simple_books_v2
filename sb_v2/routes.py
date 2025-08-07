@@ -2,6 +2,7 @@ from sb_v2 import app, db, bcrypt
 from flask import render_template, request, flash, redirect, url_for, session
 import json, secrets, datetime
 from bson.objectid import ObjectId
+from collections import defaultdict
 
 
 @app.route('/home')
@@ -20,7 +21,7 @@ def home():
         i["user_name"] = db.Users.find_one({"_id": ObjectId(i["user_id"])})["username"]
         i["description"] = db.Stock.find_one({"_id": ObjectId(i["item_id"])})["name"]
         i["status"] = i["payment_details"]["status"]
-        i["amount"] = sum(k["amount_paid"] for k in  i["payment_details"]["clearance_history"])
+        i["amount"] = sum(float(k["amount_paid"]) for k in  i["payment_details"]["clearance_history"])
     for i in expenses:
         i["type"] = "Expense"
         i["user_name"] = db.Users.find_one({"_id": ObjectId(i["user_id"])})["username"]
@@ -28,6 +29,35 @@ def home():
         i["quantity"] = "-"
         i["status"] = "-"
         i["authorizer"] = db.Users.find_one({"_id": ObjectId(i["authorized_by"])})["username"] if db.Users.find_one({"_id": ObjectId(i["authorized_by"])}) != None else None
+
+    # getting monthly sales/revenue info
+    monthly_sales = defaultdict(float)
+    for sale in sales:
+        # Getting month as YYYY-MM string
+        month = sale["date"].strftime("%B-%Y")
+        revenue = float(sale["quantity"]) * float(sale["unit_price"])
+        monthly_sales[month] += revenue
+    # Convert to list of dicts and sort by month
+    monthly_sales_list = [{"month": month, "total_sales_revenue": total}for month, total in sorted(monthly_sales.items())]
+
+
+    # getting monthly expense info
+    monthly_expenses = defaultdict(float)
+    for expense in expenses:
+        month = expense["date"].strftime("%B-%Y")
+        spent_amount = float(expense["amount"])
+        monthly_expenses[month] += spent_amount
+    monthly_expenses_list = [{"month": month, "total_expenses": total} for month, total in sorted(monthly_expenses.items())]
+
+    # getting monthly profit
+    expense_map = {e['month']: e['total_expenses'] for e in monthly_expenses_list}
+    monthly_profit = []
+    for s in monthly_sales_list:
+        month = s['month']
+        revenue = s['total_sales_revenue']
+        expense = expense_map.get(month, 0)
+        profit = revenue - expense
+        monthly_profit.append({'month': month, 'profit': profit})
         
     transactions = sales + expenses    
     
@@ -64,7 +94,10 @@ def home():
                            stock_items = stock_items,
                            stock_history = stock_history,
                            transactions = sorted(transactions, key=lambda t: t["date"], reverse=True),
-                           now=datetime.datetime.now())
+                           now=datetime.datetime.now(),
+                           monthly_sales_list = monthly_sales_list,
+                           monthly_expenses_list = monthly_expenses_list,
+                           monthly_profit = monthly_profit)
 
 @app.route("/register_owner", methods=["GET", "POST"])
 def register_owner():
@@ -243,6 +276,7 @@ def deactivate_employee():
     db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
             "$set": {"active_status": False}
         })
+    flash("employee deactivated successfully", "success")
     return redirect(url_for("home"))
 
 @app.route("/activate_employee)", methods=['POST'])
@@ -251,6 +285,7 @@ def activate_employee():
     db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
             "$set": {"active_status": True}
         })
+    flash("employee activated successfully", "success")
     return redirect(url_for("home"))
 
 @app.route("/add_employee)", methods=['POST'])
@@ -309,6 +344,7 @@ def edit_stock_item():
         db.Stock.update_one({"_id": ObjectId(form_info["item_id"])}, {
             "$set": {"name": form_info["name"]}
         })
+    flash("stock info updated successfully", "success")
     return redirect(url_for("home"))
 
 
@@ -329,7 +365,7 @@ def update_stock_quantity():
             "updater_id": user["_id"],
             "item_id": form_info["item_id"],
             "quantity_updated": int(form_info["quantity"]),
-            "unit_cost": int(form_info["unit_cost"])
+            "unit_cost": float(form_info["unit_cost"])
         })
         flash("Quantity updated successfully!", "success")
         return redirect(url_for("home"))
@@ -365,6 +401,7 @@ def new_sale():
     db.Stock.update_one({"_id": ObjectId(form_info["item_id"])}, {
         "$inc": {"quantity": -1*int(form_info["quantity"])}
     })
+    flash("sale record uploaded successfully", "success")
     return redirect(url_for("home"))
 
 
@@ -381,6 +418,7 @@ def new_expense():
         "amount": float(form_info["amount"]),
         "date": datetime.datetime.now()
     })
+    flash("expense record uploaded successfully", "success")
     return redirect(url_for("home"))
 
 
@@ -422,6 +460,7 @@ def edit_sale():
         db.Stock.update_one({"_id": ObjectId(form_info["item_id"])}, {
             "$inc": {"quantity": -1*int(form_info["quantity"])}
         })
+    flash("sale record update successful", "success")
     return redirect(url_for("home"))
 
 
@@ -429,20 +468,52 @@ def edit_sale():
 def edit_expense():
     form_info = request.form
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
-    # db.Expenses.insert_one({
-    #     "organization_id": user["organization_id"],
-    #     "branch_id": user["branch_ids"][0],
-    #     "user_id": form_info["user_id"],
-    #     "authorized_by": form_info.get("authorized_by"),
-    #     "purpose": form_info["purpose"],
-    #     "amount": float(form_info["amount"]),
-    #     "date": datetime.datetime.now()
-    # })
+    transaction = db.Expenses.find_one({"_id": ObjectId(form_info["transaction_id"])})
+
+    db.Expenses.update_one({"_id": ObjectId(form_info["transaction_id"])}, {
+        "$set": {
+        "authorized_by": form_info.get("authorized_by"),
+        "purpose": form_info["purpose"],
+        "amount": float(form_info["amount"]),
+    }
+    })
+    flash("expense record update successsful", "success")
     return redirect(url_for("home"))
 
 
 @app.route("/clear_credit)", methods=['POST'])
 def clear_credit():
     form_info = request.form
-    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    # user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    transaction = db.Sales.find_one({"_id": ObjectId(form_info["transaction_id"])})
+    db.Sales.update_one({"_id": ObjectId(form_info["transaction_id"])},
+        {
+            "$push": {
+                "payment_details.clearance_history": {
+                    "date": datetime.datetime.now(),
+                    "amount_paid": float(form_info["amount"])
+                }
+            }
+        }
+    )
+
+    #updating clearance history
+    transaction = db.Sales.find_one({"_id": ObjectId(form_info["transaction_id"])})
+    total_paid = sum(float(k["amount_paid"]) for k in transaction["payment_details"]["clearance_history"])
+    amount_left = float(transaction["quantity"]) * float(transaction["unit_price"]) - total_paid
+    
+    db.Sales.update_one({"_id": ObjectId(form_info["transaction_id"])}, {
+                "$set": {
+            "payment_details.amount_left": amount_left
+        }
+    })
+
+    #updating payment status
+    db.Sales.update_one({"_id": ObjectId(form_info["transaction_id"])}, {
+        "$set": {
+            "payment_details.status": "paid" if amount_left <= 0 else "credit"
+        }
+    })
+    
+    flash("clearance update successful", "success")
     return redirect(url_for("home"))
