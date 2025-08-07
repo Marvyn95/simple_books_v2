@@ -27,6 +27,7 @@ def home():
         i["description"] = i["purpose"]
         i["quantity"] = "-"
         i["status"] = "-"
+        i["authorizer"] = db.Users.find_one({"_id": ObjectId(i["authorized_by"])})["username"] if db.Users.find_one({"_id": ObjectId(i["authorized_by"])}) != None else None
         
     transactions = sales + expenses    
     
@@ -302,7 +303,7 @@ def edit_stock_item():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     if user["role"] == "Manager":
         db.Stock.update_one({"_id": ObjectId(form_info["item_id"])}, {
-            "$set": {"name": form_info["name"], "price": form_info["price"], "branch_id": form_info["branch_id"]}
+            "$set": {"name": form_info["name"], "price": float(form_info["price"]), "branch_id": form_info["branch_id"]}
         })
     elif user["role"] == "Branch Manager":
         db.Stock.update_one({"_id": ObjectId(form_info["item_id"])}, {
@@ -347,7 +348,6 @@ def new_sale():
         "branch_id": user["branch_ids"][0],
         "user_id": form_info["user_id"],
         "item_id": form_info["item_id"],
-        "branch_id": item["branch_id"],
         "date": datetime.datetime.now(),
         "quantity": int(form_info["quantity"]),
         "unit_price": float(form_info["unit_price"]),
@@ -355,7 +355,7 @@ def new_sale():
         "client_contact": form_info["client_contact"],
         "payment_details": {
             "status": "paid" if float(form_info["amount_paid"]) >= float(form_info["unit_price"])*int(form_info["quantity"]) else "credit",
-            "ammount_left": float(form_info["unit_price"])*int(form_info["quantity"]) - float(form_info["amount_paid"]),
+            "amount_left": float(form_info["unit_price"])*int(form_info["quantity"]) - float(form_info["amount_paid"]),
             "clearance_history": [{
                 "date": datetime.datetime.now(),
                 "amount_paid": float(form_info["amount_paid"])
@@ -381,4 +381,68 @@ def new_expense():
         "amount": float(form_info["amount"]),
         "date": datetime.datetime.now()
     })
+    return redirect(url_for("home"))
+
+
+@app.route("/edit_sale)", methods=['POST'])
+def edit_sale():
+    form_info = request.form
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    item = db.Stock.find_one({"_id": ObjectId(form_info["item_id"])})
+    transaction = db.Sales.find_one({"_id": ObjectId(form_info["transaction_id"])})
+
+    #updating transaction
+    db.Sales.update_one({"_id": ObjectId(form_info["transaction_id"])}, {
+        "$set": {
+        "item_id": form_info["item_id"],
+        "quantity": int(form_info["quantity"]),
+        "unit_price": float(form_info["unit_price"]),
+        "client_name": form_info["client_name"],
+        "client_contact": form_info["client_contact"],
+        "payment_details": {
+            "status": "paid" if float(form_info["amount_paid"]) >= float(form_info["unit_price"])*int(form_info["quantity"]) else "credit",
+            "amount_left": float(form_info["unit_price"])*int(form_info["quantity"]) - float(form_info["amount_paid"]),
+            "clearance_history": [{
+                "date": datetime.datetime.now(),
+                "amount_paid": float(form_info["amount_paid"])
+            }]
+        }
+    }
+    })
+
+    #updating stock
+    if str(item["_id"]) == str(transaction["item_id"]):
+        db.Stock.update_one({"_id": ObjectId(form_info["item_id"])}, {
+            "$inc": {"quantity": -1*int(form_info["quantity"]) + int(transaction["quantity"])}
+        })
+    else:
+        db.Stock.update_one({"_id": ObjectId(transaction["item_id"])}, {
+            "$inc": {"quantity": int(transaction["quantity"])}
+        })
+        db.Stock.update_one({"_id": ObjectId(form_info["item_id"])}, {
+            "$inc": {"quantity": -1*int(form_info["quantity"])}
+        })
+    return redirect(url_for("home"))
+
+
+@app.route("/edit_expense)", methods=['POST'])
+def edit_expense():
+    form_info = request.form
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    # db.Expenses.insert_one({
+    #     "organization_id": user["organization_id"],
+    #     "branch_id": user["branch_ids"][0],
+    #     "user_id": form_info["user_id"],
+    #     "authorized_by": form_info.get("authorized_by"),
+    #     "purpose": form_info["purpose"],
+    #     "amount": float(form_info["amount"]),
+    #     "date": datetime.datetime.now()
+    # })
+    return redirect(url_for("home"))
+
+
+@app.route("/clear_credit)", methods=['POST'])
+def clear_credit():
+    form_info = request.form
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     return redirect(url_for("home"))

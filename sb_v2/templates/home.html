@@ -103,30 +103,299 @@
         <tbody>
           {% set current_date = None %}
           {% for tx in transactions %}
-            <tr class="border-bottom">
-              <td class="text-muted small">
-                {% if current_date is none or tx.date.date() != current_date %}
-                  {% if tx.date.date() == now.date() %}
-                    Today - {{ tx.date.strftime("%b %d, %Y") }}
-                  {% else %}
-                    {{ tx.date.strftime("%b %d, %Y") }}
-                  {% endif %}
-                  {% set current_date = tx.date.date() %}
-                {% endif %}
-              </td>
-              <td class="{{ 'text-success' if tx.type == 'Sale' else 'text-danger' }}">{{ tx.type }}</td>
-              <td class="text-muted">{{ tx.user_name }}</td>
-              <td style="color: indigo;">{{ tx.description }}</td>
-              <td>{{ tx.quantity if tx.quantity else '–' }}</td>
-              <td>{{ "{:,.0f}".format(tx.amount) }}</td>
-              <td style="{% if tx.status == 'paid' %}color: green;{% elif tx.status == 'credit' %}color: red;{% else %}color: gray;{% endif %}">{{ tx.status }}</td>
-            </tr>
+<tr class="border-bottom">
+  <td class="text-muted small">
+    {% if current_date is none or tx.date.date() != current_date %}
+      {% if tx.date.date() == now.date() %}
+        Today - {{ tx.date.strftime("%b %d, %Y") }}
+      {% else %}
+        {{ tx.date.strftime("%b %d, %Y") }}
+      {% endif %}
+      {% set current_date = tx.date.date() %}
+    {% endif %}
+  </td>
+  <td class="{{ 'text-success' if tx.type == 'Sale' else 'text-danger' }}">
+    <a href="#" style="color: inherit; cursor:pointer; text-decoration: none;"
+       data-bs-toggle="modal" data-bs-target="#transactionModal_{{ tx._id }}">
+      {{ tx.type }}
+    </a>
+  </td>
+  <td class="text-muted">{{ tx.user_name }}</td>
+  <td style="color: indigo;">{{ tx.description }}</td>
+  <td>{{ tx.quantity if tx.quantity else '–' }}</td>
+  <td>{{ "{:,.0f}".format(tx.amount) }}</td>
+  <td style="{% if tx.status == 'paid' %}color: green;{% elif tx.status == 'credit' %}color: red;{% else %}color: gray;{% endif %};">
+    {{ tx.status }}
+  </td>
+  {% if tx.type == 'Sale' and tx.status == 'credit' and (tx.user_id|string) == (user._id|string) %}
+  <td>
+<button class="btn btn-xs btn-outline-success px-1 py-0" style="font-size: 0.68rem; line-height: 1.1;" data-bs-toggle="modal" data-bs-target="#clearCreditModal_{{ tx._id }}">
+  Clear
+</button>
+  </td>
+  {% endif %}
+</tr>
+            {% if tx.type == 'Sale' and tx.status == 'credit' and (tx.user_id|string) == (user._id|string) %}
+            <!-- Clear Credit Modal -->
+            <div class="modal fade" id="clearCreditModal_{{ tx._id }}" tabindex="-1" aria-labelledby="clearCreditLabel_{{ tx._id }}" aria-hidden="true">
+              <div class="modal-dialog">
+                <form method="POST" action="{{ url_for('clear_credit', sale_id=tx._id) }}">
+                  <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.78rem;">
+                    <div class="modal-header border-bottom py-2">
+                      <h6 class="modal-title fw-semibold text-success" id="clearCreditLabel_{{ tx._id }}">
+                        <i class="bi bi-cash-coin me-2"></i>Clear Credit
+                      </h6>
+                      <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.85);"></button>
+                    </div>
+                    <div class="modal-body px-3 py-2">
+                      <input type="hidden" name="user_id" value="{{ user._id }}">
+                      <input type="hidden" name="item_id" value="{{ tx.item_id }}">
+                      <div class="mb-2">
+                        <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">Amount to Clear (UGX)</label>
+                        <input type="number" name="amount" min="1" step="0.01" class="form-control form-control-sm" style="font-size: 0.72rem;" required>
+                      </div>
+                    </div>
+                    <div class="modal-footer py-2">
+                      <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                      <button type="submit" class="btn btn-sm btn-success">Clear Credit</button>
+                    </div>
+                  </div>
+                </form>
+              </div>
+            </div>
+            {% endif %}
           {% endfor %}
         </tbody>
       </table>
     </div>
   </div>
 </div>
+
+<!-- Transaction Modals -->
+{% for tx in transactions %}
+  {% if tx.type == 'Sale' %}
+<div class="modal fade" id="transactionModal_{{ tx._id }}" tabindex="-1" aria-labelledby="transactionModalLabel_{{ tx._id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.75rem;">
+      <div class="modal-header border-bottom py-2">
+        <h6 class="modal-title fw-semibold text-success" id="transactionModalLabel_{{ tx._id }}">
+          <i class="bi bi-cash-stack me-2"></i>{% if (user._id|string) == (tx.user_id|string) %}Edit Sale{% else %}Sale Details{% endif %}
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.85);"></button>
+      </div>
+      <div class="modal-body px-3 py-2">
+        <!-- Sale Info Section (always visible) -->
+        <div class="mb-2 pb-2 border-bottom" style="font-size: 0.72rem;">
+          <div class="row g-2">
+            <div class="col-6">
+              <strong>Date:</strong> {{ tx.date.strftime("%b %d, %Y") }}
+            </div>
+            <div class="col-6">
+              <strong>Time:</strong> {{ tx.date.strftime("%I:%M %p") }}
+            </div>
+            <div class="col-6">
+              <strong>Client Name:</strong> {{ tx.client_name or '—' }}
+            </div>
+            <div class="col-6">
+              <strong>Client Contact:</strong> {{ tx.client_contact or '—' }}
+            </div>
+            <div class="col-6">
+              <strong>Quantity:</strong> {{ tx.quantity if tx.quantity else '—' }}
+            </div>
+            <div class="col-6">
+              <strong>Status:</strong>
+              <span style="{% if tx.status == 'paid' %}color: green;{% elif tx.status == 'credit' %}color: red;{% else %}color: gray;{% endif %}">
+                {{ tx.status|capitalize }}
+              </span>
+            </div>
+            {% if tx.status == 'credit' %}
+            <div class="col-12">
+              <strong>Amount Left:</strong>
+              <span class="text-danger">
+                {{ "{:,.0f}".format(tx.payment_details.amount_left) }}
+              </span>
+            </div>
+            {% endif %}
+          </div>
+          {% if tx.payment_details %}
+          <div class="mt-2">
+            <strong>Clearance History:</strong>
+            <div class="table-responsive">
+              <table class="table table-sm table-borderless mb-0" style="font-size: 0.7rem;">
+                <thead>
+                  <tr>
+                    <th>Date & Time</th>
+                    <th>Amount Paid</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for entry in tx.payment_details.clearance_history %}
+                  <tr>
+                    <td>
+                      {{ entry.date.strftime("%b %d, %Y") }} {{ entry.date.strftime("%H:%M") if entry.date is defined and entry.date }}
+                    </td>
+                    <td>{{ "{:,.0f}".format(entry.amount_paid) }}</td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
+            </div>
+          </div>
+          {% endif %}
+        </div>
+        {% if (user._id|string) == (tx.user_id|string) %}
+<!-- Editable Form Section (only for owner) -->
+<form method="POST" action="{{ url_for('edit_sale', sale_id=tx._id) }}">
+  <input type="hidden" name="user_id" value="{{ tx.user_id }}">
+  <input type="hidden" name="transaction_id" value="{{ tx._id }}">
+  <div class="mb-2" style="font-size: 0.72rem;">
+    <label for="editItemSelect_{{ tx._id }}" class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">Item</label>
+    <select name="item_id" id="editItemSelect_{{ tx._id }}" class="form-select form-select-sm" style="font-size: 0.72rem;" required>
+      <option disabled value="">Select Item</option>
+      {% for item in stock_items %}
+        <option value="{{ item._id }}" data-price="{{ item.price }}"
+          {% if item.name == tx.description %}selected{% endif %}>
+          {{ item.name }} (sale at UGX {{ item.price }})
+        </option>
+      {% endfor %}
+    </select>
+  </div>
+  <div class="mb-2" style="font-size: 0.72rem;">
+    <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">Quantity Sold</label>
+    <input type="number" name="quantity" id="editQuantityInput_{{ tx._id }}" min="1" class="form-control form-control-sm" style="font-size: 0.72rem;" value="{{ tx.quantity }}" required>
+  </div>
+  <div class="mb-2" style="font-size: 0.72rem;">
+    <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">Unit Price (UGX)</label>
+    <input type="number" name="unit_price" id="editUnitPriceInput_{{ tx._id }}" step="0.01" min="0" class="form-control form-control-sm" style="font-size: 0.72rem;" value="{{ tx.unit_price if tx.unit_price is defined else '' }}" required>
+  </div>
+  <div class="mb-2" style="font-size: 0.72rem;">
+    <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">Amount Paid (UGX)</label>
+    <input type="number" name="amount_paid" id="editAmountPaidInput_{{ tx._id }}" step="0.01" min="0" class="form-control form-control-sm" style="font-size: 0.72rem;" value="{{ tx.amount }}" required>
+  </div>
+  <div class="mb-2" style="font-size: 0.72rem;">
+    <label class="form-label text-dark" style="font-size: 0.72rem;">Client Name <span class="text-muted">(Optional)</span></label>
+    <input type="text" name="client_name" class="form-control form-control-sm" style="font-size: 0.72rem;" value="{{ tx.client_name if tx.client_name is defined else '' }}">
+  </div>
+  <div style="font-size: 0.72rem;">
+    <label class="form-label text-dark" style="font-size: 0.72rem;">Client Contact <span class="text-muted">(Optional)</span></label>
+    <input type="text" name="client_contact" class="form-control form-control-sm" style="font-size: 0.72rem;" value="{{ tx.client_contact if tx.client_contact is defined else '' }}">
+  </div>
+  <div class="modal-footer py-2">
+    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+    <button type="submit" class="btn btn-sm btn-success">Save Sale</button>
+  </div>
+</form>
+        <script>
+          document.addEventListener("DOMContentLoaded", function () {
+            const itemSelect = document.getElementById("editItemSelect_{{ tx._id }}");
+            const unitPriceInput = document.getElementById("editUnitPriceInput_{{ tx._id }}");
+            const quantityInput = document.getElementById("editQuantityInput_{{ tx._id }}");
+            const amountPaidInput = document.getElementById("editAmountPaidInput_{{ tx._id }}");
+
+            function computeAmount() {
+              const qty = parseFloat(quantityInput.value);
+              const unit = parseFloat(unitPriceInput.value);
+              if (!isNaN(qty) && !isNaN(unit)) {
+                amountPaidInput.value = (qty * unit).toFixed(2);
+              }
+            }
+
+            if (itemSelect) {
+              itemSelect.addEventListener("change", function () {
+                const selected = itemSelect.options[itemSelect.selectedIndex];
+                const price = selected.getAttribute("data-price");
+                if (price) {
+                  unitPriceInput.value = price;
+                  computeAmount();
+                }
+              });
+            }
+            if (quantityInput) quantityInput.addEventListener("input", computeAmount);
+            if (unitPriceInput) unitPriceInput.addEventListener("input", computeAmount);
+          });
+        </script>
+        {% else %}
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+  {% elif tx.type == 'Expense' %}
+<div class="modal fade" id="transactionModal_{{ tx._id }}" tabindex="-1" aria-labelledby="transactionModalLabel_{{ tx._id }}" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.75rem;">
+      <div class="modal-header border-bottom py-2">
+        <h6 class="modal-title fw-semibold text-danger" id="transactionModalLabel_{{ tx._id }}">
+          <i class="bi bi-receipt me-2"></i>{% if (user._id|string) == (tx.user_id|string) %}Edit Expense{% else %}Expense Details{% endif %}
+        </h6>
+        <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.85);"></button>
+      </div>
+      <div class="modal-body px-3 py-2">
+        <!-- Expense Info Section (always visible) -->
+        <div class="mb-2 pb-2 border-bottom" style="font-size: 0.72rem;">
+          <div class="row g-2">
+            <div class="col-6">
+              <strong>Date:</strong> {{ tx.date.strftime("%b %d, %Y") }}
+            </div>
+            <div class="col-6">
+              <strong>Time:</strong> {{ tx.date.strftime("%I:%M %p") }}
+            </div>
+            <div class="col-12">
+              <strong>Purpose:</strong> {{ tx.description or '—' }}
+            </div>
+            <div class="col-6">
+              <strong>Amount:</strong> {{ "{:,.0f}".format(tx.amount) }}
+            </div>
+            <div class="col-6">
+              <strong>Authorized By:</strong>
+                {{ tx.authorizer }}
+            </div>
+          </div>
+        </div>
+        {% if (user._id|string) == (tx.user_id|string) %}
+        <form method="POST" action="{{ url_for('edit_expense', expense_id=tx._id) }}">
+          <input type="hidden" name="user_id" value="{{ tx.user_id }}">
+          <div class="mb-2" style="font-size: 0.72rem;">
+            <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">Purpose</label>
+            <input type="text" name="purpose" class="form-control form-control-sm" style="font-size: 0.72rem;" value="{{ tx.description }}" required>
+          </div>
+          <div class="mb-2" style="font-size: 0.72rem;">
+            <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">Amount (UGX)</label>
+            <input type="number" name="amount" min="0" step="0.01" class="form-control form-control-sm" style="font-size: 0.72rem;" value="{{ tx.amount }}" required>
+          </div>
+          <div class="mb-2" style="font-size: 0.72rem;">
+            <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">Authorized By</label>
+            <select name="authorized_by" class="form-select form-select-sm" style="font-size: 0.72rem;">
+              <option disabled value="None"
+                {% if not tx.authorized_by or tx.authorized_by == '' or tx.authorized_by is none %}selected{% endif %}>
+                Select Authorizer
+              </option>
+              {% for emp in employees %}
+                {% if emp.role == 'Branch Manager' %}
+                  <option value="{{ emp._id }}" {% if (tx.authorized_by|string) == (emp._id|string) %}selected{% endif %}>{{ emp.username }}</option>
+                {% endif %}
+              {% endfor %}
+            </select>
+          </div>
+          <div class="modal-footer py-2">
+            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-sm btn-danger">Save Expense</button>
+          </div>
+        </form>
+        {% else %}
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
+        </div>
+        {% endif %}
+      </div>
+    </div>
+  </div>
+</div>
+  {% endif %}
+{% endfor %}
 
         </div>
 
@@ -185,53 +454,72 @@
 
 
 <!-- Performance Section -->
-<div class="card shadow-lg rounded-4 bg-secondary-subtle mb-4" style="font-size: 0.85rem;">
+<div class="card shadow-lg rounded-4 mb-4" style="font-size: 0.85rem;">
   <div class="card-body p-3">
     <h6 class="fw-bold mb-3 text-dark">Performance Overview</h6>
 
     <!-- Performance Tabs -->
-    <ul class="nav nav-tabs nav-fill mb-3 rounded-3 overflow-hidden" id="performanceTabs" role="tablist">
-      <li class="nav-item" role="presentation">
-        <button class="nav-link active" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales"
-          type="button" role="tab" style="color: indigo;">Sales</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="expenses-tab" data-bs-toggle="tab" data-bs-target="#expenses"
-          type="button" role="tab" style="color: indigo;">Expenses</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="profit-tab" data-bs-toggle="tab" data-bs-target="#profit"
-          type="button" role="tab" style="color: indigo;">Profit</button>
-      </li>
-      <li class="nav-item" role="presentation">
-        <button class="nav-link" id="debts-tab" data-bs-toggle="tab" data-bs-target="#debts"
-          type="button" role="tab" style="color: indigo;">Debts</button>
-      </li>
-    </ul>
+<ul class="nav nav-tabs nav-fill mb-3 rounded-3 overflow-hidden" id="performanceTabs" role="tablist">
+  <li class="nav-item" role="presentation">
+    <button class="nav-link active" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales"
+      type="button" role="tab" style="color: indigo; font-weight: 600;">
+      Sales
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="expenses-tab" data-bs-toggle="tab" data-bs-target="#expenses"
+      type="button" role="tab" style="color: indigo; font-weight: 600;">
+      Expenses
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="profit-tab" data-bs-toggle="tab" data-bs-target="#profit"
+      type="button" role="tab" style="color: indigo; font-weight: 600;">
+      Profit
+    </button>
+  </li>
+  <li class="nav-item" role="presentation">
+    <button class="nav-link" id="debts-tab" data-bs-toggle="tab" data-bs-target="#debts"
+      type="button" role="tab" style="color: indigo; font-weight: 600;">
+      Debts
+    </button>
+  </li>
+</ul>
+<style>
+  #performanceTabs .nav-link.active {
+    background-color: transparent !important;
+    border-bottom: 3px solid indigo !important;
+    color: indigo !important;
+    font-weight: 700;
+  }
+  #performanceTabs .nav-link {
+    transition: background 0.2s, color 0.2s;
+  }
+</style>
 
     <!-- Tab Contents -->
     <div class="tab-content" id="performanceTabsContent">
 
       <!-- Tab Template -->
       {% macro tab_table(data, color="text-dark") %}
-      <div class="table-responsive">
-        <table class="table table-sm table-borderless bg-white rounded-4 shadow-sm overflow-hidden">
-          <thead class="border-bottom text-muted">
-            <tr>
-              <th>Month</th>
-              <th class="text-end">Amount</th>
-            </tr>
-          </thead>
-          <tbody>
-            {% for month, amount in data %}
-            <tr class="border-bottom">
-              <td>{{ month }}</td>
-              <td class="text-end fw-semibold {{ color }}">{{ amount }}</td>
-            </tr>
-            {% endfor %}
-          </tbody>
-        </table>
-      </div>
+        <div class="table-responsive">
+          <table class="table table-sm table-borderless bg-secondary-subtle rounded-4 shadow-sm overflow-hidden">
+            <thead class="border-bottom text-muted">
+              <tr>
+                <th>Month</th>
+                <th class="text-end">Amount</th>
+              </tr>
+            </thead>
+            <tbody>
+              {% for month, amount in data %}
+              <tr class="border-bottom">
+                <td>{{ month }}</td>
+                <td class="text-end fw-semibold {{ color }}">{{ amount }}</td>
+              </tr>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
       {% endmacro %}
 
       <!-- Sales Tab -->
@@ -284,7 +572,6 @@
 
     </div>
   </div>
-</div>
 
         </div>
 
@@ -458,36 +745,36 @@
                     <th>Actions</th>
                 </tr>
             </thead>
-            <tbody>
-                {% for item in stock_items %}
-                <tr>
-                    <!-- Item name is a modal trigger -->
-                    <td>
-                        <a href="#" class="fw-semibold text-decoration-none text-indigo"
-                           data-bs-toggle="modal" data-bs-target="#itemDetailsModal_{{ item._id }}">
-                            {{ item.name }}
-                        </a>
-                    </td>
-                    <td>{{ item.quantity }}</td>
-                    <td>{{ item.branch }}</td>
-                    <td>{{ item.price }}</td>
-                    <td>
-                        <div class="d-flex gap-1">
-                            <button class="btn btn-sm btn-outline-primary px-2 py-1"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#editItemModal_{{ item._id }}">
-                                <i class="bi bi-pencil"></i>
-                            </button>
-                            <button class="btn btn-sm btn-outline-warning px-2 py-1"
-                                    data-bs-toggle="modal"
-                                    data-bs-target="#updateQuantityModal_{{ item._id }}">
-                                <i class="bi bi-plus-slash-minus"></i>
-                            </button>
-                        </div>
-                    </td>
-                </tr>
-                {% endfor %}
-            </tbody>
+<tbody style="font-size: 0.78rem;">
+    {% for item in stock_items %}
+    <tr>
+        <!-- Item name is a modal trigger -->
+<td>
+    <a href="#" class="fw-semibold text-decoration-none"
+       style="color: indigo;"
+       data-bs-toggle="modal" data-bs-target="#itemDetailsModal_{{ item._id }}">
+        {{ item.name }}
+    </a>
+</td>
+        <td>{{ item.quantity }}</td>
+        <td>{{ item.branch }}</td>
+        <td>{{ "{:,.0f}".format(item.price) }}</td>
+<td>
+    <div class="d-flex gap-1">
+        <button class="btn btn-sm btn-outline-primary px-2 py-1"
+                data-bs-toggle="modal"
+                data-bs-target="#editItemModal_{{ item._id }}">
+            Edit
+        </button>
+        <button class="btn btn-sm btn-outline-warning px-2 py-1"
+                data-bs-toggle="modal"
+                data-bs-target="#updateQuantityModal_{{ item._id }}">
+            Restock
+        </button>
+    </div>
+</td>
+    </tr>
+    {% endfor %}
         </table>
     </div>
 </div>
