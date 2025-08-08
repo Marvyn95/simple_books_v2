@@ -85,7 +85,6 @@ def home():
 
     # getting monthly profit
     all_months_1 = set(monthly_sales) | set(monthly_expenses) | set(monthly_stock_expenses)
-    print(all_months_1)
     monthly_profit = [{"month": month, "profit": monthly_sales.get(month, 0) - monthly_expenses.get(month, 0) - monthly_stock_expenses.get(month, 0)} for month in sorted(all_months_1)]
         
     transactions = sales + expenses    
@@ -117,7 +116,6 @@ def home():
         for j in organization["branches"]:
             if k == j["_id"]:
                 branches.append(j)
-                print(branches)
 
     return render_template("home.html", 
                            year = datetime.datetime.today().year,
