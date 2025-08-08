@@ -16,13 +16,9 @@ def home():
 
     if user["role"] == "Manager":
         if request.method == "GET":
-            sales = list(db.Sales.find({"organization_id": ObjectId(user["organization_id"])}).sort("date", -1))
-            expenses = list(db.Expenses.find({"organization_id": ObjectId(user["organization_id"])}).sort("date", -1))
-            stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"]}).sort("date", -1))
+            selected_branch_id = session.get('selected_branch_id', "")
 
-        elif request.method == "POST":
-            selected_branch_id = request.form["branch_id"]
-            if selected_branch_id == "":
+            if selected_branch_id == "" or selected_branch_id == None:
                 sales = list(db.Sales.find({"organization_id": ObjectId(user["organization_id"])}).sort("date", -1))
                 expenses = list(db.Expenses.find({"organization_id": ObjectId(user["organization_id"])}).sort("date", -1))
                 stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"]}).sort("date", -1))
@@ -31,9 +27,16 @@ def home():
                 expenses = list(db.Expenses.find({"organization_id": ObjectId(user["organization_id"]), "branch_id": selected_branch_id}).sort("date", -1))
                 stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"]}).sort("date", -1))
 
+        elif request.method == "POST":
+            selected_branch_id = request.form["branch_id"]
+            session['selected_branch_id'] = selected_branch_id
+            return redirect(url_for('home'))
+
     if user["role"] == "Branch Manager": 
         sales = list(db.Sales.find({"organization_id": ObjectId(user["organization_id"]), "branch_id": user["branch_ids"][0]}).sort("date", -1))
         expenses = list(db.Expenses.find({"organization_id": ObjectId(user["organization_id"]), "branch_id": user["branch_ids"][0]}).sort("date", -1))
+        stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"], "branch_id": user["branch_ids"][0]}).sort("date", -1))
+
     
     if user["role"] == "Sales person": 
         sales = list(db.Sales.find({"organization_id": ObjectId(user["organization_id"]), "user_id": str(user["_id"])}).sort("date", -1))

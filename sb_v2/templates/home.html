@@ -1,49 +1,40 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <!-- Meta tags for character encoding and responsive viewport -->
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
     <title>Simple Books</title>
-    <!-- Bootstrap CSS and Icons -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
 </head>
 <body class="bg-light h-100">
-    <!-- Main container with full height and flexible layout -->
     <div class="container-fluid vh-100 py-3 d-flex flex-wrap justify-content-center align-items-stretch gap-3">
-        <!-- Sidebar Column -->
+        <!-- Sidebar -->
         <div class="text-white rounded-4 shadow-lg p-4 d-flex flex-column justify-content-between h-100"
              style="background-color: indigo; flex-grow: 1; flex-basis: 0; min-width: 0;">
-            <!-- Sidebar Header -->
             <div>
                 <h5 class="text-center mb-4">Simple Books</h5>
-                <!-- Navigation Menu -->
                 <ul class="nav flex-column gap-3">
                     <li class="nav-item">
-                        <a href="#" class="nav-link text-white text-center" data-bs-toggle="offcanvas" 
-                           data-bs-target="#profileOffcanvas" role="button">
+                        <a href="#" class="nav-link text-white text-center" data-bs-toggle="offcanvas" data-bs-target="#profileOffcanvas" role="button">
                             <i class="bi bi-person-fill fs-6 d-block"></i>
                             <small>Profile</small>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link text-white text-center" data-bs-toggle="offcanvas" 
-                           href="#inventoryOffcanvas" role="button" aria-controls="inventoryOffcanvas">
+                        <a class="nav-link text-white text-center" data-bs-toggle="offcanvas" href="#inventoryOffcanvas" role="button" aria-controls="inventoryOffcanvas">
                             <i class="bi bi-box-seam fs-6 d-block"></i>
                             <small>Inventory</small>
                         </a>
                     </li>
                     <li class="nav-item">
-                        <a href="#" class="nav-link text-white text-center" data-bs-toggle="offcanvas" 
-                           data-bs-target="#employeeOffcanvas" role="button">
+                        <a href="#" class="nav-link text-white text-center" data-bs-toggle="offcanvas" data-bs-target="#employeeOffcanvas" role="button">
                             <i class="bi bi-people-fill fs-6 d-block"></i>
                             <small>Employees</small>
                         </a>
                     </li>
                 </ul>
             </div>
-            <!-- Logout Link -->
             <div class="text-center mt-auto pt-3 border-top border-secondary">
                 <a href="{{ url_for('logout') }}" class="nav-link text-white">
                     <i class="bi bi-box-arrow-right fs-6 d-block"></i>
@@ -52,9 +43,8 @@
             </div>
         </div>
 
-        <!-- Main Content Column -->
-        <div class=" text-dark p-4 h-100 d-flex flex-column"
-             style="flex-grow: 6; flex-basis: 0; min-width: 0;">
+        <!-- Main Content -->
+        <div class="text-dark p-4 h-100 d-flex flex-column" style="flex-grow: 6; flex-basis: 0; min-width: 0;">
             <!-- Greeting Card -->
             <div class="card mb-4 border shadow-lg bg-secondary-subtle rounded-4">
                 <div class="card-body d-flex justify-content-between align-items-center p-3">
@@ -62,125 +52,119 @@
                         <h6 class="card-title mb-1">Hello <strong style="color: indigo;">{{ user["username"] }}</strong></h6>
                         <p class="card-text mb-0 text-muted">It's good to see you again</p>
                     </div>
-                    <img src="https://cdn-icons-png.flaticon.com/512/1946/1946429.png" alt="Hello icon" 
-                         style="width: 40px; height: 40px;" />
+                    <img src="https://cdn-icons-png.flaticon.com/512/1946/1946429.png" alt="Hello icon" style="width: 40px; height: 40px;" />
                 </div>
             </div>
-<!-- Action Buttons Row (No Outer Card) -->
-<div class="row g-3 mb-4">
-  <!-- New Sale -->
-  <div class="col-md-6">
-    <button type="button"
-            class="w-100 d-flex flex-column align-items-center justify-content-center p-3 rounded-4 shadow-lg border-0 bg-secondary-subtle"
-            data-bs-toggle="modal" data-bs-target="#newSaleModal" style="cursor: pointer;">
-      <i class="bi bi-cash-stack fs-3 text-success mb-2"></i>
-      <span class="fw-semibold text-dark">New Sale</span>
-    </button>
-  </div>
 
-  <!-- New Expense -->
-  <div class="col-md-6">
-    <button type="button"
-            class="w-100 d-flex flex-column align-items-center justify-content-center p-3 rounded-4 shadow-lg border-0 bg-secondary-subtle"
-            data-bs-toggle="modal" data-bs-target="#newExpenseModal" style="cursor: pointer;">
-      <i class="bi bi-receipt fs-3 text-danger mb-2"></i>
-      <span class="fw-semibold text-dark">New Expense</span>
-    </button>
-  </div>
-</div>
+            <!-- Action Buttons -->
+            <div class="row g-3 mb-4">
+                <div class="col-md-6">
+                    <button type="button" class="w-100 d-flex flex-column align-items-center justify-content-center p-3 rounded-4 shadow-lg border-0 bg-secondary-subtle"
+                        data-bs-toggle="modal" data-bs-target="#newSaleModal" style="cursor: pointer;">
+                        <i class="bi bi-cash-stack fs-3 text-success mb-2"></i>
+                        <span class="fw-semibold text-dark">New Sale</span>
+                    </button>
+                </div>
+                <div class="col-md-6">
+                    <button type="button" class="w-100 d-flex flex-column align-items-center justify-content-center p-3 rounded-4 shadow-lg border-0 bg-secondary-subtle"
+                        data-bs-toggle="modal" data-bs-target="#newExpenseModal" style="cursor: pointer;">
+                        <i class="bi bi-receipt fs-3 text-danger mb-2"></i>
+                        <span class="fw-semibold text-dark">New Expense</span>
+                    </button>
+                </div>
+            </div>
 
+            <!-- Transactions Table Card -->
+            <div class="card shadow-sm rounded-4 flex-grow-1 d-flex flex-column overflow-hidden">
+                <div class="card-body d-flex flex-column p-0" style="font-size: 0.75rem; overflow: hidden;">
+                    <div class="px-3 pt-3 pb-2">
+                        <h6 class="card-title mb-0">
+                            <i class="bi bi-list-columns-reverse me-2 text-dark"></i>Recent Transactions
+                        </h6>
+                    </div>
+                    <div class="table-responsive flex-grow-1 overflow-auto p-3">
+                        <table class="table table-sm table-borderless mb-0">
+                            <tbody>
+                                {% set current_date = None %}
+                                {% for tx in transactions %}
+                                <tr class="border-bottom">
+                                    <td class="text-muted small">
+                                        {% if current_date is none or tx.date.date() != current_date %}
+                                            {% if tx.date.date() == now.date() %}
+                                                Today - {{ tx.date.strftime("%b %d, %Y") }}
+                                            {% else %}
+                                                {{ tx.date.strftime("%b %d, %Y") }}
+                                            {% endif %}
+                                            {% set current_date = tx.date.date() %}
+                                        {% endif %}
+                                    </td>
+                                    <td class="{{ 'text-success' if tx.type == 'Sale' else 'text-danger' }}">
+                                        <a href="#" style="color: inherit; cursor:pointer; text-decoration: none;"
+                                           data-bs-toggle="modal" data-bs-target="#transactionModal_{{ tx._id }}">
+                                            {{ tx.type }}
+                                        </a>
+                                    </td>
+                                    <td class="text-muted">{{ tx.user_name }}</td>
+                                    <td style="color: indigo;">{{ tx.description }}</td>
+                                    <td>{{ tx.quantity if tx.quantity else '–' }}</td>
+                                    <td>{{ "{:,.0f}".format(tx.amount) }}</td>
+                                    <td style="{% if tx.status == 'paid' %}color: green;{% elif tx.status == 'credit' %}color: red;{% else %}color: gray;{% endif %};">
+                                        {{ tx.status }}
+                                    </td>
+                                    {% if tx.type == 'Sale' and tx.status == 'credit' and (tx.user_id|string) == (user._id|string) %}
+                                    <td>
+                                        <button class="btn btn-xs btn-outline-success px-1 py-0" style="font-size: 0.68rem; line-height: 1.1;" data-bs-toggle="modal" data-bs-target="#clearCreditModal_{{ tx._id }}">
+                                            Clear
+                                        </button>
+                                    </td>
+                                    {% endif %}
+                                </tr>
+                                {% if tx.type == 'Sale' and tx.status == 'credit' and (tx.user_id|string) == (user._id|string) %}
+                                <!-- Clear Credit Modal -->
+                                <div class="modal fade" id="clearCreditModal_{{ tx._id }}" tabindex="-1" aria-labelledby="clearCreditLabel_{{ tx._id }}" aria-hidden="true">
+                                    <div class="modal-dialog">
+                                        <form method="POST" action="{{ url_for('clear_credit', sale_id=tx._id) }}">
+                                            <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.78rem;">
+                                                <div class="modal-header border-bottom py-2">
+                                                    <h6 class="modal-title fw-semibold text-success" id="clearCreditLabel_{{ tx._id }}">
+                                                        <i class="bi bi-cash-coin me-2"></i>
+                                                        Clear Credit
+                                                        <span class="text-danger fw-normal" style="font-size: 0.85em;">
+                                                            ({{ "{:,.0f}".format(tx.payment_details.amount_left) }} UGX left)
+                                                        </span>
+                                                    </h6>
+                                                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.85);"></button>
+                                                </div>
+                                                <div class="modal-body px-3 py-2">
+                                                    <input type="hidden" name="user_id" value="{{ user._id }}">
+                                                    <input type="hidden" name="item_id" value="{{ tx.item_id }}">
+                                                    <input type="hidden" name="transaction_id" value="{{ tx._id }}">
+                                                    <div class="mb-2">
+                                                        <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">
+                                                            Amount to Clear (UGX)
+                                                        </label>
+                                                        <input type="number" name="amount" min="1" step="0.01" class="form-control form-control-sm" style="font-size: 0.72rem;" required>
+                                                    </div>
+                                                </div>
+                                                <div class="modal-footer py-2">
+                                                    <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                                                    <button type="submit" class="btn btn-sm btn-success">Clear Credit</button>
+                                                </div>
+                                            </div>
+                                        </form>
+                                    </div>
+                                </div>
+                                {% endif %}
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
 
-<!-- Transactions Table Card -->
-<div class="card shadow-sm rounded-4 flex-grow-1 d-flex flex-column overflow-hidden">
-  <div class="card-body d-flex flex-column p-0" style="font-size: 0.75rem; overflow: hidden;">
-    <div class="px-3 pt-3 pb-2">
-      <h6 class="card-title mb-0">
-        <i class="bi bi-list-columns-reverse me-2 text-dark"></i>Recent Transactions
-      </h6>
-    </div>
-    <div class="table-responsive flex-grow-1 overflow-auto p-3">
-      <table class="table table-sm table-borderless mb-0">
-        <tbody>
-          {% set current_date = None %}
-          {% for tx in transactions %}
-<tr class="border-bottom">
-  <td class="text-muted small">
-    {% if current_date is none or tx.date.date() != current_date %}
-      {% if tx.date.date() == now.date() %}
-        Today - {{ tx.date.strftime("%b %d, %Y") }}
-      {% else %}
-        {{ tx.date.strftime("%b %d, %Y") }}
-      {% endif %}
-      {% set current_date = tx.date.date() %}
-    {% endif %}
-  </td>
-  <td class="{{ 'text-success' if tx.type == 'Sale' else 'text-danger' }}">
-    <a href="#" style="color: inherit; cursor:pointer; text-decoration: none;"
-       data-bs-toggle="modal" data-bs-target="#transactionModal_{{ tx._id }}">
-      {{ tx.type }}
-    </a>
-  </td>
-  <td class="text-muted">{{ tx.user_name }}</td>
-  <td style="color: indigo;">{{ tx.description }}</td>
-  <td>{{ tx.quantity if tx.quantity else '–' }}</td>
-  <td>{{ "{:,.0f}".format(tx.amount) }}</td>
-  <td style="{% if tx.status == 'paid' %}color: green;{% elif tx.status == 'credit' %}color: red;{% else %}color: gray;{% endif %};">
-    {{ tx.status }}
-  </td>
-  {% if tx.type == 'Sale' and tx.status == 'credit' and (tx.user_id|string) == (user._id|string) %}
-  <td>
-<button class="btn btn-xs btn-outline-success px-1 py-0" style="font-size: 0.68rem; line-height: 1.1;" data-bs-toggle="modal" data-bs-target="#clearCreditModal_{{ tx._id }}">
-  Clear
-</button>
-  </td>
-  {% endif %}
-</tr>
-            {% if tx.type == 'Sale' and tx.status == 'credit' and (tx.user_id|string) == (user._id|string) %}
-<!-- Clear Credit Modal -->
-<div class="modal fade" id="clearCreditModal_{{ tx._id }}" tabindex="-1" aria-labelledby="clearCreditLabel_{{ tx._id }}" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="POST" action="{{ url_for('clear_credit', sale_id=tx._id) }}">
-      <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.78rem;">
-        <div class="modal-header border-bottom py-2">
-          <h6 class="modal-title fw-semibold text-success" id="clearCreditLabel_{{ tx._id }}">
-            <i class="bi bi-cash-coin me-2"></i>
-            Clear Credit
-            <span class="text-danger fw-normal" style="font-size: 0.85em;">
-              ({{ "{:,.0f}".format(tx.payment_details.amount_left) }} UGX left)
-            </span>
-          </h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.85);"></button>
-        </div>
-        <div class="modal-body px-3 py-2">
-          <input type="hidden" name="user_id" value="{{ user._id }}">
-          <input type="hidden" name="item_id" value="{{ tx.item_id }}">
-          <input type="hidden" name="transaction_id" value="{{ tx._id }}">
-          <div class="mb-2">
-            <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">
-              Amount to Clear (UGX)
-            </label>
-            <input type="number" name="amount" min="1" step="0.01" class="form-control form-control-sm" style="font-size: 0.72rem;" required>
-          </div>
-        </div>
-        <div class="modal-footer py-2">
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-sm btn-success">Clear Credit</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
-            {% endif %}
-          {% endfor %}
-        </tbody>
-      </table>
-    </div>
-  </div>
-</div>
-
-<!-- Transaction Modals -->
-{% for tx in transactions %}
-  {% if tx.type == 'Sale' %}
+            <!-- Transaction Modals -->
+            {% for tx in transactions %}
+                {% if tx.type == 'Sale' %}
 <div class="modal fade" id="transactionModal_{{ tx._id }}" tabindex="-1" aria-labelledby="transactionModalLabel_{{ tx._id }}" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.75rem;">
@@ -330,7 +314,7 @@
     </div>
   </div>
 </div>
-  {% elif tx.type == 'Expense' %}
+                {% elif tx.type == 'Expense' %}
 <div class="modal fade" id="transactionModal_{{ tx._id }}" tabindex="-1" aria-labelledby="transactionModalLabel_{{ tx._id }}" aria-hidden="true">
   <div class="modal-dialog">
     <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.75rem;">
@@ -402,49 +386,63 @@
     </div>
   </div>
 </div>
-  {% endif %}
-{% endfor %}
-
+                {% endif %}
+            {% endfor %}
         </div>
 
-        <!-- Right Sidebar Column -->
-        <div class="bg-light text-dark rounded-4 shadow p-4 h-100"
+        <!-- Right Sidebar -->
+        <div class="bg-light text-dark p-4 h-100"
              style="flex-grow: 3; flex-basis: 0; min-width: 0; display: flex; flex-direction: column;">
-<!-- User Profile Card -->
-<div class="card bg-secondary-subtle shadow-lg border-0 rounded-4 mb-4">
-  <div class="card-body p-4" style="font-size: 0.85rem;">
+            <!-- Profile Card -->
+<div class=" mb-4">
+<div class="card shadow-lg border-1 rounded-4 mb-4" style="font-size: 0.82rem;">
+  <div class="card-body py-3 px-4">
 
-    <div class="row g-4">
-
-      <!-- Company/Business -->
-      <div class="col-md-4 d-flex align-items-start gap-2">
-        <i class="bi bi-building text-primary mt-1"></i>
-        <div>
-          <div class="fw-semibold">Co./Business</div>
-          <small class="text-muted" style="color: indigo;">{{ organization["organization"] }}</small>
-        </div>
+    <!-- Company / Business -->
+    <div class="d-flex align-items-start gap-2 pb-3 border-bottom">
+      <div class="bg-primary bg-opacity-10 text-primary p-2 rounded">
+        <i class="bi bi-building"></i>
       </div>
+      <div>
+        <div class="fw-semibold text-dark">Company / Business</div>
+        <div class="text-indigo small">{{ organization["organization"] }}</div>
+      </div>
+    </div>
 
-<!-- Branch Display / Selector -->
-<div class="col-md-4 d-flex align-items-start gap-2">
-  <i class="bi bi-geo-alt-fill text-danger mt-1"></i>
-  <div>
-    <div class="fw-semibold mb-1">Branch</div>
+    <!-- Branch Selector -->
+    <div class="d-flex align-items-start gap-2 py-3 border-bottom">
+      <div class="bg-danger bg-opacity-10 text-danger p-2 rounded">
+        <i class="bi bi-geo-alt-fill"></i>
+      </div>
+      <div class="flex-grow-1">
+        <div class="fw-semibold text-dark mb-1">Branch</div>
+        {% if user['role'] == 'Manager' %}
+          <form method="POST" action="{{ url_for('home') }}">
+            <select id="branchSelect" name="branch_id" class="form-select form-select-sm w-auto"
+                    onchange="saveBranchSelection(this)">
+              <option value="">All branches</option>
+              {% for branch in organization['branches'] %}
+                <option value="{{ branch['_id'] }}">{{ branch['branch'] }}</option>
+              {% endfor %}
+            </select>
+          </form>
+        {% else %}
+          <div class="text-indigo small">{{ branches[0]["branch"] }}</div>
+        {% endif %}
+      </div>
+    </div>
 
-    {% if user['role'] == 'Manager' %}
-      <form method="POST" action="{{ url_for('home') }}">
-        <select id="branchSelect" name="branch_id" class="form-select form-select-sm"
-                style="width: auto; display: inline-block;"
-                onchange="saveBranchSelection(this)">
-          <option value="" selected>All branches</option>
-          {% for branch in organization['branches'] %}
-            <option value="{{ branch['_id'] }}">{{ branch['branch'] }}</option>
-          {% endfor %}
-        </select>
-      </form>
-    {% else %}
-      <span style="color: indigo;">{{ branches[0]["branch"] }}</span>
-    {% endif %}
+    <!-- Role -->
+    <div class="d-flex align-items-start gap-2 pt-3">
+      <div class="bg-secondary bg-opacity-10 text-secondary p-2 rounded">
+        <i class="bi bi-person-badge-fill"></i>
+      </div>
+      <div>
+        <div class="fw-semibold text-dark">Role</div>
+        <div class="text-indigo small">{{ user['role'] }}</div>
+      </div>
+    </div>
+
   </div>
 </div>
 
@@ -453,58 +451,32 @@
     localStorage.setItem('selectedBranch', selectElement.value);
     selectElement.form.submit();
   }
-
   document.addEventListener('DOMContentLoaded', function () {
     const savedBranch = localStorage.getItem('selectedBranch');
     const branchSelect = document.getElementById('branchSelect');
     if (savedBranch !== null && branchSelect) {
       branchSelect.value = savedBranch;
     }
-  });
-</script>
-
-
-<script>
-  // Save branch selection in localStorage
-  function saveBranchSelection(selectElement) {
-    localStorage.setItem('selectedBranch', selectElement.value);
-    selectElement.form.submit(); // still submits form
-  }
-
-  // Restore branch selection on page load
-  document.addEventListener('DOMContentLoaded', function () {
-    const savedBranch = localStorage.getItem('selectedBranch');
-    const branchSelect = document.getElementById('branchSelect');
-    if (savedBranch && branchSelect) {
-      branchSelect.value = savedBranch;
+    const logoutLink = document.querySelector('a[href="{{ url_for("logout") }}"]');
+    if (logoutLink) {
+      logoutLink.addEventListener('click', function () {
+        localStorage.removeItem('selectedBranch');
+      });
     }
   });
 </script>
 
-
-
-      <!-- Role -->
-      <div class="col-md-4 d-flex align-items-start gap-2">
-        <i class="bi bi-person-badge-fill text-secondary mt-1"></i>
-        <div>
-          <div class="fw-semibold">Role</div>
-          <small class="text-muted" style="color: indigo;">{{ user['role'] }}</small>
-        </div>
-      </div>
-
-    </div>
-
-  </div>
 </div>
 
 
+{% if user.role in ['Manager', 'Branch Manager'] %}
 <!-- Performance Section -->
-<div class="card shadow-lg rounded-4 mb-4" style="font-size: 0.85rem;">
+<div class="card shadow-lg rounded-4 mb-4" style="font-size: 0.8rem;">
   <div class="card-body p-3">
-    <h6 class="fw-bold mb-3 text-dark">Performance Overview</h6>
+    <h6 class="fw-bold mb-3 text-dark" style="font-size: 0.85rem;">Performance Overview</h6>
 
     <!-- Performance Tabs -->
-    <ul class="nav nav-tabs nav-fill mb-3 rounded-3 overflow-hidden" id="performanceTabs" role="tablist">
+    <ul class="nav nav-tabs nav-fill mb-3 rounded-3 overflow-hidden" id="performanceTabs" role="tablist" style="font-size: 0.78rem;">
       <li class="nav-item" role="presentation">
         <button class="nav-link active" id="sales-tab" data-bs-toggle="tab" data-bs-target="#sales"
           type="button" role="tab" style="color: indigo; font-weight: 600;">
@@ -535,6 +507,9 @@
       }
       #performanceTabs .nav-link {
         transition: background 0.2s, color 0.2s;
+      }
+      #performanceTabsContent table {
+        font-size: 0.78rem;
       }
     </style>
 
@@ -581,6 +556,30 @@
     </div>
   </div>
 </div>
+
+<!-- Save & Restore Active Tab -->
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+  // Restore last active tab from localStorage
+  let activeTab = localStorage.getItem('performanceActiveTab');
+  if (activeTab) {
+    let tabTrigger = document.querySelector(`#performanceTabs button[data-bs-target="${activeTab}"]`);
+    if (tabTrigger) {
+      let tab = new bootstrap.Tab(tabTrigger);
+      tab.show();
+    }
+  }
+
+  // Save active tab on click
+  document.querySelectorAll('#performanceTabs button[data-bs-toggle="tab"]').forEach(button => {
+    button.addEventListener('shown.bs.tab', function (event) {
+      localStorage.setItem('performanceActiveTab', event.target.getAttribute('data-bs-target'));
+    });
+  });
+});
+</script>
+{% endif %}
+
 
 
         <!-- Profile Offcanvas -->
@@ -1439,6 +1438,7 @@
         <!-- Modal Header -->
         <div class="modal-header border-bottom py-2">
           <h6 class="modal-title fw-semibold text-danger" id="newExpenseModalLabel">
+
             <i class="bi bi-receipt me-2"></i>New Expense
           </h6>
           <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.85);"></button>
@@ -1491,12 +1491,24 @@
     <!-- JavaScript Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
-        // Handle branch field visibility based on role selection
+        // Branch selection for Manager
+        function saveBranchSelection(selectElement) {
+            localStorage.setItem('selectedBranch', selectElement.value);
+            selectElement.form.submit();
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            const savedBranch = localStorage.getItem('selectedBranch');
+            const branchSelect = document.getElementById('branchSelect');
+            if (savedBranch && branchSelect) {
+                branchSelect.value = savedBranch;
+            }
+        });
+
+        // Toggle branch field for employee modals
         function toggleBranchField(id) {
             const roleSelect = document.getElementById(`editRoleSelect_${id}`);
             const branchWrapper = document.getElementById(`branchFieldWrapper_${id}`);
             const branchSelect = document.getElementById(`branchSelect_${id}`);
-
             if (roleSelect.value === 'Manager') {
                 branchWrapper.style.display = 'none';
                 branchSelect.removeAttribute('required');
@@ -1507,19 +1519,16 @@
                 branchSelect.setAttribute('required', 'required');
             }
         }
-
-        // Initialize branch field visibility on page load
         document.addEventListener('DOMContentLoaded', () => {
             {% for employee in employees %}
             toggleBranchField('{{ employee._id }}');
             {% endfor %}
         });
 
-        // Handle branch selection visibility for adding new employee
+        // Add employee modal branch field toggle
         document.addEventListener('DOMContentLoaded', function () {
             const roleSelect = document.getElementById('addRoleSelect');
             const branchContainer = document.getElementById('branchSelectContainer');
-
             function toggleBranchVisibility() {
                 if (roleSelect.value === 'Manager') {
                     branchContainer.style.display = 'none';
@@ -1529,15 +1538,48 @@
                     branchContainer.querySelector('select').setAttribute('required', 'required');
                 }
             }
-
-            // Initial toggle on modal open
             const addEmployeeModal = document.getElementById('addEmployeeModal');
             addEmployeeModal.addEventListener('show.bs.modal', () => {
                 toggleBranchVisibility();
             });
-
-            // Toggle on role change
             roleSelect.addEventListener('change', toggleBranchVisibility);
+        });
+
+        // Autofill and calculation for sale modals
+        document.addEventListener("DOMContentLoaded", function () {
+            function setupSaleModal(itemSelectId, unitPriceInputId, quantityInputId, amountPaidInputId) {
+                const itemSelect = document.getElementById(itemSelectId);
+                const unitPriceInput = document.getElementById(unitPriceInputId);
+                const quantityInput = document.getElementById(quantityInputId);
+                const amountPaidInput = document.getElementById(amountPaidInputId);
+                function computeAmount() {
+                    const qty = parseFloat(quantityInput.value);
+                    const unit = parseFloat(unitPriceInput.value);
+                    if (!isNaN(qty) && !isNaN(unit)) {
+                        amountPaidInput.value = (qty * unit).toFixed(2);
+                    }
+                }
+                if (itemSelect) {
+                    itemSelect.addEventListener("change", function () {
+                        const selected = itemSelect.options[itemSelect.selectedIndex];
+                        const price = selected.getAttribute("data-price");
+                        if (price) {
+                          unitPriceInput.value = price;
+                          computeAmount();
+                        }
+                    });
+                }
+                if (quantityInput) quantityInput.addEventListener("input", computeAmount);
+                if (unitPriceInput) unitPriceInput.addEventListener("input", computeAmount);
+            }
+            // Setup for new sale modal
+            setupSaleModal("itemSelect", "unitPriceInput", "quantityInput", "amountPaidInput");
+            // Setup for edit sale modals
+            {% for tx in transactions %}
+                {% if tx.type == 'Sale' and (user._id|string) == (tx.user_id|string) %}
+                    setupSaleModal("editItemSelect_{{ tx._id }}", "editUnitPriceInput_{{ tx._id }}", "editQuantityInput_{{ tx._id }}", "editAmountPaidInput_{{ tx._id }}");
+                {% endif %}
+            {% endfor %}
         });
 
         // Update dropdown button text on selection
@@ -1548,6 +1590,29 @@
                 const btn = this.closest('.dropdown').querySelector('button.dropdown-toggle');
                 btn.textContent = selectedText;
             });
+        });
+
+        // Offcanvas state persistence
+        document.addEventListener("DOMContentLoaded", function () {
+            const bs = bootstrap;
+            document.querySelectorAll(".offcanvas").forEach(oc => {
+                oc.addEventListener("shown.bs.offcanvas", function () {
+                    localStorage.setItem("openOffcanvasId", this.id);
+                });
+                oc.addEventListener("hidden.bs.offcanvas", function () {
+                    if (localStorage.getItem("openOffcanvasId") === this.id) {
+                        localStorage.removeItem("openOffcanvasId");
+                    }
+                });
+            });
+            const lastOpenId = localStorage.getItem("openOffcanvasId");
+            if (lastOpenId) {
+                const el = document.getElementById(lastOpenId);
+                if (el) {
+                    const offcanvas = new bs.Offcanvas(el);
+                    offcanvas.show();
+                }
+            }
         });
     </script>
 </body>
