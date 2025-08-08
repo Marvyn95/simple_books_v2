@@ -5,7 +5,7 @@ from bson.objectid import ObjectId
 from collections import defaultdict
 
 
-@app.route('/home')
+@app.route('/home', methods=["GET", "POST"])
 def home():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     user["_id"] = str(user["_id"])
@@ -13,8 +13,32 @@ def home():
     employees = list(db.Users.find({"organization_id": user["organization_id"]}))
     stock_items = list(db.Stock.find({"organization_id": user["organization_id"]}).sort("quantity", -1))
     stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"]}).sort("date", -1))
-    sales = list(db.Sales.find({"organization_id": user["organization_id"]}).sort("date", -1))[:100]
-    expenses = list(db.Expenses.find({"organization_id": user["organization_id"]}).sort("date", -1))[:100]
+
+    if user["role"] == "Manager":
+        if request.method == "GET":
+            sales = list(db.Sales.find({"organization_id": ObjectId(user["organization_id"])}).sort("date", -1))
+            expenses = list(db.Expenses.find({"organization_id": ObjectId(user["organization_id"])}).sort("date", -1))
+            stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"]}).sort("date", -1))
+
+        elif request.method == "POST":
+            selected_branch_id = request.form["branch_id"]
+            if selected_branch_id == "":
+                sales = list(db.Sales.find({"organization_id": ObjectId(user["organization_id"])}).sort("date", -1))
+                expenses = list(db.Expenses.find({"organization_id": ObjectId(user["organization_id"])}).sort("date", -1))
+                stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"]}).sort("date", -1))
+            else:    
+                sales = list(db.Sales.find({"organization_id": ObjectId(user["organization_id"]), "branch_id": selected_branch_id}).sort("date", -1))
+                expenses = list(db.Expenses.find({"organization_id": ObjectId(user["organization_id"]), "branch_id": selected_branch_id}).sort("date", -1))
+                stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"]}).sort("date", -1))
+
+    if user["role"] == "Branch Manager": 
+        sales = list(db.Sales.find({"organization_id": ObjectId(user["organization_id"]), "branch_id": user["branch_ids"][0]}).sort("date", -1))
+        expenses = list(db.Expenses.find({"organization_id": ObjectId(user["organization_id"]), "branch_id": user["branch_ids"][0]}).sort("date", -1))
+    
+    if user["role"] == "Sales person": 
+        sales = list(db.Sales.find({"organization_id": ObjectId(user["organization_id"]), "user_id": str(user["_id"])}).sort("date", -1))
+        expenses = list(db.Expenses.find({"organization_id": ObjectId(user["organization_id"]), "user_id": str(user["_id"])}).sort("date", -1))
+
     
     for i in sales:
         i["type"] = "Sale"
@@ -37,40 +61,48 @@ def home():
         month = sale["date"].strftime("%B-%Y")
         revenue = float(sale["quantity"]) * float(sale["unit_price"])
         monthly_sales[month] += revenue
-    # Convert to list of dicts and sort by month
     monthly_sales_list = [{"month": month, "total_sales_revenue": total}for month, total in sorted(monthly_sales.items())]
 
-
-    # getting monthly expense info
+    # getting monthly (normal) expense info
     monthly_expenses = defaultdict(float)
     for expense in expenses:
         month = expense["date"].strftime("%B-%Y")
         spent_amount = float(expense["amount"])
         monthly_expenses[month] += spent_amount
-    monthly_expenses_list = [{"month": month, "total_expenses": total} for month, total in sorted(monthly_expenses.items())]
+    # monthly_expenses_list = [{"month": month, "total_expenses": total} for month, total in sorted(monthly_expenses.items())]
+    
+    # getting monthly stocking expenses info
+    monthly_stock_expenses = defaultdict(float)
+    for stock_expense in stock_history:
+        month = stock_expense["date"].strftime("%B-%Y")
+        stocking_expense = float(stock_expense["unit_cost"]) * float(stock_expense["quantity_updated"])
+        monthly_stock_expenses[month] += stocking_expense
+    # monthly_stocking_expenses_list = [{"month": month, "total_expenses": total} for month, total in sorted(monthly_stock_expenses.items())]
+
+    # summing up expenses
+    all_months = set(monthly_expenses) | set(monthly_stock_expenses)
+    merged_expenses = [{"month": month, "total_expenses": monthly_expenses.get(month, 0) + monthly_stock_expenses.get(month, 0)} for month in sorted(all_months)]
 
     # getting monthly profit
-    expense_map = {e['month']: e['total_expenses'] for e in monthly_expenses_list}
-    monthly_profit = []
-    for s in monthly_sales_list:
-        month = s['month']
-        revenue = s['total_sales_revenue']
-        expense = expense_map.get(month, 0)
-        profit = revenue - expense
-        monthly_profit.append({'month': month, 'profit': profit})
+    all_months_1 = set(monthly_sales) | set(monthly_expenses) | set(monthly_stock_expenses)
+    print(all_months_1)
+    monthly_profit = [{"month": month, "profit": monthly_sales.get(month, 0) - monthly_expenses.get(month, 0) - monthly_stock_expenses.get(month, 0)} for month in sorted(all_months_1)]
         
     transactions = sales + expenses    
     
+    # adding information to stock history
     for m in stock_history:
         m["date"] = m["date"].strftime("%B %d, %Y")
         m["updater"] = db.Users.find_one({"_id": m["updater_id"]})["username"]
         m["quantity"] = m["quantity_updated"]
     
+    # adding information to stock items
     for k in stock_items:
         for j in list(organization["branches"]):
             if str(k["branch_id"]) == str(j["_id"]):
                 k["branch"] = j["branch"]
     
+    # adding information to employees
     for i in employees:
         branch_objects = []
         for j in i["branch_ids"]:
@@ -79,11 +111,13 @@ def home():
                     branch_objects.append(m)
         i["branches"] = branch_objects    
 
+    # adding branch information to user object
     branches = []
     for k in user["branch_ids"]:
         for j in organization["branches"]:
             if k == j["_id"]:
                 branches.append(j)
+                print(branches)
 
     return render_template("home.html", 
                            year = datetime.datetime.today().year,
@@ -96,7 +130,7 @@ def home():
                            transactions = sorted(transactions, key=lambda t: t["date"], reverse=True),
                            now=datetime.datetime.now(),
                            monthly_sales_list = monthly_sales_list,
-                           monthly_expenses_list = monthly_expenses_list,
+                           monthly_expenses_list = merged_expenses,
                            monthly_profit = monthly_profit)
 
 @app.route("/register_owner", methods=["GET", "POST"])
@@ -189,7 +223,7 @@ def edit_profile():
     
     # updating email
     if form_info['email'] != old_user_info['email']:
-        if db.Users.find_one({"email": form_info["email"]}) is None:
+        if db.Users.find_one({"email": form_info["email"]}) is None or form_info["email"]is "":
             db.Users.update_one({"_id": ObjectId(session.get("userid"))}, {
                 "$set": {"email": form_info["email"]}
             })
@@ -237,26 +271,27 @@ def edit_employee():
     form_info = request.form
     # getting initial user and organization info
     user_info = db.Users.find_one({"_id": ObjectId(form_info["employee_id"])})
+    # updating user name
+    if form_info['username'] != user_info['username']:
+        if db.Users.find_one({"username": form_info["username"]}) is None:
+            db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
+                "$set": {"username": form_info["username"]}
+            })
+        else:
+            flash("User Name Already Taken, Use Another")
+            
+    # updating email
+    if form_info['email'] != user_info['email']:
+        print("reached here")
+        if db.Users.find_one({"email": form_info["email"]}) is None or form_info.get("email") == "":
+            db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
+                "$set": {"email": form_info["email"]}
+            })
+        else:
+            flash("Email Already Taken, Use Another")
+    
+    # updating role
     if db.Users.find_one({"_id": ObjectId(session.get("userid"))})["role"] == "Manager":
-        # updating user name
-        if form_info['username'] != user_info['username']:
-            if db.Users.find_one({"username": form_info["username"]}) is None:
-                db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
-                    "$set": {"username": form_info["username"]}
-                })
-            else:
-                flash("User Name Already Taken, Use Another")
-                
-        # updating email
-        if form_info['email'] != user_info['email']:
-            if db.Users.find_one({"email": form_info["email"]}) or form_info.get("email") == "":
-                db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
-                    "$set": {"email": form_info["email"]}
-                })
-            else:
-                flash("Email Already Taken, Use Another")
-        
-        # updating role
         db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
                 "$set": {"role": form_info.get("role")}
             })
@@ -265,10 +300,8 @@ def edit_employee():
         db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
                 "$set": {"branch_ids": [form_info.get("branch_id")]}
             })    
-        return redirect(url_for("home"))
-    else:
-        flash("Only Managers can update these details", "error")
-        return redirect(url_for("home"))
+    return redirect(url_for("home"))
+
 
 @app.route("/deactivate_employee)", methods=['POST'])
 def deactivate_employee():
