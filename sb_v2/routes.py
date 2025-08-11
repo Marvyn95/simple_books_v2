@@ -7,6 +7,7 @@ from collections import defaultdict
 
 @app.route('/home', methods=["GET", "POST"])
 def home():
+    selected_branch_id = ""
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     user["_id"] = str(user["_id"])
     organization = db.Organizations.find_one({"_id": user["organization_id"]})
@@ -17,32 +18,44 @@ def home():
     if user["role"] == "Manager":
         if request.method == "GET":
             selected_branch_id = session.get('selected_branch_id', "")
-
             if selected_branch_id == "" or selected_branch_id == None:
                 sales = list(db.Sales.find({"organization_id": ObjectId(user["organization_id"])}).sort("date", -1))
                 expenses = list(db.Expenses.find({"organization_id": ObjectId(user["organization_id"])}).sort("date", -1))
                 stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"]}).sort("date", -1))
-            else:    
+                stock_items = list(db.Stock.find({"organization_id": user["organization_id"]}).sort("quantity", -1))
+
+            else:
                 sales = list(db.Sales.find({"organization_id": ObjectId(user["organization_id"]), "branch_id": selected_branch_id}).sort("date", -1))
                 expenses = list(db.Expenses.find({"organization_id": ObjectId(user["organization_id"]), "branch_id": selected_branch_id}).sort("date", -1))
-                stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"]}).sort("date", -1))
+                stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"], "branch_id": selected_branch_id}).sort("date", -1))
+                stock_items = list(db.Stock.find({"organization_id": user["organization_id"], "branch_id": selected_branch_id}).sort("quantity", -1))
+
 
         elif request.method == "POST":
             selected_branch_id = request.form["branch_id"]
             session['selected_branch_id'] = selected_branch_id
             return redirect(url_for('home'))
 
-    if user["role"] == "Branch Manager": 
+    if user["role"] == "Branch Manager":
+        selected_branch_id = ""
         sales = list(db.Sales.find({"organization_id": ObjectId(user["organization_id"]), "branch_id": user["branch_ids"][0]}).sort("date", -1))
         expenses = list(db.Expenses.find({"organization_id": ObjectId(user["organization_id"]), "branch_id": user["branch_ids"][0]}).sort("date", -1))
         stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"], "branch_id": user["branch_ids"][0]}).sort("date", -1))
+        stock_items = list(db.Stock.find({"organization_id": user["organization_id"], "branch_id": user["branch_ids"][0]}).sort("quantity", -1))
+
 
     
     if user["role"] == "Sales person": 
+        selected_branch_id = ""
         sales = list(db.Sales.find({"organization_id": ObjectId(user["organization_id"]), "user_id": str(user["_id"])}).sort("date", -1))
         expenses = list(db.Expenses.find({"organization_id": ObjectId(user["organization_id"]), "user_id": str(user["_id"])}).sort("date", -1))
+        stock_items = list(db.Stock.find({"organization_id": user["organization_id"], "branch_id": user["branch_ids"][0]}).sort("quantity", -1))
+        stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"], "branch_id": user["branch_ids"][0]}).sort("date", -1))
+
+
 
     
+    # adding necessary info on transactions
     for i in sales:
         i["type"] = "Sale"
         i["user_name"] = db.Users.find_one({"_id": ObjectId(i["user_id"])})["username"]
@@ -120,11 +133,13 @@ def home():
             if k == j["_id"]:
                 branches.append(j)
 
+
     return render_template("home.html", 
                            year = datetime.datetime.today().year,
                            user = user,
                            organization = organization,
                            branches = branches,
+                           selected_branch_id = selected_branch_id,
                            employees = list(employees),
                            stock_items = stock_items,
                            stock_history = stock_history,
@@ -180,6 +195,9 @@ def login():
     if request.method == "POST":
         form_info = request.form
         user = db.Users.find_one({"username": form_info["username"]})
+        if user == None:
+            flash("Account doesnt exist, check user name!", "error")
+            return redirect(url_for("login"))
         if user["active_status"] == True:
             if user:
                 if bcrypt.check_password_hash(user["password"], form_info["password"]):
@@ -351,12 +369,22 @@ def add_employee():
 def add_stock_item():
     form_info = request.form
     user = db.Users.find_one({"_id": ObjectId(form_info["user_id"])})
-    if user["role"] == "Manager" or user["role"] == "Branch Manager":
+    if user["role"] == "Manager":
         db.Stock.insert_one({
             "name": form_info["name"],
             "quantity": 0,
             "price": 0,
             "branch_id": form_info["branch_id"],
+            "organization_id": user["organization_id"]
+        })
+        flash("Item added successfully!", "success")
+        return redirect(url_for("home"))
+    if user["role"] == "Branch Manager":
+        db.Stock.insert_one({
+            "name": form_info["name"],
+            "quantity": 0,
+            "price": 0,
+            "branch_id": user["branch_ids"][0],
             "organization_id": user["organization_id"]
         })
         flash("Item added successfully!", "success")
@@ -415,7 +443,7 @@ def new_sale():
     item = db.Stock.find_one({"_id": ObjectId(form_info["item_id"])})
     db.Sales.insert_one({
         "organization_id": user["organization_id"],
-        "branch_id": user["branch_ids"][0],
+        "branch_id": form_info["branch_id"] if user["role"] == "Manager" else user["branch_ids"][0],
         "user_id": form_info["user_id"],
         "item_id": form_info["item_id"],
         "date": datetime.datetime.now(),
@@ -445,7 +473,7 @@ def new_expense():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     db.Expenses.insert_one({
         "organization_id": user["organization_id"],
-        "branch_id": user["branch_ids"][0],
+        "branch_id": form_info["branch_id"] if user["role"] == "Manager" else user["branch_ids"][0],
         "user_id": form_info["user_id"],
         "authorized_by": form_info.get("authorized_by"),
         "purpose": form_info["purpose"],
