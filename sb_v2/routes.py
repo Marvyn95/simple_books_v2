@@ -42,17 +42,15 @@ def home():
         expenses = list(db.Expenses.find({"organization_id": ObjectId(user["organization_id"]), "branch_id": user["branch_ids"][0]}).sort("date", -1))
         stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"], "branch_id": user["branch_ids"][0]}).sort("date", -1))
         stock_items = list(db.Stock.find({"organization_id": user["organization_id"], "branch_id": user["branch_ids"][0]}).sort("quantity", -1))
+        employees = list(db.Users.find({"organization_id": user["organization_id"], "branch_ids": {"$in": user["branch_ids"]}}))
 
-
-    
     if user["role"] == "Sales person": 
         selected_branch_id = ""
         sales = list(db.Sales.find({"organization_id": ObjectId(user["organization_id"]), "user_id": str(user["_id"])}).sort("date", -1))
         expenses = list(db.Expenses.find({"organization_id": ObjectId(user["organization_id"]), "user_id": str(user["_id"])}).sort("date", -1))
         stock_items = list(db.Stock.find({"organization_id": user["organization_id"], "branch_id": user["branch_ids"][0]}).sort("quantity", -1))
         stock_history = list(db.Stock_movement.find({"organization_id": user["organization_id"], "branch_id": user["branch_ids"][0]}).sort("date", -1))
-
-
+        employees = list(db.Users.find({"organization_id": user["organization_id"], "branch_ids": {"$in": user["branch_ids"]}}))
 
     
     # adding necessary info on transactions
@@ -132,7 +130,6 @@ def home():
         for j in organization["branches"]:
             if k == j["_id"]:
                 branches.append(j)
-
 
     return render_template("home.html", 
                            year = datetime.datetime.today().year,
@@ -242,7 +239,7 @@ def edit_profile():
     
     # updating email
     if form_info['email'] != old_user_info['email']:
-        if db.Users.find_one({"email": form_info["email"]}) is None or form_info["email"]is "":
+        if db.Users.find_one({"email": form_info["email"]}) is None or form_info["email"] == "":
             db.Users.update_one({"_id": ObjectId(session.get("userid"))}, {
                 "$set": {"email": form_info["email"]}
             })
@@ -290,22 +287,29 @@ def edit_employee():
     form_info = request.form
     # getting initial user and organization info
     user_info = db.Users.find_one({"_id": ObjectId(form_info["employee_id"])})
+
     # updating user name
     if form_info['username'] != user_info['username']:
-        if db.Users.find_one({"username": form_info["username"]}) is None:
+        if db.Users.update_one({"_id": ObjectId(form_info["username"])}) == None:
             db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
                 "$set": {"username": form_info["username"]}
             })
+            flash("User name update successful!", "success")
         else:
-            flash("User Name Already Taken, Use Another")
+            flash("user name already taken !", "danger")
             
     # updating email
     if form_info['email'] != user_info['email']:
-        print("reached here")
-        if db.Users.find_one({"email": form_info["email"]}) is None or form_info.get("email") == "":
+        if form_info.get("email") == "":
             db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
                 "$set": {"email": form_info["email"]}
             })
+            flash("email removed!", "success")
+        elif db.Users.find_one({"email": form_info["email"]}) is None:
+            db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
+                "$set": {"email": form_info["email"]}
+            })
+            flash("email update successful", "success")
         else:
             flash("Email Already Taken, Use Another")
     
@@ -318,7 +322,7 @@ def edit_employee():
         # updating branch id
         db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
                 "$set": {"branch_ids": [form_info.get("branch_id")]}
-            })    
+            })
     return redirect(url_for("home"))
 
 
@@ -579,3 +583,17 @@ def clear_credit():
     
     flash("clearance update successful", "success")
     return redirect(url_for("home"))
+
+@app.route("/change_employee_password)", methods=['POST'])
+def change_employee_password():
+    form_info = request.form
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    if form_info["new_password"] != form_info["confirm_password"]:
+        flash("passwords must match!", "error")
+        return redirect(url_for("home"))
+    else:
+        db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
+            "$set": {"password": bcrypt.generate_password_hash(form_info["new_password"]).decode("utf-8")}
+        })
+        flash("passwords update successful!", "success")
+        return redirect(url_for("home"))
