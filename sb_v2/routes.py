@@ -408,7 +408,7 @@ def edit_stock_item():
         })
     elif user["role"] == "Branch Manager":
         db.Stock.update_one({"_id": ObjectId(form_info["item_id"])}, {
-            "$set": {"name": form_info["name"]}
+            "$set": {"name": form_info["name"], "price": float(form_info["price"])}
         })
     flash("stock info updated successfully", "success")
     return redirect(url_for("home"))

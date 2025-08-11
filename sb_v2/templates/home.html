@@ -1359,14 +1359,16 @@ document.addEventListener('DOMContentLoaded', function () {
                    class="form-control form-control-sm" required>
           </div>
 
-          {% if user.role == 'Manager' %}
+          {% if user.role in ['Manager', 'Branch Manager'] %}
           <!-- Price Field -->
           <div class="mb-2">
             <label class="form-label fw-semibold" style="color: indigo;">Price</label>
             <input type="number" name="price" value="{{ item.price }}" step="0.01" 
                    class="form-control form-control-sm" required>
           </div>
+          {% endif %}
 
+    {% if user.role in ['Manager'] %}
           <!-- Branch Dropdown -->
 <div class="mb-2">
   <label class="form-label fw-semibold" style="color: indigo;">Branch</label>
@@ -1378,7 +1380,8 @@ document.addEventListener('DOMContentLoaded', function () {
     {% endfor %}
   </select>
 </div>
-          {% endif %}
+    {% endif %}
+
         </div>
 
         <div class="modal-footer py-2">
@@ -1570,11 +1573,15 @@ document.addEventListener('DOMContentLoaded', function () {
             <label for="itemSelect" class="form-label fw-semibold text-dark">Item</label>
             <select name="item_id" id="itemSelect" class="form-select form-select-sm" required>
               <option disabled selected value="">Select Item</option>
-              {% for item in stock_items %}
-                <option value="{{ item._id }}" data-price="{{ item.price }}">
-                  {{ item.name }} (sale at UGX {{ item.price }})
-                </option>
-              {% endfor %}
+{% for item in stock_items %} 
+  <option value="{{ item._id }}" data-price="{{ item.price }}">
+    {{ item.name }}
+    {% if item.price != 0 %}
+      <span style="font-size: smaller; font-style: italic; color: indigo;">(priced at UGX {{ item.price }})</span>
+    {% endif %}
+  </option>
+{% endfor %}
+
             </select>
           </div>
 
