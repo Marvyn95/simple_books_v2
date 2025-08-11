@@ -45,6 +45,29 @@
 
         <!-- Main Content -->
         <div class="text-dark p-4 h-100 d-flex flex-column" style="flex-grow: 6; flex-basis: 0; min-width: 0;">
+
+            {# Flashed Messages #}
+            {% with messages = get_flashed_messages(with_categories=true) %}
+              {% if messages %}
+                <div class="flash-messages mb-3">
+                  {% for category, message in messages %}
+                    {% set bs_class = {
+                      'success':'success',
+                      'error':'danger',
+                      'warning':'warning',
+                      'info':'info'
+                    }[category] if category in ['success','error','warning','info'] else 'secondary' %}
+                    <div class="alert alert-{{ bs_class }} alert-dismissible fade show py-2 px-3 small shadow-sm rounded-3"
+                         role="alert" style="font-size: .72rem;">
+                      <i class="bi bi-info-circle me-1"></i>{{ message }}
+                      <button type="button" class="btn-close p-2" data-bs-dismiss="alert" aria-label="Close"
+                              style="transform: scale(.7);"></button>
+                    </div>
+                  {% endfor %}
+                </div>
+              {% endif %}
+            {% endwith %}
+
             <!-- Greeting Card -->
             <div class="card mb-4 border shadow-lg bg-secondary-subtle rounded-4">
                 <div class="card-body d-flex justify-content-between align-items-center p-3">
@@ -636,81 +659,73 @@ document.addEventListener('DOMContentLoaded', function () {
 
 
 
+<!-- Profile Offcanvas -->
+<div class="offcanvas offcanvas-end shadow-lg" tabindex="-1" id="profileOffcanvas" 
+     aria-labelledby="profileOffcanvasLabel" style="background-color: #f4f5ff; min-width: 320px; max-width: 360px;">
 
-        <!-- Profile Offcanvas -->
-        <div class="offcanvas offcanvas-start shadow" tabindex="-1" id="profileOffcanvas" 
-             aria-labelledby="profileOffcanvasLabel" style="background-color: #f4f5ff; min-width: 280px;">
-            <div class="offcanvas-header border-bottom">
-                <h5 class="offcanvas-title fw-semibold d-flex align-items-center" id="profileOffcanvasLabel" 
-                    style="color: indigo;">
-                    <i class="bi bi-person-circle me-2 fs-4" style="color: indigo;"></i> My Profile
-                </h5>
-                <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
-            </div>
-            <div class="offcanvas-body px-3 py-4">
-                <div class="mb-4">
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="bi bi-person-fill fs-5 me-2" style="color: indigo;"></i>
-                        <div>
-                            <div class="small text-muted">Username</div>
-                            <div class="fw-semibold" style="color: indigo;">{{ user['username'] }}</div>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="bi bi-envelope-fill fs-5 me-2" style="color: indigo;"></i>
-                        <div>
-                            <div class="small text-muted">Email</div>
-                            <div class="fw-semibold" style="color: indigo;">{{ user['email'] }}</div>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="bi bi-building fs-5 me-2" style="color: indigo;"></i>
-                        <div>
-                            <div class="small text-muted">Organization</div>
-                            <div class="fw-semibold" style="color: indigo;">{{ organization['organization'] }}</div>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-center mb-3">
-                        <i class="bi bi-award-fill fs-5 me-2" style="color: indigo;"></i>
-                        <div>
-                            <div class="small text-muted">Role</div>
-                            <div class="fw-semibold" style="color: indigo;">{{ user['role'] }}</div>
-                        </div>
-                    </div>
-                    <div class="d-flex align-items-start mb-3">
-                        <i class="bi bi-geo-alt-fill fs-5 me-2 mt-1" style="color: indigo;"></i>
-                        <div class="flex-grow-1">
-                            <div class="small text-muted">Branches</div>
-                            <ul class="list-group list-group-flush small">
-                                {% for branch in organization.branches %}
-                                <li class="list-group-item d-flex justify-content-between align-items-center px-0 py-1 border-0">
-                                    <span class="fw-semibold" style="color: indigo;">{{ branch.branch }}</span>
-{% if user['role'] == 'Manager' %}
-<button class="btn btn-sm btn-outline-primary px-2 py-0" 
-        data-bs-toggle="modal" data-bs-target="#editBranchModal_{{ branch._id }}">
-    <i class="bi bi-pencil"></i>
-</button>
-{% endif %}
-                                </li>
-                                {% endfor %}
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-{% if user['role'] == 'Manager' %}
-<div class="border-top pt-3 text-end">
-    <button class="btn btn-sm" style="border: 1px solid indigo; color: indigo;" 
-            data-bs-toggle="modal" data-bs-target="#editProfileModal">
-        <i class="bi bi-pencil-square me-1"></i>Edit Profile
-    </button>
-    <button class="btn btn-sm btn-outline-primary" data-bs-toggle="modal" 
-            data-bs-target="#addBranchModal">
-        <i class="bi bi-plus-circle me-1"></i>Add Branch
-    </button>
+  <div class="offcanvas-header border-bottom border-2">
+    <h5 class="offcanvas-title d-flex align-items-center gap-2" id="profileOffcanvasLabel" style="color: indigo; font-weight: 600; font-size: 1.25rem;">
+      <i class="bi bi-person-circle fs-3"></i> My Profile
+    </h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+
+  <div class="offcanvas-body px-4 py-3">
+    <dl class="row mb-4" style="font-size: 0.9rem; color: #333;">
+      
+      <dt class="col-5 d-flex align-items-center text-indigo fw-semibold" style="color: indigo;">
+        <i class="bi bi-person-fill me-2"></i> Username
+      </dt>
+      <dd class="col-7">{{ user['username'] }}</dd>
+
+      <dt class="col-5 d-flex align-items-center text-indigo fw-semibold" style="color: indigo;">
+        <i class="bi bi-envelope-fill me-2"></i> Email
+      </dt>
+      <dd class="col-7">{{ user['email'] or "Not Provided" }}</dd>
+
+      <dt class="col-5 d-flex align-items-center text-indigo fw-semibold" style="color: indigo;">
+        <i class="bi bi-building me-2"></i> Organization
+      </dt>
+      <dd class="col-7">{{ organization['organization'] }}</dd>
+
+      <dt class="col-5 d-flex align-items-center text-indigo fw-semibold" style="color: indigo;">
+        <i class="bi bi-award-fill me-2"></i> Role
+      </dt>
+      <dd class="col-7 text-capitalize">{{ user['role'] }}</dd>
+
+      <dt class="col-5 d-flex align-items-center text-indigo fw-semibold" style="color: indigo; white-space: nowrap;">
+        <i class="bi bi-geo-alt-fill me-2"></i> Branches
+      </dt>
+      <dd class="col-7">
+        {% for branch in organization.branches %}
+          {% if user['role'] == 'Manager' %}
+            <a href="#" class="text-indigo text-decoration-none fw-semibold me-1" 
+               data-bs-toggle="modal" data-bs-target="#editBranchModal_{{ branch._id }}" 
+               style="cursor: pointer;">
+              {{ branch.branch }}
+            </a>{% if not loop.last %}, {% endif %}
+          {% else %}
+            <span class="fw-normal me-1">{{ branch.branch }}{% if not loop.last %}, {% endif %}</span>
+          {% endif %}
+        {% endfor %}
+      </dd>
+    </dl>
+
+    {% if user['role'] == 'Manager' %}
+    <div class="d-flex justify-content-end gap-2 mt-4">
+      <button class="btn btn-outline-primary btn-sm d-flex align-items-center gap-1" 
+              data-bs-toggle="modal" data-bs-target="#editProfileModal" type="button" style="font-size: 0.9rem;">
+        <i class="bi bi-pencil-square"></i> Edit Profile
+      </button>
+      <button class="btn btn-primary btn-sm d-flex align-items-center gap-1" 
+              data-bs-toggle="modal" data-bs-target="#addBranchModal" type="button" style="font-size: 0.9rem;">
+        <i class="bi bi-plus-circle"></i> Add Branch
+      </button>
+    </div>
+    {% endif %}
+  </div>
 </div>
-{% endif %}
-            </div>
-        </div>
+
 
 <!-- Employee Offcanvas -->
 <div class="offcanvas offcanvas-end" tabindex="-1" id="employeeOffcanvas" 
@@ -1739,6 +1754,14 @@ document.addEventListener('DOMContentLoaded', function () {
     <!-- JavaScript Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script>
+        // Auto-dismiss flash messages
+        setTimeout(() => {
+          document.querySelectorAll('.flash-messages .alert').forEach(alert => {
+            const bsAlert = new bootstrap.Alert(alert);
+            bsAlert.close();
+          });
+        }, 5000);
+
         // Branch selection for Manager
         function saveBranchSelection(selectElement) {
             localStorage.setItem('selectedBranch', selectElement.value);
