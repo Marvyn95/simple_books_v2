@@ -6,42 +6,104 @@
     <title>Simple Books</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet" />
+
+    <style>
+  @media (max-width: 576px) {
+    .table-responsive table tbody tr td {
+      max-width: 100px;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      vertical-align: middle;
+    }
+    .table-responsive table tbody tr td:nth-child(4) {
+      max-width: 120px;
+    }
+  }
+  
+  @media (max-width: 576px) {
+  /* Hide employee name column (3rd td) */
+  .table-responsive table tbody tr td:nth-child(3) {
+    display: none;
+  }
+
+  /* Hide last td in each row */
+  .table-responsive table tbody tr td:last-child {
+    display: none;
+  }
+}
+</style>
+
 </head>
 <body class="bg-light h-100">
     <div class="container-fluid vh-100 py-3 d-flex flex-wrap justify-content-center align-items-stretch gap-3">
-        <!-- Sidebar -->
-        <div class="text-white rounded-4 shadow-lg p-4 d-flex flex-column justify-content-between h-100"
-             style="background-color: indigo; flex-grow: 1; flex-basis: 0; min-width: 0;">
-            <div>
-                <h5 class="text-center mb-4">Simple Books</h5>
-                <ul class="nav flex-column gap-3">
-                    <li class="nav-item">
-                        <a href="#" class="nav-link text-white text-center" data-bs-toggle="offcanvas" data-bs-target="#profileOffcanvas" role="button">
-                            <i class="bi bi-person-fill fs-6 d-block"></i>
-                            <small>Profile</small>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link text-white text-center" data-bs-toggle="offcanvas" href="#inventoryOffcanvas" role="button" aria-controls="inventoryOffcanvas">
-                            <i class="bi bi-box-seam fs-6 d-block"></i>
-                            <small>Inventory</small>
-                        </a>
-                    </li>
-                    <li class="nav-item">
-                        <a href="#" class="nav-link text-white text-center" data-bs-toggle="offcanvas" data-bs-target="#employeeOffcanvas" role="button">
-                            <i class="bi bi-people-fill fs-6 d-block"></i>
-                            <small>Employees</small>
-                        </a>
-                    </li>
-                </ul>
-            </div>
-            <div class="text-center mt-auto pt-3 border-top border-secondary">
-                <a href="{{ url_for('logout') }}" class="nav-link text-white">
-                    <i class="bi bi-box-arrow-right fs-6 d-block"></i>
-                    <small>Logout</small>
-                </a>
-            </div>
-        </div>
+<!-- Mobile toggle button (compact, floating) -->
+<button class="btn btn-sm d-md-none position-absolute top-2 start-2 rounded-circle p-1"
+        type="button"
+        data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas"
+        aria-controls="sidebarOffcanvas"
+        style="background-color: indigo; color: white; z-index: 1051;">
+  <i class="bi bi-list fs-5"></i>
+</button>
+
+
+<!-- Offcanvas for small screens -->
+<div class="offcanvas offcanvas-start d-md-none" tabindex="-1" id="sidebarOffcanvas"
+     aria-labelledby="sidebarLabel" style="background-color: indigo; color: white;">
+  <div class="offcanvas-header border-bottom border-light">
+    <h5 class="offcanvas-title" id="sidebarLabel">Simple Books</h5>
+    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body d-flex flex-column justify-content-between p-3" style="height: 100%;">
+    <nav class="nav flex-column gap-3 text-center">
+      <a href="#" class="nav-link text-white" data-bs-toggle="offcanvas" data-bs-target="#profileOffcanvas">
+        <i class="bi bi-person-fill d-block mb-1"></i><small>Profile</small>
+      </a>
+      <a href="#" class="nav-link text-white" data-bs-toggle="offcanvas" data-bs-target="#inventoryOffcanvas">
+        <i class="bi bi-box-seam d-block mb-1"></i><small>Inventory</small>
+      </a>
+      <a href="#" class="nav-link text-white" data-bs-toggle="offcanvas" data-bs-target="#employeeOffcanvas">
+        <i class="bi bi-people-fill d-block mb-1"></i><small>Employees</small>
+      </a>
+    </nav>
+    <div class="mt-4 border-top border-light pt-3 text-center">
+      <a href="{{ url_for('logout') }}" class="nav-link text-white">
+        <i class="bi bi-box-arrow-right d-block mb-1"></i><small>Logout</small>
+      </a>
+    </div>
+  </div>
+</div>
+
+<!-- Desktop sidebar (always visible on md+) -->
+<aside class="d-none d-md-flex flex-column justify-content-between text-white p-3 rounded-4 shadow-lg"
+       style="background-color: indigo; min-width: 220px; max-width: 260px; height: 100%;">
+  <div>
+    <h5 class="text-center mb-4">Simple Books</h5>
+    <ul class="nav flex-column gap-3 text-center">
+      <li class="nav-item">
+        <a href="#" class="nav-link text-white" data-bs-toggle="offcanvas" data-bs-target="#profileOffcanvas">
+          <i class="bi bi-person-fill d-block mb-1"></i><small>Profile</small>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link text-white" data-bs-toggle="offcanvas" data-bs-target="#inventoryOffcanvas">
+          <i class="bi bi-box-seam d-block mb-1"></i><small>Inventory</small>
+        </a>
+      </li>
+      <li class="nav-item">
+        <a href="#" class="nav-link text-white" data-bs-toggle="offcanvas" data-bs-target="#employeeOffcanvas">
+          <i class="bi bi-people-fill d-block mb-1"></i><small>Employees</small>
+        </a>
+      </li>
+    </ul>
+  </div>
+  <div class="text-center mt-auto pt-3 border-top border-white-25">
+    <a href="{{ url_for('logout') }}" class="nav-link text-white">
+      <i class="bi bi-box-arrow-right d-block mb-1"></i><small>Logout</small>
+    </a>
+  </div>
+</aside>
+
 
         <!-- Main Content -->
         <div class="text-dark p-4 h-100 d-flex flex-column" style="flex-grow: 6; flex-basis: 0; min-width: 0;">
@@ -79,23 +141,221 @@
                 </div>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="row g-3 mb-4">
-                <div class="col-md-6">
-                    <button type="button" class="w-100 d-flex flex-column align-items-center justify-content-center p-3 rounded-4 shadow-lg border-0 bg-secondary-subtle"
-                        data-bs-toggle="modal" data-bs-target="#newSaleModal" style="cursor: pointer;">
-                        <i class="bi bi-cash-stack fs-3 text-success mb-2"></i>
-                        <span class="fw-semibold text-dark">New Sale</span>
-                    </button>
-                </div>
-                <div class="col-md-6">
-                    <button type="button" class="w-100 d-flex flex-column align-items-center justify-content-center p-3 rounded-4 shadow-lg border-0 bg-secondary-subtle"
-                        data-bs-toggle="modal" data-bs-target="#newExpenseModal" style="cursor: pointer;">
-                        <i class="bi bi-receipt fs-3 text-danger mb-2"></i>
-                        <span class="fw-semibold text-dark">New Expense</span>
-                    </button>
-                </div>
-            </div>
+<!-- Action Buttons -->
+<div class="row g-3 mb-4">
+    <div class="col-6">
+        <button type="button" class="w-100 d-flex flex-column align-items-center justify-content-center p-3 rounded-4 shadow-lg border-0 bg-secondary-subtle"
+            data-bs-toggle="modal" data-bs-target="#newSaleModal" style="cursor: pointer;">
+            <i class="bi bi-cash-stack fs-3 text-success mb-2"></i>
+            <span class="fw-semibold text-dark">New Sale</span>
+        </button>
+    </div>
+    <div class="col-6">
+        <button type="button" class="w-100 d-flex flex-column align-items-center justify-content-center p-3 rounded-4 shadow-lg border-0 bg-secondary-subtle"
+            data-bs-toggle="modal" data-bs-target="#newExpenseModal" style="cursor: pointer;">
+            <i class="bi bi-receipt fs-3 text-danger mb-2"></i>
+            <span class="fw-semibold text-dark">New Expense</span>
+        </button>
+    </div>
+</div>
+
+<!-- New Sale Modal -->
+<div class="modal fade" id="newSaleModal" tabindex="-1" aria-labelledby="newSaleModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('new_sale') }}">
+      <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
+
+        <!-- Modal Header -->
+        <div class="modal-header border-bottom py-2">
+          <h6 class="modal-title fw-semibold text-success" id="newSaleModalLabel">
+            <i class="bi bi-cash-stack me-2"></i>New Sale
+          </h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.85);"></button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="modal-body px-3 py-2">
+          <input type="hidden" name="user_id" value="{{ user._id }}">
+
+          {% if user.role == 'Manager' %}
+          <!-- Branch Selection -->
+          <div class="mb-3">
+            <label for="branchSelect" class="form-label fw-semibold text-dark">Branch</label>
+            <select name="branch_id" id="branchSelect" class="form-select form-select-sm" required>
+              <option value="">Select Branch</option>
+              {% for branch in organization.branches %}
+                <option value="{{ branch._id }}" {% if branch._id == selected_branch_id %}selected{% endif %}>
+                  {{ branch.branch }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+
+          <!-- Item Selection -->
+          <div class="mb-3">
+            <label for="itemSelect" class="form-label fw-semibold text-dark">Item</label>
+            <select name="item_id" id="itemSelect" class="form-select form-select-sm" required>
+              <option disabled selected value="">Select Item</option>
+{% for item in stock_items %} 
+  <option value="{{ item._id }}" data-price="{{ item.price }}">
+    {{ item.name }}
+    {% if item.price != 0 %}
+      <span style="font-size: smaller; font-style: italic; color: indigo;">(priced at UGX {{ item.price }})</span>
+    {% endif %}
+  </option>
+{% endfor %}
+
+            </select>
+          </div>
+
+          <!-- Quantity Sold -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold text-dark">Quantity Sold</label>
+            <input type="number" name="quantity" id="quantityInput" min="1" class="form-control form-control-sm" required>
+          </div>
+
+          <!-- Unit Price -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold text-dark">Unit Price (UGX)</label>
+            <input type="number" name="unit_price" id="unitPriceInput" step="0.01" min="0" class="form-control form-control-sm" required>
+          </div>
+
+          <!-- Amount Paid -->
+          <div class="mb-3">
+            <label class="form-label fw-semibold text-dark">Amount Paid (UGX)</label>
+            <input type="number" name="amount_paid" id="amountPaidInput" step="0.01" min="0" class="form-control form-control-sm" required>
+          </div>
+
+          <!-- Client Name -->
+          <div class="mb-3">
+            <label class="form-label text-dark">Client Name <span class="text-muted">(Optional)</span></label>
+            <input type="text" name="client_name" class="form-control form-control-sm">
+          </div>
+
+          <!-- Client Contact -->
+          <div class="mb-2">
+            <label class="form-label text-dark">Client Contact <span class="text-muted">(Optional)</span></label>
+            <input type="text" name="client_contact" class="form-control form-control-sm">
+          </div>
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-success">Save Sale</button>
+        </div>
+      </div>
+    </form>
+  </div>
+</div>
+
+
+
+<!-- Script for autofill & calculation -->
+<script>
+  document.addEventListener("DOMContentLoaded", function () {
+    const itemSelect = document.getElementById("itemSelect");
+    const unitPriceInput = document.getElementById("unitPriceInput");
+    const quantityInput = document.getElementById("quantityInput");
+    const amountPaidInput = document.getElementById("amountPaidInput");
+
+    function computeAmount() {
+      const qty = parseFloat(quantityInput.value);
+      const unit = parseFloat(unitPriceInput.value);
+      if (!isNaN(qty) && !isNaN(unit)) {
+        amountPaidInput.value = (qty * unit).toFixed(2);
+      }
+    }
+
+    // On item change -> prefill unit price
+    itemSelect.addEventListener("change", function () {
+      const selected = itemSelect.options[itemSelect.selectedIndex];
+      const price = selected.getAttribute("data-price");
+      if (price) {
+        unitPriceInput.value = price;
+        computeAmount();
+      }
+    });
+
+    // On quantity or unit price input change -> update amount
+    quantityInput.addEventListener("input", computeAmount);
+    unitPriceInput.addEventListener("input", computeAmount);
+  });
+</script>
+
+
+
+<!-- New Expense Modal -->
+<div class="modal fade" id="newExpenseModal" tabindex="-1" aria-labelledby="newExpenseModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <form method="POST" action="{{ url_for('new_expense') }}">
+      <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
+        
+        <!-- Modal Header -->
+        <div class="modal-header border-bottom py-2">
+          <h6 class="modal-title fw-semibold text-danger" id="newExpenseModalLabel">
+            <i class="bi bi-receipt me-2"></i>New Expense
+          </h6>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.85);"></button>
+        </div>
+
+        <!-- Modal Body -->
+        <div class="modal-body px-3 py-2">
+          <input type="hidden" name="user_id" value="{{ user._id }}">
+
+          {% if user.role == 'Manager' %}
+          <!-- Branch Selection -->
+          <div class="mb-3">
+            <label for="branchSelect" class="form-label fw-semibold text-dark">Branch</label>
+            <select name="branch_id" id="branchSelect" class="form-select form-select-sm" required>
+              <option value="">Select Branch</option>
+              {% for branch in organization.branches %}
+                <option value="{{ branch._id }}" {% if branch._id == selected_branch_id %}selected{% endif %}>
+                  {{ branch.branch }}
+                </option>
+              {% endfor %}
+            </select>
+          </div>
+          {% endif %}
+
+          <!-- Purpose -->
+          <div class="mb-3">
+            <label for="expensePurpose" class="form-label fw-semibold text-dark">Purpose</label>
+            <input type="text" id="expensePurpose" name="purpose" class="form-control form-control-sm" required>
+          </div>
+
+          <!-- Amount -->
+          <div class="mb-3">
+            <label for="expenseAmount" class="form-label fw-semibold text-dark">Amount (UGX)</label>
+            <input type="number" id="expenseAmount" name="amount" min="0" step="0.01" class="form-control form-control-sm" required>
+          </div>
+
+<!-- Authorized By -->
+<div class="mb-2">
+  <label for="authorizedBy" class="form-label fw-semibold text-dark">Authorized By</label>
+  <select name="authorized_by" id="authorizedBy" class="form-select form-select-sm" required>
+    <option disabled selected value="">Select Authorizer</option>
+    {% for emp in employees %}
+      {% if emp.role == 'Branch Manager' or emp.role == 'Manager' %}
+        <option value="{{ emp._id }}">{{ emp.username }}</option>
+      {% endif %}
+    {% endfor %}
+  </select>
+</div>
+
+        </div>
+
+        <!-- Modal Footer -->
+        <div class="modal-footer py-2">
+          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" class="btn btn-sm btn-danger">Save Expense</button>
+        </div>
+
+      </div>
+    </form>
+  </div>
+</div>
 
             <!-- Transactions Table Card -->
             <div class="card shadow-sm rounded-4 flex-grow-1 d-flex flex-column overflow-hidden">
@@ -413,171 +673,174 @@
             {% endfor %}
         </div>
 
-        <!-- Right Sidebar -->
-        <div class="bg-light text-dark p-4 h-100"
-             style="flex-grow: 3; flex-basis: 0; min-width: 0; display: flex; flex-direction: column;">
-            <!-- Profile Card -->
-            <div class="mb-4">
-                <div class="card shadow-lg border-1 rounded-4 mb-4" style="font-size: 0.82rem;">
-                    <div class="card-body py-3 px-4">
-                        <!-- Company / Business -->
-                        <div class="d-flex align-items-start gap-2 pb-3 border-bottom">
-                            <div class="bg-primary bg-opacity-10 text-primary p-2 rounded">
-                                <i class="bi bi-building"></i>
-                            </div>
-                            <div>
-                                <div class="fw-semibold text-dark">Company / Business</div>
-                                <div class="text-indigo small">{{ organization["organization"] }}</div>
-                            </div>
-                        </div>
-                        <!-- Branch Selector -->
-                        <div class="d-flex align-items-start gap-2 py-3 border-bottom">
-                            <div class="bg-danger bg-opacity-10 text-danger p-2 rounded">
-                                <i class="bi bi-geo-alt-fill"></i>
-                            </div>
-                            <div class="flex-grow-1">
-                                <div class="fw-semibold text-dark mb-1">Branch</div>
-                                {% if user['role'] == 'Manager' %}
-                                    <form method="POST" action="{{ url_for('home') }}">
-                                        <select id="branchSelect" name="branch_id" class="form-select form-select-sm w-auto"
-                                                onchange="saveBranchSelection(this)">
-                                            <option value="">All branches</option>
-                                            {% for branch in organization['branches'] %}
-                                                <option value="{{ branch['_id'] }}">{{ branch['branch'] }}</option>
-                                            {% endfor %}
-                                        </select>
-                                    </form>
-                                {% else %}
-                                    <div class="text-indigo small">{{ branches[0]["branch"] }}</div>
-                                {% endif %}
-                            </div>
-                        </div>
-                        <!-- Role -->
-                        <div class="d-flex align-items-start gap-2 pt-3">
-                            <div class="bg-secondary bg-opacity-10 text-secondary p-2 rounded">
-                                <i class="bi bi-person-badge-fill"></i>
-                            </div>
-                            <div>
-                                <div class="fw-semibold text-dark">Role</div>
-                                <div class="text-indigo small">{{ user['role'] }}</div>
-                            </div>
-                        </div>
+<!-- Right Sidebar -->
+<div class="bg-light text-dark p-4 h-100 d-none d-lg-flex"
+     style="flex-grow: 3; flex-basis: 0; min-width: 0; display: flex; flex-direction: column;">
+    <!-- Profile Card -->
+    <div class="mb-4">
+        <div class="card shadow-lg border-1 rounded-4 mb-4" style="font-size: 0.82rem;">
+            <div class="card-body py-3 px-4">
+                <!-- Company / Business -->
+                <div class="d-flex align-items-start gap-2 pb-3 border-bottom">
+                    <div class="bg-primary bg-opacity-10 text-primary p-2 rounded">
+                        <i class="bi bi-building"></i>
+                    </div>
+                    <div>
+                        <div class="fw-semibold text-dark">Company / Business</div>
+                        <div class="text-indigo small">{{ organization["organization"] }}</div>
                     </div>
                 </div>
-                <script>
-                    function saveBranchSelection(selectElement) {
-                        localStorage.setItem('selectedBranch', selectElement.value);
-                        selectElement.form.submit();
-                    }
-                    document.addEventListener('DOMContentLoaded', function () {
-                        const savedBranch = localStorage.getItem('selectedBranch');
-                        const branchSelect = document.getElementById('branchSelect');
-                        if (savedBranch !== null && branchSelect) {
-                            branchSelect.value = savedBranch;
-                        }
-                        const logoutLink = document.querySelector('a[href="{{ url_for("logout") }}"]');
-                        if (logoutLink) {
-                            logoutLink.addEventListener('click', function () {
-                                localStorage.removeItem('selectedBranch');
-                            });
-                        }
+                <!-- Branch Selector -->
+                <div class="d-flex align-items-start gap-2 py-3 border-bottom">
+                    <div class="bg-danger bg-opacity-10 text-danger p-2 rounded">
+                        <i class="bi bi-geo-alt-fill"></i>
+                    </div>
+                    <div class="flex-grow-1">
+                        <div class="fw-semibold text-dark mb-1">Branch</div>
+                        {% if user['role'] == 'Manager' %}
+                            <form method="POST" action="{{ url_for('home') }}">
+                                <select id="branchSelect" name="branch_id" class="form-select form-select-sm w-auto"
+                                        onchange="saveBranchSelection(this)">
+                                    <option value="">All branches</option>
+                                    {% for branch in organization['branches'] %}
+                                        <option value="{{ branch['_id'] }}">{{ branch['branch'] }}</option>
+                                    {% endfor %}
+                                </select>
+                            </form>
+                        {% else %}
+                            <div class="text-indigo small">{{ branches[0]["branch"] }}</div>
+                        {% endif %}
+                    </div>
+                </div>
+                <!-- Role -->
+                <div class="d-flex align-items-start gap-2 pt-3">
+                    <div class="bg-secondary bg-opacity-10 text-secondary p-2 rounded">
+                        <i class="bi bi-person-badge-fill"></i>
+                    </div>
+                    <div>
+                        <div class="fw-semibold text-dark">Role</div>
+                        <div class="text-indigo small">{{ user['role'] }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <script>
+            function saveBranchSelection(selectElement) {
+                localStorage.setItem('selectedBranch', selectElement.value);
+                selectElement.form.submit();
+            }
+            document.addEventListener('DOMContentLoaded', function () {
+                const savedBranch = localStorage.getItem('selectedBranch');
+                const branchSelect = document.getElementById('branchSelect');
+                if (savedBranch !== null && branchSelect) {
+                    branchSelect.value = savedBranch;
+                }
+                const logoutLink = document.querySelector('a[href="{{ url_for("logout") }}"]');
+                if (logoutLink) {
+                    logoutLink.addEventListener('click', function () {
+                        localStorage.removeItem('selectedBranch');
                     });
-                </script>
+                }
+            });
+        </script>
+    </div>
+
+    <!-- Performance Section -->
+    {% if user.role in ['Manager', 'Branch Manager'] %}
+    <div class="card shadow-lg rounded-4 mb-4" style="font-size: 0.8rem;">
+      <div class="card-body p-3">
+        <h6 class="fw-bold mb-3 text-dark" style="font-size: 0.85rem;">Performance Overview</h6>
+
+        <!-- Performance Tabs -->
+        <ul class="nav nav-tabs nav-fill mb-3 rounded-3 overflow-hidden" id="performanceTabs" role="tablist" style="font-size: 0.78rem;">
+          {% set tabs = [
+            {'id': 'sales', 'label': 'Sales', 'color': 'text-indigo'},
+            {'id': 'expenses', 'label': 'Expenses', 'color': 'text-danger'},
+            {'id': 'profit', 'label': 'Profit', 'color': 'text-success'}
+          ] %}
+          {% for tab in tabs %}
+          <li class="nav-item" role="presentation">
+            <button class="nav-link {% if loop.first %}active{% endif %}" 
+                    id="{{ tab.id }}-tab" data-bs-toggle="tab" data-bs-target="#{{ tab.id }}"
+                    type="button" role="tab" style="color: indigo; font-weight: 600;">
+              {{ tab.label }}
+            </button>
+          </li>
+          {% endfor %}
+        </ul>
+
+        <!-- Tabs Style -->
+        <style>
+          #performanceTabs .nav-link.active {
+            background-color: transparent !important;
+            border-bottom: 3px solid indigo !important;
+            color: indigo !important;
+            font-weight: 700;
+          }
+          #performanceTabs .nav-link {
+            transition: background 0.2s, color 0.2s;
+          }
+          #performanceTabsContent table {
+            font-size: 0.78rem;
+          }
+        </style>
+
+        <!-- Tab Contents -->
+        <div class="tab-content" id="performanceTabsContent">
+
+          {% set datasets = {
+            'sales': {'data': monthly_sales_list, 'key': 'total_sales_revenue', 'color': 'text-indigo'},
+            'expenses': {'data': monthly_expenses_list, 'key': 'total_expenses', 'color': 'text-danger'},
+            'profit': {'data': monthly_profit, 'key': 'profit', 'color': 'text-success'}
+          } %}
+
+          {% for tab in tabs %}
+          <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
+               id="{{ tab.id }}" role="tabpanel" aria-labelledby="{{ tab.id }}-tab">
+
+            <div class="table-responsive">
+              <table class="table table-sm overflow-hidden">
+                <thead class="border-bottom text-muted">
+                  <tr>
+                    <th>Month</th>
+                    <th class="text-end">Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {% for row in datasets[tab.id].data %}
+                  <tr class="border-bottom">
+                    <td>
+                      {% if tab.id in ['sales', 'expenses'] %}
+                        <!-- Button trigger modal -->
+                        <button type="button" class="btn btn-link p-0 m-0 align-baseline text-decoration-none" 
+                                style="font-size: 0.78rem; color: indigo;" 
+                                data-bs-toggle="modal" 
+                                data-bs-target="#modal_{{ tab.id }}_{{ row.month | replace('-', '') }}">
+                          {{ row.month }}
+                        </button>
+                      {% else %}
+                        {{ row.month }}
+                      {% endif %}
+                    </td>
+                    <td class="text-end fw-semibold {{ datasets[tab.id].color }}">
+                      UGX {{ "{:,.0f}".format(row[datasets[tab.id].key]) }}
+                    </td>
+                  </tr>
+                  {% endfor %}
+                </tbody>
+              </table>
             </div>
 
-            <!-- Performance Section -->
-            {% if user.role in ['Manager', 'Branch Manager'] %}
-            <div class="card shadow-lg rounded-4 mb-4" style="font-size: 0.8rem;">
-              <div class="card-body p-3">
-                <h6 class="fw-bold mb-3 text-dark" style="font-size: 0.85rem;">Performance Overview</h6>
+          </div>
+          {% endfor %}
 
-                <!-- Performance Tabs -->
-                <ul class="nav nav-tabs nav-fill mb-3 rounded-3 overflow-hidden" id="performanceTabs" role="tablist" style="font-size: 0.78rem;">
-                  {% set tabs = [
-                    {'id': 'sales', 'label': 'Sales', 'color': 'text-indigo'},
-                    {'id': 'expenses', 'label': 'Expenses', 'color': 'text-danger'},
-                    {'id': 'profit', 'label': 'Profit', 'color': 'text-success'}
-                  ] %}
-                  {% for tab in tabs %}
-                  <li class="nav-item" role="presentation">
-                    <button class="nav-link {% if loop.first %}active{% endif %}" 
-                            id="{{ tab.id }}-tab" data-bs-toggle="tab" data-bs-target="#{{ tab.id }}"
-                            type="button" role="tab" style="color: indigo; font-weight: 600;">
-                      {{ tab.label }}
-                    </button>
-                  </li>
-                  {% endfor %}
-                </ul>
+        </div>
+      </div>
+    </div>
+</div>
 
-                <!-- Tabs Style -->
-                <style>
-                  #performanceTabs .nav-link.active {
-                    background-color: transparent !important;
-                    border-bottom: 3px solid indigo !important;
-                    color: indigo !important;
-                    font-weight: 700;
-                  }
-                  #performanceTabs .nav-link {
-                    transition: background 0.2s, color 0.2s;
-                  }
-                  #performanceTabsContent table {
-                    font-size: 0.78rem;
-                  }
-                </style>
 
-                <!-- Tab Contents -->
-                <div class="tab-content" id="performanceTabsContent">
-
-                  {% set datasets = {
-                    'sales': {'data': monthly_sales_list, 'key': 'total_sales_revenue', 'color': 'text-indigo'},
-                    'expenses': {'data': monthly_expenses_list, 'key': 'total_expenses', 'color': 'text-danger'},
-                    'profit': {'data': monthly_profit, 'key': 'profit', 'color': 'text-success'}
-                  } %}
-
-                  {% for tab in tabs %}
-                  <div class="tab-pane fade {% if loop.first %}show active{% endif %}" 
-                       id="{{ tab.id }}" role="tabpanel" aria-labelledby="{{ tab.id }}-tab">
-
-                    <div class="table-responsive">
-                      <table class="table table-sm overflow-hidden">
-                        <thead class="border-bottom text-muted">
-                          <tr>
-                            <th>Month</th>
-                            <th class="text-end">Amount</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {% for row in datasets[tab.id].data %}
-                          <tr class="border-bottom">
-                            <td>
-                              {% if tab.id in ['sales', 'expenses'] %}
-                                <!-- Button trigger modal -->
-                                <button type="button" class="btn btn-link p-0 m-0 align-baseline text-decoration-none" 
-                                        style="font-size: 0.78rem; color: indigo;" 
-                                        data-bs-toggle="modal" 
-                                        data-bs-target="#modal_{{ tab.id }}_{{ row.month | replace('-', '') }}">
-                                  {{ row.month }}
-                                </button>
-                              {% else %}
-                                {{ row.month }}
-                              {% endif %}
-                            </td>
-                            <td class="text-end fw-semibold {{ datasets[tab.id].color }}">
-                              UGX {{ "{:,.0f}".format(row[datasets[tab.id].key]) }}
-                            </td>
-                          </tr>
-                          {% endfor %}
-                        </tbody>
-                      </table>
-                    </div>
-
-                  </div>
-                  {% endfor %}
-
-                </div>
-              </div>
-            </div>
-
+          
             <!-- Modals for each month in sales and expenses -->
             {% for tab in tabs if tab.id in ['sales', 'expenses'] %}
               {% for row in datasets[tab.id].data %}
@@ -1550,206 +1813,9 @@ document.addEventListener('DOMContentLoaded', function () {
             </div>
         </div>
 
-<!-- New Sale Modal -->
-<div class="modal fade" id="newSaleModal" tabindex="-1" aria-labelledby="newSaleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="POST" action="{{ url_for('new_sale') }}">
-      <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
-
-        <!-- Modal Header -->
-        <div class="modal-header border-bottom py-2">
-          <h6 class="modal-title fw-semibold text-success" id="newSaleModalLabel">
-            <i class="bi bi-cash-stack me-2"></i>New Sale
-          </h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.85);"></button>
-        </div>
-
-        <!-- Modal Body -->
-        <div class="modal-body px-3 py-2">
-          <input type="hidden" name="user_id" value="{{ user._id }}">
-
-          {% if user.role == 'Manager' %}
-          <!-- Branch Selection -->
-          <div class="mb-3">
-            <label for="branchSelect" class="form-label fw-semibold text-dark">Branch</label>
-            <select name="branch_id" id="branchSelect" class="form-select form-select-sm" required>
-              <option value="">Select Branch</option>
-              {% for branch in organization.branches %}
-                <option value="{{ branch._id }}" {% if branch._id == selected_branch_id %}selected{% endif %}>
-                  {{ branch.branch }}
-                </option>
-              {% endfor %}
-            </select>
-          </div>
-          {% endif %}
-
-          <!-- Item Selection -->
-          <div class="mb-3">
-            <label for="itemSelect" class="form-label fw-semibold text-dark">Item</label>
-            <select name="item_id" id="itemSelect" class="form-select form-select-sm" required>
-              <option disabled selected value="">Select Item</option>
-{% for item in stock_items %} 
-  <option value="{{ item._id }}" data-price="{{ item.price }}">
-    {{ item.name }}
-    {% if item.price != 0 %}
-      <span style="font-size: smaller; font-style: italic; color: indigo;">(priced at UGX {{ item.price }})</span>
-    {% endif %}
-  </option>
-{% endfor %}
-
-            </select>
-          </div>
-
-          <!-- Quantity Sold -->
-          <div class="mb-3">
-            <label class="form-label fw-semibold text-dark">Quantity Sold</label>
-            <input type="number" name="quantity" id="quantityInput" min="1" class="form-control form-control-sm" required>
-          </div>
-
-          <!-- Unit Price -->
-          <div class="mb-3">
-            <label class="form-label fw-semibold text-dark">Unit Price (UGX)</label>
-            <input type="number" name="unit_price" id="unitPriceInput" step="0.01" min="0" class="form-control form-control-sm" required>
-          </div>
-
-          <!-- Amount Paid -->
-          <div class="mb-3">
-            <label class="form-label fw-semibold text-dark">Amount Paid (UGX)</label>
-            <input type="number" name="amount_paid" id="amountPaidInput" step="0.01" min="0" class="form-control form-control-sm" required>
-          </div>
-
-          <!-- Client Name -->
-          <div class="mb-3">
-            <label class="form-label text-dark">Client Name <span class="text-muted">(Optional)</span></label>
-            <input type="text" name="client_name" class="form-control form-control-sm">
-          </div>
-
-          <!-- Client Contact -->
-          <div class="mb-2">
-            <label class="form-label text-dark">Client Contact <span class="text-muted">(Optional)</span></label>
-            <input type="text" name="client_contact" class="form-control form-control-sm">
-          </div>
-        </div>
-
-        <!-- Modal Footer -->
-        <div class="modal-footer py-2">
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-sm btn-success">Save Sale</button>
-        </div>
-      </div>
-    </form>
-  </div>
-</div>
 
 
 
-<!-- Script for autofill & calculation -->
-<script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const itemSelect = document.getElementById("itemSelect");
-    const unitPriceInput = document.getElementById("unitPriceInput");
-    const quantityInput = document.getElementById("quantityInput");
-    const amountPaidInput = document.getElementById("amountPaidInput");
-
-    function computeAmount() {
-      const qty = parseFloat(quantityInput.value);
-      const unit = parseFloat(unitPriceInput.value);
-      if (!isNaN(qty) && !isNaN(unit)) {
-        amountPaidInput.value = (qty * unit).toFixed(2);
-      }
-    }
-
-    // On item change -> prefill unit price
-    itemSelect.addEventListener("change", function () {
-      const selected = itemSelect.options[itemSelect.selectedIndex];
-      const price = selected.getAttribute("data-price");
-      if (price) {
-        unitPriceInput.value = price;
-        computeAmount();
-      }
-    });
-
-    // On quantity or unit price input change -> update amount
-    quantityInput.addEventListener("input", computeAmount);
-    unitPriceInput.addEventListener("input", computeAmount);
-  });
-</script>
-
-
-
-<!-- New Expense Modal -->
-<div class="modal fade" id="newExpenseModal" tabindex="-1" aria-labelledby="newExpenseModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="POST" action="{{ url_for('new_expense') }}">
-      <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.85rem;">
-        
-        <!-- Modal Header -->
-        <div class="modal-header border-bottom py-2">
-          <h6 class="modal-title fw-semibold text-danger" id="newExpenseModalLabel">
-            <i class="bi bi-receipt me-2"></i>New Expense
-          </h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.85);"></button>
-        </div>
-
-        <!-- Modal Body -->
-        <div class="modal-body px-3 py-2">
-          <input type="hidden" name="user_id" value="{{ user._id }}">
-
-          {% if user.role == 'Manager' %}
-          <!-- Branch Selection -->
-          <div class="mb-3">
-            <label for="branchSelect" class="form-label fw-semibold text-dark">Branch</label>
-            <select name="branch_id" id="branchSelect" class="form-select form-select-sm" required>
-              <option value="">Select Branch</option>
-              {% for branch in organization.branches %}
-                <option value="{{ branch._id }}" {% if branch._id == selected_branch_id %}selected{% endif %}>
-                  {{ branch.branch }}
-                </option>
-              {% endfor %}
-            </select>
-          </div>
-          {% endif %}
-
-          <!-- Purpose -->
-          <div class="mb-3">
-            <label for="expensePurpose" class="form-label fw-semibold text-dark">Purpose</label>
-            <input type="text" id="expensePurpose" name="purpose" class="form-control form-control-sm" required>
-          </div>
-
-          <!-- Amount -->
-          <div class="mb-3">
-            <label for="expenseAmount" class="form-label fw-semibold text-dark">Amount (UGX)</label>
-            <input type="number" id="expenseAmount" name="amount" min="0" step="0.01" class="form-control form-control-sm" required>
-          </div>
-
-<!-- Authorized By -->
-<div class="mb-2">
-  <label for="authorizedBy" class="form-label fw-semibold text-dark">Authorized By</label>
-  <select name="authorized_by" id="authorizedBy" class="form-select form-select-sm" required>
-    <option disabled selected value="">Select Authorizer</option>
-    {% for emp in employees %}
-      {% if emp.role == 'Branch Manager' or emp.role == 'Manager' %}
-        <option value="{{ emp._id }}">{{ emp.username }}</option>
-      {% endif %}
-    {% endfor %}
-  </select>
-</div>
-
-        </div>
-
-        <!-- Modal Footer -->
-        <div class="modal-footer py-2">
-          <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
-          <button type="submit" class="btn btn-sm btn-danger">Save Expense</button>
-        </div>
-
-      </div>
-    </form>
-  </div>
-</div>
-
-
-    </div>
 
     <!-- JavaScript Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
