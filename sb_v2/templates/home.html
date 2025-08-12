@@ -346,7 +346,7 @@
 <!-- Authorized By -->
 <div class="mb-2">
   <label for="authorizedBy" class="form-label fw-semibold text-dark">Authorized By</label>
-  <select name="authorized_by" id="authorizedBy" class="form-select form-select-sm" required>
+  <select name="authorized_by" id="authorizedBy" class="form-select form-select-sm">
     <option disabled selected value="">Select Authorizer</option>
     {% for emp in employees %}
       {% if emp.role == 'Branch Manager' or emp.role == 'Manager' %}
@@ -710,15 +710,18 @@
                     <div class="flex-grow-1">
                         <div class="fw-semibold text-dark mb-1">Branch</div>
                         {% if user['role'] == 'Manager' %}
-                            <form method="POST" action="{{ url_for('home') }}">
-                                <select id="branchSelect" name="branch_id" class="form-select form-select-sm w-auto"
-                                        onchange="saveBranchSelection(this)">
-                                    <option value="">All branches</option>
-                                    {% for branch in organization['branches'] %}
-                                        <option value="{{ branch['_id'] }}">{{ branch['branch'] }}</option>
-                                    {% endfor %}
-                                </select>
-                            </form>
+<form method="POST" action="{{ url_for('home') }}">
+    <select id="branchSelect" name="branch_id" class="form-select form-select-sm w-auto"
+            onchange="saveBranchSelection(this)">
+        <option value="">All branches</option>
+        {% for branch in organization['branches'] %}
+            <option value="{{ branch['_id'] }}"
+                {% if selected_branch_id == branch['_id'] %}selected{% endif %}>
+                {{ branch['branch'] }}
+            </option>
+        {% endfor %}
+    </select>
+</form>
                         {% else %}
                             <div class="text-indigo small">{{ branches[0]["branch"] }}</div>
                         {% endif %}
@@ -1190,7 +1193,7 @@ document.addEventListener('DOMContentLoaded', function () {
 <!-- Reports Offcanvas (right side) -->
 <div class="offcanvas offcanvas-end bg-light text-dark" tabindex="-1" id="reportsOffcanvas" aria-labelledby="reportsOffcanvasLabel">
   <div class="offcanvas-header border-bottom">
-    <h5 class="offcanvas-title" id="reportsOffcanvasLabel">Generate Report</h5>
+    <h5 class="offcanvas-title" id="reportsOffcanvasLabel">Download Records</h5>
     <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
   </div>
   <div class="offcanvas-body p-3">
@@ -1221,20 +1224,38 @@ document.addEventListener('DOMContentLoaded', function () {
         </select>
       </div>
 
-      <!-- Branch Selection -->
-      <div class="mb-3">
-        <label for="branchSelectReport" class="form-label fw-semibold text-secondary mb-1">Branch</label>
+<!-- Branch Selection -->
+<div class="mb-3">
+    <label for="branchSelectReport" class="form-label fw-semibold text-secondary mb-1">Branch</label>
+
+    {% if user.role == "Manager" %}
+        <!-- Manager: Can choose any branch -->
         <select class="form-select form-select-sm" id="branchSelectReport" name="branch_id" required>
-          <option value="all" selected>All Branches</option>
-          {% for branch in organization.branches %}
-          <option value="{{ branch._id }}">{{ branch.branch }}</option>
-          {% endfor %}
+            <option value="all" {% if selected_branch_id == "all" %}selected{% endif %}>All Branches</option>
+            {% for branch in organization.branches %}
+                <option value="{{ branch._id }}" {% if selected_branch_id == branch._id %}selected{% endif %}>
+                    {{ branch.branch }}
+                </option>
+            {% endfor %}
         </select>
-      </div>
+    {% else %}
+        <!-- Non-manager: Only their assigned branch -->
+        <select class="form-select form-select-sm" id="branchSelectReport" name="branch_id" disabled>
+            {% for branch in organization.branches %}
+                {% if branch._id == user.branch_ids[0] %}
+                    <option value="{{ branch._id }}" selected>{{ branch.branch }}</option>
+                {% endif %}
+            {% endfor %}
+        </select>
+        <!-- Hidden field to actually submit the branch value -->
+        <input type="hidden" name="branch_id" value="{{ user.branch_ids[0] }}">
+    {% endif %}
+</div>
+
 
       <!-- Submit Button -->
       <div class="d-grid">
-        <button type="submit" class="btn btn-sm btn-primary">Generate Report</button>
+        <button type="submit" class="btn btn-sm btn-primary">Download Records</button>
       </div>
       
     </form>

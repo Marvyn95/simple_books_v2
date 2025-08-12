@@ -293,7 +293,7 @@ def edit_employee():
 
     # updating user name
     if form_info['username'] != user_info['username']:
-        if db.Users.update_one({"_id": ObjectId(form_info["username"])}) == None:
+        if db.Users.find_one({"username": (form_info["username"])}) == None:
             db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
                 "$set": {"username": form_info["username"]}
             })
