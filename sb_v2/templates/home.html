@@ -1234,7 +1234,7 @@ document.addEventListener('DOMContentLoaded', function () {
 
       <!-- Submit Button -->
       <div class="d-grid">
-        <button type="submit" class="btn btn-sm btn-primary">Create Report</button>
+        <button type="submit" class="btn btn-sm btn-primary">Generate Report</button>
       </div>
       
     </form>
@@ -2017,27 +2017,6 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     </script>
-
-    <button id="downloadReportBtn" class="btn btn-primary">Generate Report</button>
-
-<script>
-document.getElementById('downloadReportBtn').addEventListener('click', function() {
-  // Create a hidden iframe or open download URL in a new tab
-  const downloadUrl = '/download_report';
-
-  // Option 1: Use a hidden iframe to trigger download without navigation
-  const iframe = document.createElement('iframe');
-  iframe.style.display = 'none';
-  iframe.src = downloadUrl;
-  document.body.appendChild(iframe);
-
-  // Redirect or flash after delay (adjust delay as needed)
-  setTimeout(() => {
-    // Redirect to home page
-    window.location.href = '/home';  // or your url_for('home') equivalent
-  }, 2000);
-});
-</script>
 
 </body>
 </html>
