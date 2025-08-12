@@ -65,6 +65,11 @@
       <a href="#" class="nav-link text-white" data-bs-toggle="offcanvas" data-bs-target="#employeeOffcanvas">
         <i class="bi bi-people-fill d-block mb-1"></i><small>Employees</small>
       </a>
+<!-- Inside offcanvas nav (small screens), add after Employees -->
+<a href="#" class="nav-link text-white" data-bs-toggle="offcanvas" data-bs-target="#reportsOffcanvas">
+  <i class="bi bi-bar-chart-line d-block mb-1"></i><small>Reports</small>
+</a>
+
     </nav>
     <div class="mt-4 border-top border-light pt-3 text-center">
       <a href="{{ url_for('logout') }}" class="nav-link text-white">
@@ -94,6 +99,13 @@
         <a href="#" class="nav-link text-white" data-bs-toggle="offcanvas" data-bs-target="#employeeOffcanvas">
           <i class="bi bi-people-fill d-block mb-1"></i><small>Employees</small>
         </a>
+<!-- Inside desktop sidebar ul, add after Employees li -->
+<li class="nav-item">
+  <a href="#" class="nav-link text-white" data-bs-toggle="offcanvas" data-bs-target="#reportsOffcanvas">
+    <i class="bi bi-bar-chart-line d-block mb-1"></i><small>Reports</small>
+  </a>
+</li>
+
       </li>
     </ul>
   </div>
@@ -1175,6 +1187,59 @@ document.addEventListener('DOMContentLoaded', function () {
   {% endfor %}
 {% endif %}
 
+<!-- Reports Offcanvas (right side) -->
+<div class="offcanvas offcanvas-end bg-light text-dark" tabindex="-1" id="reportsOffcanvas" aria-labelledby="reportsOffcanvasLabel">
+  <div class="offcanvas-header border-bottom">
+    <h5 class="offcanvas-title" id="reportsOffcanvasLabel">Generate Report</h5>
+    <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+  </div>
+  <div class="offcanvas-body p-3">
+    <form method="POST" action="{{ url_for('generate_report') }}" style="font-size: 0.85rem;">
+      
+      <!-- Start Date -->
+      <div class="mb-2">
+        <label for="startDate" class="form-label fw-semibold text-secondary mb-1">Start Date</label>
+        <input type="date" class="form-control form-control-sm" id="startDate" name="start_date"
+               value="{{ now.strftime('%Y-%m') }}-01" required>
+      </div>
+
+      <!-- End Date -->
+      <div class="mb-2">
+        <label for="endDate" class="form-label fw-semibold text-secondary mb-1">End Date</label>
+        <input type="date" class="form-control form-control-sm" id="endDate" name="end_date"
+               value="{{ now.strftime('%Y-%m-%d') }}" required>
+      </div>
+
+      <!-- Data Selection -->
+      <div class="mb-2">
+        <label for="dataSelect" class="form-label fw-semibold text-secondary mb-1">Data</label>
+        <select class="form-select form-select-sm" id="dataSelect" name="data" required>
+          <option value="" disabled selected>Select Data</option>
+          <option value="sales">Sales</option>
+          <option value="expenses">Expenses</option>
+          <option value="stock_movement">Stock Movement</option>
+        </select>
+      </div>
+
+      <!-- Branch Selection -->
+      <div class="mb-3">
+        <label for="branchSelectReport" class="form-label fw-semibold text-secondary mb-1">Branch</label>
+        <select class="form-select form-select-sm" id="branchSelectReport" name="branch_id" required>
+          <option value="all" selected>All Branches</option>
+          {% for branch in organization.branches %}
+          <option value="{{ branch._id }}">{{ branch.branch }}</option>
+          {% endfor %}
+        </select>
+      </div>
+
+      <!-- Submit Button -->
+      <div class="d-grid">
+        <button type="submit" class="btn btn-sm btn-primary">Create Report</button>
+      </div>
+      
+    </form>
+  </div>
+</div>
 
 
 
@@ -1952,5 +2017,27 @@ document.addEventListener('DOMContentLoaded', function () {
             }
         });
     </script>
+
+    <button id="downloadReportBtn" class="btn btn-primary">Generate Report</button>
+
+<script>
+document.getElementById('downloadReportBtn').addEventListener('click', function() {
+  // Create a hidden iframe or open download URL in a new tab
+  const downloadUrl = '/download_report';
+
+  // Option 1: Use a hidden iframe to trigger download without navigation
+  const iframe = document.createElement('iframe');
+  iframe.style.display = 'none';
+  iframe.src = downloadUrl;
+  document.body.appendChild(iframe);
+
+  // Redirect or flash after delay (adjust delay as needed)
+  setTimeout(() => {
+    // Redirect to home page
+    window.location.href = '/home';  // or your url_for('home') equivalent
+  }, 2000);
+});
+</script>
+
 </body>
 </html>

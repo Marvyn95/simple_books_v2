@@ -1,8 +1,11 @@
 from sb_v2 import app, db, bcrypt
-from flask import render_template, request, flash, redirect, url_for, session
+from flask import render_template, request, flash, redirect, url_for, session, send_file
+import pandas as pd
+from io import BytesIO
 import json, secrets, datetime
 from bson.objectid import ObjectId
 from collections import defaultdict
+from datetime import timedelta
 
 
 @app.route('/home', methods=["GET", "POST"])
@@ -597,3 +600,99 @@ def change_employee_password():
         })
         flash("passwords update successful!", "success")
         return redirect(url_for("home"))
+    
+
+@app.route("/generate_report)", methods=['POST'])
+def generate_report():
+    form_info = request.form
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+
+    if form_info["branch_id"] == "all":
+        branch_name = "all"
+    else:
+        for m in db.Organizations.find_one({"_id": user["organization_id"]})["branches"]:
+            if m["_id"] == form_info["branch_id"]:
+                branch_name = m["branch"]
+
+    if form_info["data"] == "sales":
+        if form_info["branch_id"] == "all":
+            data = list(db.Sales.find({"organization_id": ObjectId(user["organization_id"])}).sort("date", -1))
+        else:
+            data = list(db.Sales.find({"organization_id": ObjectId(user["organization_id"]), "branch_id": form_info["branch_id"]}).sort("date", -1))
+        start_date = datetime.datetime.strptime(form_info["start_date"], "%Y-%m-%d").date()
+        end_date = datetime.datetime.strptime(form_info["end_date"], "%Y-%m-%d").date()
+        filtered_data = [k for k in data if start_date <= k["date"].date() <= end_date]
+        required_data = []
+        for i in filtered_data:
+            required_data.append({
+                "date": i["date"].date().strftime("%d, %B, %Y"),
+                "sales person": db.Users.find_one({"_id": ObjectId(i["user_id"])})["username"],
+                "product/service": db.Stock.find_one({"_id": ObjectId(i["item_id"])})["name"],
+                "quantity": i["quantity"],
+                "unit price": i["unit_price"],
+                "amount": sum(float(k["amount_paid"]) for k in  i["payment_details"]["clearance_history"]),
+                "status": i["payment_details"]["status"],
+                "client name": i["client_name"],
+                "client contact": i["client_contact"]
+            })
+        
+        df = pd.DataFrame(required_data)
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Sheet1")
+        output.seek(0)
+        return send_file(output, as_attachment=True, download_name=f"{branch_name}-sales-{form_info["start_date"]}--{form_info["end_date"]}.xlsx", mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+
+    if form_info["data"] == "expenses":
+        if form_info["branch_id"] == "all":
+            data = list(db.Expenses.find({"organization_id": ObjectId(user["organization_id"])}).sort("date", -1))
+        else:
+            data = list(db.Expenses.find({"organization_id": ObjectId(user["organization_id"]), "branch_id": form_info["branch_id"]}).sort("date", -1))
+        start_date = datetime.datetime.strptime(form_info["start_date"], "%Y-%m-%d").date()
+        end_date = datetime.datetime.strptime(form_info["end_date"], "%Y-%m-%d").date()
+        filtered_data = [k for k in data if start_date <= k["date"].date() <= end_date]
+        required_data = []
+        for i in filtered_data:
+            required_data.append({
+                "date": i["date"].date().strftime("%d, %B, %Y"),
+                "spend by": db.Users.find_one({"_id": ObjectId(i["user_id"])})["username"],
+                "expense": i["purpose"],
+                "amount": i["amount"]
+            })
+        
+        df = pd.DataFrame(required_data)
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Sheet1")
+        output.seek(0)
+        return send_file(output, as_attachment=True, download_name=f"{branch_name}-expenses-{form_info["start_date"]}--{form_info["end_date"]}.xlsx", mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+    if form_info["data"] == "stock_movement":
+        if form_info["branch_id"] == "all":
+            data = list(db.Stock_movement.find({"organization_id": ObjectId(user["organization_id"])}).sort("date", -1))
+        else:
+            data = list(db.Stock_movement.find({"organization_id": ObjectId(user["organization_id"]), "branch_id": form_info["branch_id"]}).sort("date", -1))
+        start_date = datetime.datetime.strptime(form_info["start_date"], "%Y-%m-%d").date()
+        end_date = datetime.datetime.strptime(form_info["end_date"], "%Y-%m-%d").date()
+        filtered_data = [k for k in data if start_date <= k["date"].date() <= end_date]
+        required_data = []
+        for i in filtered_data:
+            required_data.append({
+                "date": i["date"].date().strftime("%d, %B, %Y"),
+                "updated by": db.Users.find_one({"_id": ObjectId(i["updater_id"])})["username"],
+                "item": db.Stock.find_one({"_id": ObjectId(i["item_id"])})["name"],
+                "quantity": i["quantity_updated"],
+                "unit cost": i["unit_cost"],
+                "amount": float(i["quantity_updated"])*float(i["unit_cost"]),
+            })
+        
+        df = pd.DataFrame(required_data)
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Sheet1")
+        output.seek(0)
+        return send_file(output, as_attachment=True, download_name=f"{branch_name}-stock_movement-{form_info["start_date"]}--{form_info["end_date"]}.xlsx", mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet")
+
+    flash("Report generated successfully!", "success")
+    return redirect(url_for("home"))
