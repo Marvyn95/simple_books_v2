@@ -171,6 +171,7 @@
     </div>
 </div>
 
+```html
 <!-- New Sale Modal -->
 <div class="modal fade" id="newSaleModal" tabindex="-1" aria-labelledby="newSaleModalLabel" aria-hidden="true">
   <div class="modal-dialog">
@@ -209,15 +210,14 @@
             <label for="itemSelect" class="form-label fw-semibold text-dark">Item</label>
             <select name="item_id" id="itemSelect" class="form-select form-select-sm" required>
               <option disabled selected value="">Select Item</option>
-{% for item in stock_items %} 
-  <option value="{{ item._id }}" data-price="{{ item.price }}">
-    {{ item.name }}
-    {% if item.price != 0 %}
-      <span style="font-size: smaller; font-style: italic; color: indigo;">(priced at UGX {{ item.price }})</span>
-    {% endif %}
-  </option>
-{% endfor %}
-
+              {% for item in stock_items %}
+                <option value="{{ item._id }}" data-price="{{ item.price }}">
+                  {{ item.name }}
+                  {% if item.price != 0 %}
+                    (priced at UGX {{ item.price }})
+                  {% endif %}
+                </option>
+              {% endfor %}
             </select>
           </div>
 
@@ -230,7 +230,14 @@
           <!-- Unit Price -->
           <div class="mb-3">
             <label class="form-label fw-semibold text-dark">Unit Price (UGX)</label>
-            <input type="number" name="unit_price" id="unitPriceInput" step="0.01" min="0" class="form-control form-control-sm" required>
+            <input type="number" 
+                   name="unit_price" 
+                   id="unitPriceInput" 
+                   step="0.01" 
+                   min="0" 
+                   class="form-control form-control-sm" 
+                   required 
+                   style="color: blue; font-weight: bold;">
           </div>
 
           <!-- Amount Paid -->
@@ -241,14 +248,14 @@
 
           <!-- Client Name -->
           <div class="mb-3">
-            <label class="form-label text-dark">Client Name <span class="text-muted">(Optional)</span></label>
-            <input type="text" name="client_name" class="form-control form-control-sm">
+            <label class="form-label text-dark">Client Name <span class="text-muted client-name-optional">(Optional)</span></label>
+            <input type="text" name="client_name" id="clientNameInput" class="form-control form-control-sm">
           </div>
 
           <!-- Client Contact -->
           <div class="mb-2">
-            <label class="form-label text-dark">Client Contact <span class="text-muted">(Optional)</span></label>
-            <input type="text" name="client_contact" class="form-control form-control-sm">
+            <label class="form-label text-dark">Client Contact <span class="text-muted client-contact-optional">(Optional)</span></label>
+            <input type="text" name="client_contact" id="clientContactInput" class="form-control form-control-sm">
           </div>
         </div>
 
@@ -262,40 +269,60 @@
   </div>
 </div>
 
-
-
-<!-- Script for autofill & calculation -->
+<!-- Script for autofill, calculation, and dynamic required fields -->
 <script>
-  document.addEventListener("DOMContentLoaded", function () {
-    const itemSelect = document.getElementById("itemSelect");
-    const unitPriceInput = document.getElementById("unitPriceInput");
-    const quantityInput = document.getElementById("quantityInput");
-    const amountPaidInput = document.getElementById("amountPaidInput");
+document.addEventListener("DOMContentLoaded", function () {
+  const itemSelect = document.getElementById("itemSelect");
+  const unitPriceInput = document.getElementById("unitPriceInput");
+  const quantityInput = document.getElementById("quantityInput");
+  const amountPaidInput = document.getElementById("amountPaidInput");
+  const clientNameInput = document.getElementById("clientNameInput");
+  const clientContactInput = document.getElementById("clientContactInput");
+  const clientNameOptional = document.querySelector(".client-name-optional");
+  const clientContactOptional = document.querySelector(".client-contact-optional");
 
-    function computeAmount() {
-      const qty = parseFloat(quantityInput.value);
-      const unit = parseFloat(unitPriceInput.value);
-      if (!isNaN(qty) && !isNaN(unit)) {
-        amountPaidInput.value = (qty * unit).toFixed(2);
-      }
+  function computeAmount() {
+    const qty = parseFloat(quantityInput.value) || 0;
+    const unit = parseFloat(unitPriceInput.value) || 0;
+    if (!isNaN(qty) && !isNaN(unit)) {
+      amountPaidInput.value = (qty * unit).toFixed(2);
     }
+    updateRequiredFields();
+  }
 
-    // On item change -> prefill unit price
-    itemSelect.addEventListener("change", function () {
-      const selected = itemSelect.options[itemSelect.selectedIndex];
-      const price = selected.getAttribute("data-price");
-      if (price) {
-        unitPriceInput.value = price;
-        computeAmount();
-      }
-    });
+  function updateRequiredFields() {
+    const qty = parseFloat(quantityInput.value) || 0;
+    const unit = parseFloat(unitPriceInput.value) || 0;
+    const amountPaid = parseFloat(amountPaidInput.value) || 0;
+    const totalPrice = qty * unit;
 
-    // On quantity or unit price input change -> update amount
-    quantityInput.addEventListener("input", computeAmount);
-    unitPriceInput.addEventListener("input", computeAmount);
+    if (amountPaid < totalPrice && totalPrice > 0) {
+      clientNameInput.setAttribute("required", "required");
+      clientContactInput.setAttribute("required", "required");
+      clientNameOptional.textContent = "";
+      clientContactOptional.textContent = "";
+    } else {
+      clientNameInput.removeAttribute("required");
+      clientContactInput.removeAttribute("required");
+      clientNameOptional.textContent = "(Optional)";
+      clientContactOptional.textContent = "(Optional)";
+    }
+  }
+
+  // On item change -> prefill unit price
+  itemSelect.addEventListener("change", function () {
+    const selected = itemSelect.options[itemSelect.selectedIndex];
+    const price = selected.getAttribute("data-price") || 0;
+    unitPriceInput.value = parseFloat(price).toFixed(2);
+    computeAmount();
   });
-</script>
 
+  // On quantity, unit price, or amount paid input change -> update amount and required fields
+  quantityInput.addEventListener("input", computeAmount);
+  unitPriceInput.addEventListener("input", computeAmount);
+  amountPaidInput.addEventListener("input", updateRequiredFields);
+});
+</script>
 
 
 <!-- New Expense Modal -->
@@ -559,47 +586,73 @@
     <input type="number" name="amount_paid" id="editAmountPaidInput_{{ tx._id }}" step="0.01" min="0" class="form-control form-control-sm" style="font-size: 0.72rem;" value="{{ tx.amount }}" required>
   </div>
   <div class="mb-2" style="font-size: 0.72rem;">
-    <label class="form-label text-dark" style="font-size: 0.72rem;">Client Name <span class="text-muted">(Optional)</span></label>
-    <input type="text" name="client_name" class="form-control form-control-sm" style="font-size: 0.72rem;" value="{{ tx.client_name if tx.client_name is defined else '' }}">
+    <label class="form-label text-dark" style="font-size: 0.72rem;">Client Name <span class="text-muted client-name-optional">(Optional)</span></label>
+    <input type="text" name="client_name" id="editClientNameInput_{{ tx._id }}" class="form-control form-control-sm" style="font-size: 0.72rem;" value="{{ tx.client_name if tx.client_name is defined else '' }}">
   </div>
   <div style="font-size: 0.72rem;">
-    <label class="form-label text-dark" style="font-size: 0.72rem;">Client Contact <span class="text-muted">(Optional)</span></label>
-    <input type="text" name="client_contact" class="form-control form-control-sm" style="font-size: 0.72rem;" value="{{ tx.client_contact if tx.client_contact is defined else '' }}">
+    <label class="form-label text-dark" style="font-size: 0.72rem;">Client Contact <span class="text-muted client-contact-optional">(Optional)</span></label>
+    <input type="text" name="client_contact" id="editClientContactInput_{{ tx._id }}" class="form-control form-control-sm" style="font-size: 0.72rem;" value="{{ tx.client_contact if tx.client_contact is defined else '' }}">
   </div>
   <div class="modal-footer py-2">
     <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
     <button type="submit" class="btn btn-sm btn-success">Save Sale</button>
   </div>
 </form>
-        <script>
-          document.addEventListener("DOMContentLoaded", function () {
-            const itemSelect = document.getElementById("editItemSelect_{{ tx._id }}");
-            const unitPriceInput = document.getElementById("editUnitPriceInput_{{ tx._id }}");
-            const quantityInput = document.getElementById("editQuantityInput_{{ tx._id }}");
-            const amountPaidInput = document.getElementById("editAmountPaidInput_{{ tx._id }}");
+<script>
+document.addEventListener("DOMContentLoaded", function () {
+  const itemSelect = document.getElementById("editItemSelect_{{ tx._id }}");
+  const unitPriceInput = document.getElementById("editUnitPriceInput_{{ tx._id }}");
+  const quantityInput = document.getElementById("editQuantityInput_{{ tx._id }}");
+  const amountPaidInput = document.getElementById("editAmountPaidInput_{{ tx._id }}");
+  const clientNameInput = document.getElementById("editClientNameInput_{{ tx._id }}");
+  const clientContactInput = document.getElementById("editClientContactInput_{{ tx._id }}");
+  const clientNameOptional = document.querySelector(".client-name-optional");
+  const clientContactOptional = document.querySelector(".client-contact-optional");
 
-            function computeAmount() {
-              const qty = parseFloat(quantityInput.value);
-              const unit = parseFloat(unitPriceInput.value);
-              if (!isNaN(qty) && !isNaN(unit)) {
-                amountPaidInput.value = (qty * unit).toFixed(2);
-              }
-            }
+  function computeAmount() {
+    const qty = parseFloat(quantityInput.value) || 0;
+    const unit = parseFloat(unitPriceInput.value) || 0;
+    if (!isNaN(qty) && !isNaN(unit)) {
+      amountPaidInput.value = (qty * unit).toFixed(2);
+    }
+    updateRequiredFields();
+  }
 
-            if (itemSelect) {
-              itemSelect.addEventListener("change", function () {
-                const selected = itemSelect.options[itemSelect.selectedIndex];
-                const price = selected.getAttribute("data-price");
-                if (price) {
-                  unitPriceInput.value = price;
-                  computeAmount();
-                }
-              });
-            }
-            if (quantityInput) quantityInput.addEventListener("input", computeAmount);
-            if (unitPriceInput) unitPriceInput.addEventListener("input", computeAmount);
-          });
-        </script>
+  function updateRequiredFields() {
+    const qty = parseFloat(quantityInput.value) || 0;
+    const unit = parseFloat(unitPriceInput.value) || 0;
+    const amountPaid = parseFloat(amountPaidInput.value) || 0;
+    const totalPrice = qty * unit;
+
+    if (amountPaid < totalPrice && totalPrice > 0) {
+      clientNameInput.setAttribute("required", "required");
+      clientContactInput.setAttribute("required", "required");
+      clientNameOptional.textContent = "";
+      clientContactOptional.textContent = "";
+    } else {
+      clientNameInput.removeAttribute("required");
+      clientContactInput.removeAttribute("required");
+      clientNameOptional.textContent = "(Optional)";
+      clientContactOptional.textContent = "(Optional)";
+    }
+  }
+
+  if (itemSelect) {
+    itemSelect.addEventListener("change", function () {
+      const selected = itemSelect.options[itemSelect.selectedIndex];
+      const price = selected.getAttribute("data-price") || 0;
+      unitPriceInput.value = parseFloat(price).toFixed(2);
+      computeAmount();
+    });
+  }
+  if (quantityInput) quantityInput.addEventListener("input", computeAmount);
+  if (unitPriceInput) unitPriceInput.addEventListener("input", computeAmount);
+  if (amountPaidInput) amountPaidInput.addEventListener("input", updateRequiredFields);
+
+  // Run on load to set initial state
+  updateRequiredFields();
+});
+</script>
         {% else %}
         <div class="modal-footer py-2">
           <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
