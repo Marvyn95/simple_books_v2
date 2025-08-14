@@ -42,7 +42,7 @@
       Create a business owner account to manage your organization
     </p>
 
-    <form action="{{ url_for('register_owner') }}" method="POST">
+    <form action="{{ url_for('register_owner') }}" method="POST" onsubmit="return validatePasswords()">
       <div class="row g-3">
 
         <!-- Left Column -->
@@ -60,6 +60,13 @@
           <div class="mb-2">
             <label for="password" class="form-label fw-medium">Password</label>
             <input type="password" id="password" name="password" class="form-control py-2" required>
+          </div>
+
+          <!-- ✅ New Confirm Password Field -->
+          <div class="mb-2">
+            <label for="confirm_password" class="form-label fw-medium">Confirm Password</label>
+            <input type="password" id="confirm_password" name="confirm_password" class="form-control py-2" required>
+            <div id="passwordMatchMessage" class="small mt-1"></div>
           </div>
 
           <div class="mb-2">
@@ -121,6 +128,33 @@
       input.placeholder = "Enter branch";
       input.className = "form-control py-2";
       container.appendChild(input);
+    }
+
+    // ✅ Password match validation
+    const password = document.getElementById("password");
+    const confirmPassword = document.getElementById("confirm_password");
+    const message = document.getElementById("passwordMatchMessage");
+
+    confirmPassword.addEventListener("input", function() {
+      if (confirmPassword.value === "") {
+        message.textContent = "";
+        return;
+      }
+      if (password.value === confirmPassword.value) {
+        message.textContent = "Passwords match";
+        message.className = "text-success small mt-1";
+      } else {
+        message.textContent = "Passwords do not match";
+        message.className = "text-danger small mt-1";
+      }
+    });
+
+    function validatePasswords() {
+      if (password.value !== confirmPassword.value) {
+        alert("Passwords do not match!");
+        return false;
+      }
+      return true;
     }
   </script>
 

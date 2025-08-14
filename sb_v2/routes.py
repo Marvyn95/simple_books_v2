@@ -158,15 +158,20 @@ def register_owner():
     if request.method == "POST":
         form_info = request.form
         if form_info["admin_password"] == config["ADMIN_PASSWORD"]:
+            
+            if form_info['password'] != form_info['confirm_password']:
+                flash('password confirmation failed, try again!', 'error')
+                return redirect(url_for("login"))
+            
             if db.Users.find_one({"username": form_info["username"]}) is None:
                 if db.Organizations.find_one({"organization": form_info["organization"]}) is None:
                     db.Organizations.insert_one({
-                        "organization": form_info["organization"],
+                        "organization": form_info["organization"].strip(),
                         "branches": [{"_id": secrets.token_hex(32), "branch": branch} for branch in request.form.getlist("branches") if branch != ""]
                     })
                     org = db.Organizations.find_one({"organization": form_info["organization"]})
                     db.Users.insert_one({
-                        "username": form_info["username"],
+                        "username": form_info["username"].strip(),
                         "email": form_info["email"],
                         "password": bcrypt.generate_password_hash(form_info["password"]).decode("utf-8"),
                         "role": "Manager",
@@ -209,7 +214,7 @@ def login():
                     return redirect(url_for('login'))
             else:
                 flash("That user name is not registered, try again!", "error")
-            return redirect(url_for('login')) 
+                return redirect(url_for('login')) 
         else:
             flash("Account was deactivated, contact your manager!")
             return redirect(url_for("login"))
@@ -235,7 +240,7 @@ def edit_profile():
     if form_info['username'] != old_user_info['username']:
         if db.Users.find_one({"username": form_info["username"]}) is None:
             db.Users.update_one({"_id": ObjectId(session.get("userid"))}, {
-                "$set": {"username": form_info["username"]}
+                "$set": {"username": form_info["username"].strip()}
             })
         else:
             flash("User Name Already Taken, Use Another")
@@ -269,7 +274,7 @@ def add_branch():
         db.Organizations.update_one({"_id": user["organization_id"]}, {
             "$push": {"branches": {
                 "_id": secrets.token_hex(32),
-                "branch": form_info["branch_name"]
+                "branch": form_info["branch_name"].strip()
             }}
         })
     return redirect(url_for("home"))
@@ -280,7 +285,7 @@ def edit_branch():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     if user["role"] == "Manager":
         db.Organizations.update_one({"_id": user["organization_id"], "branches._id": form_info["branch_id"]}, {
-            "$set": {"branches.$.branch": form_info["branch_name"]}
+            "$set": {"branches.$.branch": form_info["branch_name"].strip()}
         })
     return redirect(url_for("home"))
 
@@ -295,7 +300,7 @@ def edit_employee():
     if form_info['username'] != user_info['username']:
         if db.Users.find_one({"username": (form_info["username"])}) == None:
             db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
-                "$set": {"username": form_info["username"]}
+                "$set": {"username": form_info["username"].strip()}
             })
             flash("User name update successful!", "success")
         else:
@@ -305,12 +310,12 @@ def edit_employee():
     if form_info['email'] != user_info['email']:
         if form_info.get("email") == "":
             db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
-                "$set": {"email": form_info["email"]}
+                "$set": {"email": form_info["email"].strip()}
             })
             flash("email removed!", "success")
         elif db.Users.find_one({"email": form_info["email"]}) is None:
             db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
-                "$set": {"email": form_info["email"]}
+                "$set": {"email": form_info["email"].strip()}
             })
             flash("email update successful", "success")
         else:
@@ -354,8 +359,8 @@ def add_employee():
     if db.Users.find_one({"username": form_info["username"]}) is None:
         if form_info["password"] == form_info["confirm_password"]:
             db.Users.insert_one({
-                "username": form_info["username"],
-                "email": form_info["email"],
+                "username": form_info["username"].strip(),
+                "email": form_info["email"].strip(),
                 "password": bcrypt.generate_password_hash(form_info["password"]).decode("utf-8"),
                 "role": form_info["role"],
                 "organization_id": user["organization_id"],
@@ -378,7 +383,7 @@ def add_stock_item():
     user = db.Users.find_one({"_id": ObjectId(form_info["user_id"])})
     if user["role"] == "Manager":
         db.Stock.insert_one({
-            "name": form_info["name"],
+            "name": form_info["name"].strip(),
             "quantity": 0,
             "price": 0,
             "branch_id": form_info["branch_id"],
@@ -388,7 +393,7 @@ def add_stock_item():
         return redirect(url_for("home"))
     if user["role"] == "Branch Manager":
         db.Stock.insert_one({
-            "name": form_info["name"],
+            "name": form_info["name"].strip(),
             "quantity": 0,
             "price": 0,
             "branch_id": user["branch_ids"][0],
@@ -407,7 +412,7 @@ def edit_stock_item():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     if user["role"] == "Manager":
         db.Stock.update_one({"_id": ObjectId(form_info["item_id"])}, {
-            "$set": {"name": form_info["name"], "price": float(form_info["price"]), "branch_id": form_info["branch_id"]}
+            "$set": {"name": form_info["name"].strip(), "price": float(form_info["price"]), "branch_id": form_info["branch_id"]}
         })
     elif user["role"] == "Branch Manager":
         db.Stock.update_one({"_id": ObjectId(form_info["item_id"])}, {
@@ -483,7 +488,7 @@ def new_expense():
         "branch_id": form_info["branch_id"] if user["role"] == "Manager" else user["branch_ids"][0],
         "user_id": form_info["user_id"],
         "authorized_by": form_info.get("authorized_by"),
-        "purpose": form_info["purpose"],
+        "purpose": form_info["purpose"].strip(),
         "amount": float(form_info["amount"]),
         "date": datetime.datetime.now()
     })
@@ -542,7 +547,7 @@ def edit_expense():
     db.Expenses.update_one({"_id": ObjectId(form_info["transaction_id"])}, {
         "$set": {
         "authorized_by": form_info.get("authorized_by"),
-        "purpose": form_info["purpose"],
+        "purpose": form_info["purpose"].strip(),
         "amount": float(form_info["amount"]),
     }
     })
@@ -596,7 +601,7 @@ def change_employee_password():
         return redirect(url_for("home"))
     else:
         db.Users.update_one({"_id": ObjectId(form_info["employee_id"])}, {
-            "$set": {"password": bcrypt.generate_password_hash(form_info["new_password"]).decode("utf-8")}
+            "$set": {"password": bcrypt.generate_password_hash(form_info["new_password"].strip()).decode("utf-8")}
         })
         flash("passwords update successful!", "success")
         return redirect(url_for("home"))
