@@ -11,7 +11,7 @@
 
   <!-- Employees Table -->
   <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-    <table class="table table-light table-hover table-striped align-middle small" style="margin-bottom: 0; font-size:0.85rem;">
+    <table class="table table-hover align-middle small" style="margin-bottom: 0; font-size:0.85rem;">
       <thead class="table-primary" style="position: sticky; top: 0; z-index: 2; background: #f8f9fa;">
         <tr>
           <th>Username</th>
@@ -22,7 +22,7 @@
       </thead>
       <tbody>
         {% for employee in employees %}
-        <tr>
+        <tr class="border-bottom">
           <td>{{ employee.username }}</td>
           <td>{{ employee.role }}</td>
           <td>{{ employee.branch }}</td>

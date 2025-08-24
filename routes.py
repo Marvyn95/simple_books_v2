@@ -98,15 +98,6 @@ def logout():
 
 
 
-@app.route('/transactions')
-def transactions():
-    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
-    organization = db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))})
-    user['organization'] = organization.get('organization')
-    selected_branch = session.get("branch")
-
-    return render_template('transactions.html', user=user, selected_branch=selected_branch, organization=organization)
-
 
 @app.route('/change_branch', methods=["POST"])
 def change_branch():
@@ -252,7 +243,6 @@ def add_branch():
 
 
 
-
 @app.route('/stock', methods=['GET'])
 def stock():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
@@ -262,20 +252,28 @@ def stock():
     branch = session.get("branch")
 
     if selected_branch is None:
-        stock = list(db.Stock.find({"organization_id": ObjectId(organization.get("_id"))}))
+        stock = list(db.Stock.find({"organization_id": ObjectId(organization.get("_id"))}).sort("name", 1))
+        stock_history = list(db.Stock_movement.find({"organization_id": ObjectId(organization.get("_id"))}).sort("date", -1))
         for item in stock:
             item['branch'] = next((b for b in organization.get("branches", []) if b.get("_id") == item.get("branch_id")), {}).get("branch")
+        for item in stock_history:
+            item['updater'] = db.Users.find_one({"_id": ObjectId(item.get("updater_id"))}).get("username")
     else:
-        stock = list(db.Stock.find({"branch_id": branch.get("_id"), "organization_id": ObjectId(organization.get("_id"))}))
+        stock = list(db.Stock.find({ "organization_id": ObjectId(organization.get("_id")), "branch_id": branch.get("_id") }).sort("name", 1))
+        stock_history = list(db.Stock_movement.find({"organization_id": ObjectId(organization.get("_id")), "branch_id": branch.get("_id")}).sort("date", -1))
         for item in stock:
             item['branch'] = next((b for b in organization.get("branches", []) if b.get("_id") == item.get("branch_id")), {}).get("branch")
+        for item in stock_history:
+            item['updater'] = db.Users.find_one({"_id": ObjectId(item.get("updater_id"))}).get("username")
 
     return render_template('stock.html',
                            user=user,
                            selected_branch=selected_branch,
                            organization=organization,
                            branch=branch,
-                           stock=stock)
+                           stock=stock,
+                           stock_history=stock_history
+                           )
 
 
 
@@ -293,8 +291,6 @@ def add_item():
         "name": name,
         "branch_id": branch_id,
         "organization_id": ObjectId(organization_id),
-        "quantity": int(0),
-        "price": int(0)
     })
     flash('Item added successfully!', 'success')
     return redirect(url_for('stock'))
@@ -343,7 +339,7 @@ def update_stock():
     db.Stock.update_one(
         {"_id": ObjectId(item_id)},
         {"$set": {
-            "quantity": item.get("quantity") + quantity
+            "quantity": item.get("quantity", 0) + quantity
         }}
     )   
 
@@ -367,8 +363,6 @@ def delete_item():
     db.Stock.delete_one({"_id": ObjectId(item_id)})
     flash('Item deleted successfully!', 'success')
     return redirect(url_for('stock'))
-
-
 
 
 
@@ -483,9 +477,6 @@ def delete_employee():
 
 
 
-
-
-
 @app.route('/reports')
 def reports():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
@@ -511,7 +502,283 @@ def stock_movement():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     organization = db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))})
     user['organization'] = organization.get('organization')
-    selected_branch = session.get("branch_id")
+    selected_branch = session.get("branch")
     branch = session.get("branch")
 
-    return render_template('stock_movement.html', user=user, selected_branch=selected_branch, organization=organization, branch=branch)
+    if session.get("branch") is None:
+        stock_history = list(db.Stock_movement.find({"organization_id": organization.get("_id")}).sort("date", -1))
+        for movement in stock_history:
+            movement["updater"] = db.Users.find_one({"_id": ObjectId(movement.get("updater_id"))}).get("username", "")
+            movement["item"] = db.Stock.find_one({"_id": ObjectId(movement.get("item_id"))}).get("name", "")
+            movement["branch"] = next((b for b in organization.get("branches", []) if b.get("_id") == movement.get("branch_id")), {}).get("branch", "")
+    else:
+        stock_history = list(db.Stock_movement.find({"organization_id": organization.get("_id"), "branch_id": branch.get("_id")}).sort("date", -1))
+        for movement in stock_history:
+            movement["updater"] = db.Users.find_one({"_id": ObjectId(movement.get("updater_id"))}).get("username", "")
+            movement["item"] = db.Stock.find_one({"_id": ObjectId(movement.get("item_id"))}).get("name", "")
+            movement["branch"] = next((b for b in organization.get("branches", []) if b.get("_id") == movement.get("branch_id")), {}).get("branch", "")
+
+    return render_template('stock_movement.html',
+                           user=user,
+                           selected_branch=selected_branch,
+                           organization=organization,
+                           branch=branch,
+                           stock_history=stock_history
+                           )
+
+
+@app.route('/edit_stock_movement', methods=['POST'])
+def edit_stock_movement():
+    movement_id = request.form.get('movement_id')
+    item_id = request.form.get('item_id')
+    new_quantity = int(request.form.get('quantity'))
+    new_unit_cost = int(request.form.get('unit_cost'))
+
+    item = db.Stock.find_one({"_id": ObjectId(item_id)})
+    movement = db.Stock_movement.find_one({"_id": ObjectId(movement_id)})
+
+    db.Stock_movement.update_one(
+        {"_id": ObjectId(movement_id)},
+        {"$set": {
+            "quantity_updated": new_quantity,
+            "unit_cost": new_unit_cost,
+        }}
+    )
+
+    db.Stock.update_one(
+        {"_id": ObjectId(item_id)},
+        {"$set": {
+            "quantity": item.get("quantity", 0) - movement.get("quantity_updated", 0) + new_quantity
+        }}
+    )
+
+    flash('Stock movement updated.', 'success')
+    return redirect(url_for('stock_movement'))
+
+
+@app.route('/delete_stock_movement', methods=['POST'])
+def delete_stock_movement():
+    movement_id = request.form.get('movement_id')
+    item_id = request.form.get('item_id')
+
+    movement = db.Stock_movement.find_one({"_id": ObjectId(movement_id)})
+    item = db.Stock.find_one({"_id": ObjectId(item_id)})
+
+    db.Stock_movement.delete_one({"_id": ObjectId(movement_id)})
+    db.Stock.update_one(
+        {"_id": ObjectId(item_id)},
+        {"$inc": {"quantity": -1 * (movement.get("quantity_updated", 0))}}
+    )
+
+    flash('Stock movement deleted.', 'success')
+    return redirect(url_for('stock_movement'))
+
+
+
+# transactions
+@app.route('/transactions')
+def transactions():
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    organization = db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))})
+    employees = list(db.Users.find({"organization_id": ObjectId(user.get("organization_id"))}))
+    stock_items = list(db.Stock.find({"organization_id": ObjectId(user.get("organization_id"))}))
+    selected_branch = session.get("branch")
+    user["organization"] = organization.get('organization')
+
+    if selected_branch is None:
+        sales = list(db.Sales.find({"organization_id": ObjectId(user.get("organization_id"))}).sort("date", -1))
+        expenses = list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id"))}).sort("date", -1))
+    else:
+        sales = list(db.Sales.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}).sort("date", -1))
+        expenses = list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}).sort("date", -1))
+
+    for sale in sales:
+        sale["type"] = "Sale"
+        sale["user_name"] = next((emp.get("username") for emp in employees if str(emp.get("_id")) == str(sale.get("user_id"))), "Unknown")
+        sale["description"] = next((item.get("name") for item in stock_items if str(item.get("_id")) == str(sale.get("item_id"))), "Unknown Item")
+        sale["status"] = sale.get("payment_details", {}).get("status", "Unknown")
+        sale["amount"] = sum(int(k["amount_paid"]) for k in sale.get("payment_details", {}).get("clearance_history", []))
+
+    for expense in expenses:
+        expense["type"] = "Expense"
+        expense["user_name"] = next((emp.get("username") for emp in employees if str(emp.get("_id")) == str(expense.get("user_id"))), "Unknown")
+        expense["description"] = expense.get("purpose", "")
+        expense["authorizer"] = next((emp.get("username") for emp in employees if str(emp.get("_id")) == str(expense.get("authorized_by"))), "Unknown")
+
+    transactions = sorted(sales + expenses, key=lambda x: x.get("date"), reverse=True)
+
+    return render_template("transactions.html",
+                           transactions=transactions,
+                           user=user,
+                           organization=organization,
+                           employees=employees,
+                           stock_items=stock_items,
+                           selected_branch=selected_branch)
+
+@app.route('/new_sale', methods=['POST'])
+def new_sale():
+    user_id = request.form.get('user_id')
+    org_id = request.form.get('org_id')
+    branch_id = request.form.get('branch_id')
+    item_id = request.form.get('item_id')
+    quantity = int(request.form.get('quantity', 0))
+    unit_price = float(request.form.get('unit_price', 0))
+    amount_paid = float(request.form.get('amount_paid', 0))
+    client_name = request.form.get('client_name') or None
+    client_contact = request.form.get('client_contact') or None
+
+    total = quantity * unit_price
+    
+    db.Sales.insert_one({
+        "organization_id":ObjectId(org_id),
+        "user_id": ObjectId(user_id),
+        "branch_id": branch_id,
+        "item_id": item_id,
+        "date": datetime.datetime.now(),
+        "quantity": quantity,
+        "unit_price": unit_price,
+        "client_name": client_name,
+        "client_contact": client_contact,
+        "payment_details": {
+            "status": "paid" if amount_paid >= total else "credit",
+            "amount_left": total - amount_paid,
+            "clearance_history": [{"date": datetime.datetime.now(), "amount_paid": amount_paid}]
+        }
+    })
+
+    db.Stock.update_one({"_id": ObjectId(item_id)}, {"$inc": {"quantity": -quantity}})
+    flash('Sale recorded.', 'success')
+    return redirect(url_for('transactions'))
+
+
+
+
+
+@app.route('/edit_sale', methods=['POST'])
+def edit_sale():
+    user = request.form.get('user_id')
+    tx_id = request.form.get('tx_id')
+    old_item_id = request.form.get('old_item_id')
+    new_item_id = request.form.get('new_item_id')
+    
+    quantity = int(request.form.get('quantity', 0))
+    unit_price = float(request.form.get('unit_price', 0))
+    amount_paid = float(request.form.get('amount_paid', 0))
+    client_name = request.form.get('client_name') or None
+    client_contact = request.form.get('client_contact') or None
+
+    total = quantity * unit_price
+
+    item = db.Stock.find_one({"_id": ObjectId(old_item_id)})
+    tx = db.Sales.find_one({"_id": ObjectId(tx_id)})
+
+    if str(new_item_id) == str(old_item_id):
+        db.Stock.update_one({"_id": ObjectId(old_item_id)}, {"$set": {"quantity": item.get("quantity", 0) + tx.get("quantity", 0) - quantity}})
+    elif str(new_item_id) != str(old_item_id):
+        db.Stock.update_one({"_id": ObjectId(old_item_id)}, {"$inc": {"quantity": -tx.get("quantity", 0)}})
+        db.Stock.update_one({"_id": ObjectId(new_item_id)}, {"$inc": {"quantity": quantity}})
+
+    db.Sales.update_one({"_id": ObjectId(tx_id)}, {"$set": {
+        "item_id": new_item_id,
+        "quantity": quantity,
+        "unit_price": unit_price,
+        "client_name": client_name,
+        "client_contact": client_contact,
+        "payment_details": {
+            "status": "paid" if amount_paid >= total else "credit",
+            "amount_left": total - amount_paid,
+            "clearance_history": [{"date": datetime.datetime.now(), "amount_paid": amount_paid}]
+        }
+    }})
+    
+    flash('Sale recorded.', 'success')
+    return redirect(url_for('transactions'))
+
+
+
+
+@app.route('/clear_credit/<sale_id>', methods=['POST'])
+def clear_credit(sale_id):
+    user = current_user()
+    if not user:
+        return redirect(url_for('login'))
+    sale = db.Transactions.find_one({"_id": ObjectId(sale_id)})
+    if not sale or sale.get("type") != "Sale":
+        flash('Sale not found.', 'error')
+        return redirect(url_for('transactions'))
+    amt = float(request.form.get('amount', 0))
+    pd = sale.get('payment_details') or {}
+    left = pd.get('amount_left', 0)
+    if amt <= 0 or left <= 0:
+        return redirect(url_for('transactions'))
+    new_left = max(left - amt, 0)
+    history = pd.get('clearance_history', [])
+    history.append({"date": datetime.datetime.now(), "amount_paid": amt})
+    update = {
+        "payment_details": {"amount_left": new_left, "clearance_history": history},
+        "amount": sale.get("amount", 0) + amt
+    }
+    if new_left == 0:
+        update["status"] = "paid"
+    db.Transactions.update_one({"_id": ObjectId(sale_id)}, {"$set": update})
+    flash('Credit cleared.' if new_left == 0 else 'Credit payment recorded.', 'success')
+    return redirect(url_for('transactions'))
+
+@app.route('/new_expense', methods=['POST'])
+def new_expense():
+    user = current_user()
+    if not user:
+        return redirect(url_for('login'))
+    purpose = request.form.get('purpose')
+    amount = float(request.form.get('amount', 0))
+    branch_id = request.form.get('branch_id') or user.get("branch_id")
+    auth_by = request.form.get('authorized_by') or None
+    authorizer = None
+    if auth_by:
+        au = db.Users.find_one({"_id": ObjectId(auth_by)})
+        if au:
+            authorizer = au.get("username")
+    tx = {
+        "type": "Expense",
+        "organization_id": user.get("organization_id"),
+        "branch_id": branch_id,
+        "description": purpose,
+        "amount": amount,
+        "status": None,
+        "authorized_by": auth_by,
+        "authorizer": authorizer,
+        "user_id": str(user["_id"]),
+        "date": datetime.datetime.now()
+    }
+    db.Transactions.insert_one(tx)
+    flash('Expense saved.', 'success')
+    return redirect(url_for('transactions'))
+
+@app.route('/edit_expense/<expense_id>', methods=['POST'])
+def edit_expense(expense_id):
+    user = current_user()
+    if not user:
+        return redirect(url_for('login'))
+    exp = db.Transactions.find_one({"_id": ObjectId(expense_id)})
+    if not exp or exp.get("type") != "Expense":
+        flash('Expense not found.', 'error')
+        return redirect(url_for('transactions'))
+    purpose = request.form.get('purpose')
+    amount = float(request.form.get('amount', 0))
+    auth_by = request.form.get('authorized_by') or None
+    authorizer = None
+    if auth_by:
+        au = db.Users.find_one({"_id": ObjectId(auth_by)})
+        if au:
+            authorizer = au.get("username")
+    db.Transactions.update_one(
+        {"_id": ObjectId(expense_id)},
+        {"$set": {
+            "description": purpose,
+            "amount": amount,
+            "authorized_by": auth_by,
+            "authorizer": authorizer
+        }}
+    )
+    flash('Expense updated.', 'success')
+    return redirect(url_for('transactions'))
