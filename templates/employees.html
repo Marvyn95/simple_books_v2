@@ -1,0 +1,185 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div style="font-size: 0.95rem;">
+  <div class="d-flex justify-content-between align-items-center mb-3">
+    <h5 class="mb-3">Manage employees</h5>
+<button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+  <i class="bi bi-person-plus me-1"></i> Add Employee
+</button>
+  </div>
+
+  <!-- Employees Table -->
+  <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+    <table class="table table-light table-hover table-striped align-middle small" style="margin-bottom: 0; font-size:0.85rem;">
+      <thead class="table-primary" style="position: sticky; top: 0; z-index: 2; background: #f8f9fa;">
+        <tr>
+          <th>Username</th>
+          <th>Role</th>
+          <th>Branch</th>
+          <th>Actions</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for employee in employees %}
+        <tr>
+          <td>{{ employee.username }}</td>
+          <td>{{ employee.role }}</td>
+          <td>{{ employee.branch }}</td>
+          <td>
+            <button class="btn btn-sm btn-primary me-1" data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ employee._id }}">
+              <i class="bi bi-pencil"></i>
+            </button>
+            <button class="btn btn-sm btn-warning me-1" data-bs-toggle="modal" data-bs-target="#editPasswordModal{{ employee._id }}">
+              <i class="bi bi-key"></i>
+            </button>
+            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal{{ employee._id }}">
+              <i class="bi bi-person-x"></i>
+            </button>
+          </td>
+        </tr>
+
+        <!-- Edit Employee Modal -->
+        <div class="modal fade" id="editEmployeeModal{{ employee._id }}" tabindex="-1" aria-labelledby="editEmployeeLabel{{ employee._id }}" aria-hidden="true">
+          <div class="modal-dialog">
+            <form method="POST" action="{{ url_for('edit_employee') }}">
+              <input type="hidden" name="employee_id" value="{{ employee._id }}">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="editEmployeeLabel{{ employee._id }}">Edit Employee</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <div class="mb-2">
+                    <label class="form-label">Username</label>
+                    <input type="text" name="username" class="form-control form-control-sm" value="{{ employee.username }}" required>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Role</label>
+                    <select name="role" class="form-select form-select-sm" required>
+                      <option value="Manager" {% if employee.role == "Manager" %}selected{% endif %}>Manager</option>
+                      <option value="Branch Manager" {% if employee.role == "Branch Manager" %}selected{% endif %}>Branch Manager</option>
+                      <option value="Sales Person" {% if employee.role == "Sales Person" %}selected{% endif %}>Sales Person</option>
+                    </select>
+                  </div>
+<div class="mb-2">
+  <label class="form-label">Branch</label>
+  <select name="branch_id" class="form-select form-select-sm" required>
+    {% for branch in organization['branches'] %}
+      <option value="{{ branch['_id'] }}" {% if branch['_id']|string == employee.branch_id|string %}selected{% endif %}>{{ branch['branch'] }}</option>
+    {% endfor %}
+  </select>
+</div>
+                </div>
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Edit Password Modal -->
+        <div class="modal fade" id="editPasswordModal{{ employee._id }}" tabindex="-1" aria-labelledby="editPasswordLabel{{ employee._id }}" aria-hidden="true">
+          <div class="modal-dialog">
+            <form method="POST" action="{{ url_for('edit_employee_password') }}">
+              <input type="hidden" name="employee_id" value="{{ employee._id }}">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="editPasswordLabel{{ employee._id }}">Change Password</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  <div class="mb-2">
+                    <label class="form-label">New Password</label>
+                    <input type="password" name="password" class="form-control form-control-sm" required>
+                  </div>
+                  <div class="mb-2">
+                    <label class="form-label">Confirm Password</label>
+                    <input type="password" name="confirm_password" class="form-control form-control-sm" required>
+                  </div>
+                </div>
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-warning btn-sm">Change Password</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+
+        <!-- Delete Employee Modal -->
+        <div class="modal fade" id="deleteEmployeeModal{{ employee._id }}" tabindex="-1" aria-labelledby="deleteEmployeeLabel{{ employee._id }}" aria-hidden="true">
+          <div class="modal-dialog">
+            <form method="POST" action="{{ url_for('delete_employee') }}">
+              <input type="hidden" name="employee_id" value="{{ employee._id }}">
+              <div class="modal-content">
+                <div class="modal-header">
+                  <h5 class="modal-title" id="deleteEmployeeLabel{{ employee._id }}">Delete Employee</h5>
+                  <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                  Are you sure you want to delete <strong>{{ employee.username }}</strong>?
+                </div>
+                <div class="modal-footer">
+                  <button type="submit" class="btn btn-danger btn-sm">Delete</button>
+                </div>
+              </div>
+            </form>
+          </div>
+        </div>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  <!-- Add Employee Modal -->
+  <div class="modal fade" id="addEmployeeModal" tabindex="-1" aria-labelledby="addEmployeeLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form method="POST" action="{{ url_for('add_employee') }}">
+        <input type="hidden" name="organization_id" value="{{ user.organization_id }}">
+        <div class="modal-content">
+          <div class="modal-header">
+            <h5 class="modal-title fs-5" id="addEmployeeLabel">Add New Employee</h5>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-2">
+              <label class="form-label">Username</label>
+              <input type="text" name="username" class="form-control form-control-sm" required>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Password</label>
+              <input type="password" name="password" class="form-control form-control-sm" required>
+            </div>
+            <div class="mb-2">
+              <label class="form-label">Confirm Password</label>
+              <input type="password" name="confirm_password" class="form-control form-control-sm" required>
+            </div>
+<div class="mb-2">
+  <label class="form-label">Role</label>
+  <select name="role" class="form-select form-select-sm" required>
+    <option value="Manager">Manager</option>
+    <option value="Branch Manager">Branch Manager</option>
+    <option value="Sales Person">Sales Person</option>
+  </select>
+</div>
+<div class="mb-2">
+  <label class="form-label">Branch</label>
+  <select name="branch_id" class="form-select form-select-sm" required>
+    {% for branch in organization['branches'] %}
+      <option value="{{ branch['_id'] }}">{{ branch['branch'] }}</option>
+    {% endfor %}
+  </select>
+</div>
+          </div>
+          <div class="modal-footer">
+<button type="submit" class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;">
+  Add Employee
+</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}

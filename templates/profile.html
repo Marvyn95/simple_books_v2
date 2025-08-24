@@ -1,0 +1,205 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container-fluid" style="max-width: 800px;">
+  <div class="card rounded-4 shadow p-4 mb-4 bg-secondary-subtle">
+    <h5 class="mb-4 text-center fw-bold" style="color: #4B0082;">User Profile</h5>
+    <div class="row g-4" style="min-height: 300px;">
+      <!-- Profile Info -->
+      <div class="col-12 col-md-6 d-flex flex-column">
+        <div class="mb-3">
+          <label class="form-label fw-semibold mb-1">Username:</label>
+          <span class="ms-2 fw-medium text-indigo" style="color: #4B0082;">{{ user.username }}</span>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold mb-1">Role:</label>
+          <span class="ms-2 fw-medium text-indigo" style="color: #4B0082;">{{ user.role }}</span>
+        </div>
+        <div class="mb-3">
+          <label class="form-label fw-semibold mb-1">Organization:</label>
+          <span class="ms-2 fw-medium text-indigo" style="color: #4B0082;">{{ user.organization }}</span>
+        </div>
+        {% if user.role != "Manager" %}
+        <div class="mb-3">
+          <label class="form-label fw-semibold mb-1">Branch:</label>
+          <span class="ms-2 fw-medium text-indigo" style="color: #4B0082;">{{ branch }}</span>
+        </div>
+        {% endif %}
+        <div class="d-flex gap-2 mt-auto">
+<button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+  <i class="bi bi-pencil me-1"></i> Edit Profile
+</button>
+<button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#updatePasswordModal">
+  <i class="bi bi-key me-1"></i> Update Password
+</button>
+        </div>
+      </div>
+      <!-- Branches Table (for Managers) -->
+      {% if user.role == "Manager" %}
+      <div class="col-12 col-md-6 d-flex flex-column">
+        <div class="d-flex justify-content-between align-items-center mb-3">
+          <span class="fw-semibold text-indigo" style="color: #4B0082;">Branches</span>
+<button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#addBranchModal">
+  <i class="bi bi-plus me-1"></i> Add Branch
+</button>
+        </div>
+        <div style="max-height: 240px; overflow-y: auto; flex-grow: 1;">
+          <table class="table table-sm table-borderless mb-0">
+            <tbody>
+              {% for branch in organization['branches'] %}
+              <tr style="border-left: 3px solid #4B0082;">
+                <td class="fw-medium py-2 px-3 text-indigo">
+                  <i class="bi bi-building me-2"></i>{{ branch['branch'] }}
+                </td>
+                <td class="text-end py-2 px-3">
+                  <button class="btn btn-sm btn-indigo me-2 px-2" data-bs-toggle="modal" data-bs-target="#editBranchModal{{ branch['_id'] }}">
+                    <i class="bi bi-pencil"></i>
+                  </button>
+                  <button class="btn btn-sm btn-outline-indigo px-2" data-bs-toggle="modal" data-bs-target="#deleteBranchModal{{ branch['_id'] }}">
+                    <i class="bi bi-trash"></i>
+                  </button>
+                </td>
+              </tr>
+              <!-- Edit Branch Modal -->
+              <div class="modal fade" id="editBranchModal{{ branch['_id'] }}" tabindex="-1" aria-labelledby="editBranchLabel{{ branch['_id'] }}" aria-hidden="true">
+                <div class="modal-dialog">
+                  <form method="POST" action="{{ url_for('edit_branch') }}">
+                    <input type="hidden" name="branch_id" value="{{ branch['_id'] }}">
+                    <div class="modal-content rounded-3">
+                      <div class="modal-header bg-indigo text-white">
+                        <h5 class="modal-title" id="editBranchLabel{{ branch['_id'] }}">Edit Branch</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        <div class="mb-3">
+                          <label class="form-label text-indigo fw-medium">Branch Name</label>
+                          <input type="text" name="branch" class="form-control form-control-sm" value="{{ branch['branch'] }}" required>
+                        </div>
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-sm btn-indigo">Save Changes</button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+              <!-- Delete Branch Modal -->
+              <div class="modal fade" id="deleteBranchModal{{ branch['_id'] }}" tabindex="-1" aria-labelledby="deleteBranchLabel{{ branch['_id'] }}" aria-hidden="true">
+                <div class="modal-dialog">
+                  <form method="POST" action="{{ url_for('delete_branch') }}">
+                    <input type="hidden" name="branch_id" value="{{ branch['_id'] }}">
+                    <input type="hidden" name="organization_id" value="{{ user.organization_id }}">
+                    <div class="modal-content rounded-3">
+                      <div class="modal-header bg-indigo text-white">
+                        <h5 class="modal-title" id="deleteBranchLabel{{ branch['_id'] }}">Delete Branch</h5>
+                        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                      </div>
+                      <div class="modal-body">
+                        Are you sure you want to delete <strong>{{ branch['branch'] }}</strong>?
+                      </div>
+                      <div class="modal-footer">
+                        <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+                        <button type="submit" class="btn btn-sm btn-danger">Delete</button>
+                      </div>
+                    </div>
+                  </form>
+                </div>
+              </div>
+              {% endfor %}
+            </tbody>
+          </table>
+        </div>
+      </div>
+      {% endif %}
+    </div>
+  </div>
+
+  <!-- Add Branch Modal -->
+  {% if user.role == "Manager" %}
+  <div class="modal fade" id="addBranchModal" tabindex="-1" aria-labelledby="addBranchLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form method="POST" action="{{ url_for('add_branch') }}">
+        <input type="hidden" name="organization_id" value="{{ user.organization_id }}">
+        <input type="hidden" name="user_id" value="{{ user._id }}">
+        <div class="modal-content rounded-3">
+          <div class="modal-header bg-indigo text-white">
+            <h5 class="modal-title" id="addBranchLabel">Add New Branch</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label text-indigo fw-medium">Branch Name</label>
+              <input type="text" name="branch" class="form-control form-control-sm" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-sm btn-indigo">Add Branch</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+  {% endif %}
+
+  <!-- Edit Profile Modal -->
+  <div class="modal fade" id="editProfileModal" tabindex="-1" aria-labelledby="editProfileLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form method="POST" action="{{ url_for('edit_profile') }}">
+        <div class="modal-content rounded-3">
+          <div class="modal-header bg-indigo text-white">
+            <h5 class="modal-title" id="editProfileLabel">Edit Profile</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label text-indigo fw-medium">Username</label>
+              <input type="text" name="username" class="form-control form-control-sm" value="{{ user.username }}" required>
+            </div>
+            {% if user.role == "Manager" %}
+            <div class="mb-3">
+              <label class="form-label text-indigo fw-medium">Organization Name</label>
+              <input type="text" name="organization" class="form-control form-control-sm" value="{{ user.organization }}" required>
+            </div>
+            {% endif %}
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-sm btn-indigo">Save Changes</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Update Password Modal -->
+  <div class="modal fade" id="updatePasswordModal" tabindex="-1" aria-labelledby="updatePasswordLabel" aria-hidden="true">
+    <div class="modal-dialog">
+      <form method="POST" action="{{ url_for('update_password') }}">
+        <div class="modal-content rounded-3">
+          <div class="modal-header bg-indigo text-white">
+            <h5 class="modal-title" id="updatePasswordLabel">Update Password</h5>
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <label class="form-label text-indigo fw-medium">New Password</label>
+              <input type="password" name="password" class="form-control form-control-sm" required>
+            </div>
+            <div class="mb-3">
+              <label class="form-label text-indigo fw-medium">Confirm Password</label>
+              <input type="password" name="confirm_password" class="form-control form-control-sm" required>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-sm btn-outline-secondary" data-bs-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-sm btn-indigo">Update Password</button>
+          </div>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
