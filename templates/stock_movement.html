@@ -24,26 +24,32 @@
       </thead>
       <tbody>
         {% for movement in stock_history|default([]) %}
-        <tr>
-          <td>{{ movement.date.strftime('%d %b %Y') }}</td>
-          <td>{{ movement.updater }}</td>
-          <td>{{ movement.branch }}</td>
-          <td>{{ movement.item }}</td>
-          <td>{{ movement.quantity_updated }}</td>
-          <td>{{ "{:,.0f}".format(movement.unit_cost) }}</td>
-          <td>
+        <tr style="height:24px; font-size:0.78rem;">
+          <td class="py-0">{{ movement.date.strftime('%d %b %Y') }}</td>
+          <td class="py-0">{{ movement.updater }}</td>
+          <td class="py-0">{{ movement.branch }}</td>
+          <td class="py-0">{{ movement.item }}</td>
+          <td class="py-0">{{ movement.quantity_updated }}</td>
+          <td class="py-0">{{ "{:,.0f}".format(movement.unit_cost) }}</td>
+          <td class="py-0">
+            {% if user.role in ["Manager", "Branch Manager"] %}
             <div class="d-flex gap-1">
-              <button class="btn btn-sm btn-outline-primary px-2 py-1"
-                      data-bs-toggle="modal"
-                      data-bs-target="#editStockMovementModal_{{ movement._id }}">
-                <i class="bi bi-pencil-square"></i>
+              <button class="btn btn-sm btn-outline-primary px-1 py-0"
+              style="font-size:0.75rem; height:22px;"
+              data-bs-toggle="modal"
+              data-bs-target="#editStockMovementModal_{{ movement._id }}">
+              <i class="bi bi-pencil-square"></i>
               </button>
-              <button class="btn btn-sm btn-outline-danger px-2 py-1"
-                      data-bs-toggle="modal"
-                      data-bs-target="#deleteStockMovementModal_{{ movement._id }}">
-                <i class="bi bi-trash"></i>
+              <button class="btn btn-sm btn-outline-danger px-1 py-0"
+              style="font-size:0.75rem; height:22px;"
+              data-bs-toggle="modal"
+              data-bs-target="#deleteStockMovementModal_{{ movement._id }}">
+              <i class="bi bi-trash"></i>
               </button>
             </div>
+            {% else %}
+              <span class="text-muted small fst-italic" style="font-size:0.75rem;">-</span>
+            {% endif %}
           </td>
         </tr>
         <!-- Edit Movement Modal -->

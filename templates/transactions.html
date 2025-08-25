@@ -7,13 +7,17 @@
   <div class="d-flex flex-wrap align-items-center gap-2 mb-3">
     <!-- Left group -->
     <div class="d-flex gap-2">
-      <button type="button" class="btn btn-sm btn-success d-flex align-items-center gap-1"
-              data-bs-toggle="modal" data-bs-target="#newSaleModal">
-        <i class="bi bi-cash-stack"></i> Sale
+      <button type="button" class="btn btn-sm btn-gradient-success shadow-sm px-3 py-2 d-flex align-items-center gap-2"
+          data-bs-toggle="modal" data-bs-target="#newSaleModal"
+          style="background: linear-gradient(90deg, #28a745 60%, #218838 100%); color: #fff; border: none; font-weight: 500; border-radius: 0.4rem;">
+      <i class="bi bi-cash-stack fs-5"></i>
+      <span>New Sale</span>
       </button>
-      <button type="button" class="btn btn-sm btn-danger d-flex align-items-center gap-1"
-              data-bs-toggle="modal" data-bs-target="#newExpenseModal">
-        <i class="bi bi-receipt"></i> Expense
+      <button type="button" class="btn btn-sm btn-gradient-danger shadow-sm px-3 py-2 d-flex align-items-center gap-2"
+          data-bs-toggle="modal" data-bs-target="#newExpenseModal"
+          style="background: linear-gradient(90deg, #dc3545 60%, #c82333 100%); color: #fff; border: none; font-weight: 500; border-radius: 0.4rem;">
+      <i class="bi bi-receipt fs-5"></i>
+      <span>New Expense</span>
       </button>
     </div>
     <!-- Right group pushed to extreme right -->
@@ -154,25 +158,29 @@
           <input type="hidden" name="user_id" value="{{ user._id }}">
           {% if user.role=='Manager' %}
             <div class="mb-2">
-            <label class="form-label fw-semibold text-dark">Branch</label>
-            <select name="branch_id" class="form-select form-select-sm" required>
-              <option value="" disabled selected>Select Branch</option>
-              {% for branch in organization.branches %}
-              <option value="{{ branch._id }}"
-                {% if branch._id == selected_branch._id %}selected{% endif %}>
-                {{ branch.branch }}
-              </option>
-              {% endfor %}
-            </select>
+              <label class="form-label fw-semibold text-dark">Branch</label>
+              <select name="branch_id" class="form-select form-select-sm" required>
+                <option value="" disabled selected>Select Branch</option>
+                {% for branch in organization.branches %}
+                  <option value="{{ branch._id }}"
+                    {% if branch._id == selected_branch._id %}selected{% endif %}>
+                    {{ branch.branch }}
+                  </option>
+                {% endfor %}
+              </select>
             </div>
+          {% else %}
+            <input type="hidden" name="branch_id" value="{{ selected_branch._id }}">
           {% endif %}
           <div class="mb-2">
             <label class="form-label fw-semibold text-dark">Item</label>
             <select name="item_id" id="saleItemSelect" class="form-select form-select-sm" required>
               <option value="" disabled selected>Select Item</option>
-              {% for item in stock_items %}
-                <option value="{{ item._id }}" data-price="{{ item.price }}">{{ item.name }}{% if item.price %} (UGX {{ item.price }}){% endif %}</option>
-              {% endfor %}
+                {% for item in stock_items %}
+                <option value="{{ item._id }}" data-price="{{ item.price }}">
+                  {{ item.name }}{% if item.price %} (ugx {{ "{:,.0f}".format(item.price) }}){% endif %}
+                </option>
+                {% endfor %}
             </select>
           </div>
             <div class="mb-2">
@@ -329,7 +337,7 @@
               {% for item in stock_items %}
               <option value="{{ item._id }}" data-price="{{ item.price }}"
                 {% if item.name == tx.description %}selected{% endif %}>
-                {{ item.name }} (UGX {{ item.price }})
+                {{ item.name }}{% if item.price %} (ugx {{ "{:,.0f}".format(item.price) }}){% endif %}
               </option>
               {% endfor %}
               </select>
@@ -435,14 +443,14 @@
   <!-- Clear Credit Modal -->
   <div class="modal fade" id="clearCreditModal_{{ tx._id }}" tabindex="-1" aria-labelledby="clearCreditLabel_{{ tx._id }}" aria-hidden="true">
     <div class="modal-dialog">
-      <form method="POST" action="{{ url_for('clear_credit', sale_id=tx._id) }}">
+      <form method="POST" action="{{ url_for('clear_credit') }}">
         <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.78rem;">
           <div class="modal-header border-bottom py-2">
-            <h6 class="modal-title fw-semibold text-success" id="clearCreditLabel_{{ tx._id }}">
-              <i class="bi bi-cash-coin me-2"></i>
+        <h6 class="modal-title fw-semibold text-success" id="clearCreditLabel_{{ tx._id }}">
+          <i class="bi bi-cash-coin me-2"></i>
               Clear Credit
               <span class="text-danger fw-normal" style="font-size: 0.85em;">
-                ({{ "{:,.0f}".format(tx.payment_details.amount_left) }} UGX left)
+                ( ugx {{ "{:,.0f}".format(tx.payment_details.amount_left) }} left)
               </span>
             </h6>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close" style="transform: scale(0.85);"></button>
@@ -450,7 +458,7 @@
           <div class="modal-body px-3 py-2">
             <input type="hidden" name="user_id" value="{{ user._id }}">
             <input type="hidden" name="item_id" value="{{ tx.item_id }}">
-            <input type="hidden" name="transaction_id" value="{{ tx._id }}">
+            <input type="hidden" name="tx_id" value="{{ tx._id }}">
             <div class="mb-2">
               <label class="form-label fw-semibold text-dark" style="font-size: 0.72rem;">Amount to Clear (UGX)</label>
               <input type="number" name="amount" min="1" step="0.01" class="form-control form-control-sm" style="font-size: 0.72rem;" required>

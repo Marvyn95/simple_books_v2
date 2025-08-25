@@ -4,52 +4,93 @@
 <div class="container-fluid" style="max-width: 900px;">
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="fw-bold mb-0" style="color: indigo;">Stock Items</h4>
-    <button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color:#fff; border-radius:.4rem; border:1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#addItemModal">
-      <i class="bi bi-plus-lg me-1"></i> Add New Item
-    </button>
+    {% if user.role == "Manager" or user.role == "Branch Manager" %}
+      <button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color:#fff; border-radius:.4rem; border:1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#addItemModal">
+        <i class="bi bi-plus-lg me-1"></i> Add New Item
+      </button>
+    {% endif %}
   </div>
 
   <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+    {% if stock|length == 0 %}
+      <div class="text-center text-muted py-4">
+      <i class="bi bi-box-seam" style="font-size:2rem; color:indigo;"></i><br>
+      <span class="fst-italic">No stock items available.</span>
+      </div>
+    {% else %}
     <table class="table table-hover align-middle small" style="margin-bottom:0; border-top:none; font-size:.85rem;">
       <thead class="table-primary" style="position:sticky; top:0; z-index:2;">
-        <tr>
-          <th>Item</th>
-          <th>Branch</th>
-          <th>Quantity</th>
-          <th>Price</th>
-          <th>Actions</th>
-        </tr>
+      <tr>
+        <th>Item</th>
+        <th>Branch</th>
+        <th>Quantity</th>
+        <th>Selling Price</th>
+        <th>Actions</th>
+      </tr>
       </thead>
       <tbody>
-        {% for item in stock %}
-        <tr>
-          <td class="fw-semibold">
-            <a href="#" style="color: indigo; text-decoration: underline;"
-               data-bs-toggle="modal" data-bs-target="#itemDetailsModal_{{ item._id }}">
-              {{ item.name }}
-            </a>
-          </td>
-          <td>{{ item.branch }}</td>
-            <td>{{ item.quantity }}</td>
-          <td>{{ item.price }}</td>
-          <td>
-            <button class="btn btn-sm px-2 me-1" style="background: indigo; color:#fff; border-radius:.3rem;"
-                    data-bs-toggle="modal" data-bs-target="#editItemModal{{ item._id }}">
-              <i class="bi bi-pencil"></i>
+      {% for item in stock %}
+      <tr style="height: 28px; font-size: .78rem;">
+        <td class="fw-semibold py-0">
+          <a href="#" style="color: indigo; text-decoration: none;"
+         data-bs-toggle="modal" data-bs-target="#itemDetailsModal_{{ item._id }}">
+        {{ item.name }}
+          </a>
+        </td>
+        <td class="py-0">{{ item.branch }}</td>
+        <td class="py-0">{{ item.quantity }}</td>
+        <td class="py-0">
+          {% if item.price %}
+            ugx {{ "{:,.0f}".format(item.price) }}
+          {% else %}
+            Not Set
+          {% endif %}
+        </td>
+        <td class="py-0">
+            <div class="d-flex gap-2 justify-content-start align-items-center">
+            {% if user.role == "Manager" or user.role == "Branch Manager" %}
+            <button class="btn btn-sm px-2 py-1 border-0 shadow-sm" 
+              style="color: indigo; border-radius: .35rem; min-width: 38px;" 
+              data-bs-toggle="modal" data-bs-target="#itemDetailsModal_{{ item._id }}" 
+              title="View Details">
+              <span class="ms-1 fw-semibold" style="font-size:.78rem;">Details</span>
             </button>
-            <button class="btn btn-sm px-2 me-1" style="background:#fff; color:indigo; border:1.5px solid indigo; border-radius:.3rem;"
-                    data-bs-toggle="modal" data-bs-target="#updateStockModal{{ item._id }}">
-              <i class="bi bi-arrow-repeat"></i>
+            <button class="btn btn-sm px-2 py-1 border-0 shadow-sm" 
+              style="color: #198754; border-radius: .35rem; min-width: 38px;" 
+              data-bs-toggle="modal" data-bs-target="#updateStockModal{{ item._id }}" 
+              title="Restock">
+              <i class="bi bi-plus-circle"></i>
+              <span class="ms-1 fw-semibold" style="font-size:.78rem;">Restock</span>
             </button>
-            <button class="btn btn-sm btn-outline-danger px-2"
-                    data-bs-toggle="modal" data-bs-target="#deleteItemModal{{ item._id }}">
-              <i class="bi bi-trash"></i>
+            <button class="btn btn-sm px-2 py-1 border-0 shadow-sm" 
+              style="color: #0a58ca; border-radius: .35rem; min-width: 38px;" 
+              data-bs-toggle="modal" data-bs-target="#editItemModal{{ item._id }}" 
+              title="Edit Item">
+              <span class="ms-1 fw-semibold" style="font-size:.78rem;">Update</span>
             </button>
-          </td>
-        </tr>
-        {% endfor %}
+            <button class="btn btn-sm px-2 py-1 border-0 shadow-sm" 
+              style="color: #dc3545; border-radius: .35rem; min-width: 38px;" 
+              data-bs-toggle="modal" data-bs-target="#deleteItemModal{{ item._id }}" 
+              title="Delete Item">
+              <i class="bi bi-x-circle"></i>
+              <span class="ms-1 fw-semibold" style="font-size:.78rem;">Delete</span>
+            </button>
+            {% else %}
+            <button class="btn btn-sm px-2 py-1 border-0 shadow-sm" 
+              style="color: indigo; border-radius: .35rem; min-width: 38px;" 
+              data-bs-toggle="modal" data-bs-target="#itemDetailsModal_{{ item._id }}" 
+              title="View Details">
+              <i class="bi bi-info-circle"></i>
+              <span class="ms-1 fw-semibold" style="font-size:.78rem;">Details</span>
+            </button>
+            {% endif %}
+            </div>
+        </td>
+      </tr>
+      {% endfor %}
       </tbody>
     </table>
+    {% endif %}
   </div>
 </div>
 
@@ -78,7 +119,11 @@
               </div>
               <div>
                 <small style="color: indigo;">Unit Price</small><br>
-                <span class="fw-semibold">{{ item.price }}</span>
+                {% if item.price %}
+                  <span class="fw-semibold">ugx {{ "{:,.0f}".format(item.price) }}</span>
+                {% else %}
+                  <span class="text-muted fst-italic">Not Set</span>
+                {% endif %}
               </div>
               <div>
                 <small style="color: indigo;">Branch</small><br>
@@ -118,7 +163,13 @@
                         </td>
                         <td>{{ entry.updater }}</td>
                         <td>{{ entry.quantity_updated }}</td>
-                        <td>{{ entry.unit_cost }}</td>
+                        <td>
+                          {% if entry.unit_cost %}
+                          ugx {{ "{:,.0f}".format(entry.unit_cost) }}
+                          {% else %}
+                          <span class="text-muted fst-italic">Not Set</span>
+                          {% endif %}
+                        </td>
                       </tr>
                     {% endif %}
                   {% endfor %}
@@ -171,7 +222,7 @@
               <input type="text" name="name" class="form-control form-control-sm" value="{{ item.name }}" required>
             </div>
             <div class="mb-3">
-              <label class="form-label text-indigo fw-medium">Price</label>
+              <label class="form-label text-indigo fw-medium">Set Selling Price</label>
               <input type="number" name="price" class="form-control form-control-sm" value="{{ item.price }}" required>
             </div>
           </div>

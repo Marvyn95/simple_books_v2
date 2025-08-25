@@ -23,7 +23,7 @@
         {% if user.role != "Manager" %}
         <div class="mb-3">
           <label class="form-label fw-semibold mb-1">Branch:</label>
-          <span class="ms-2 fw-medium text-indigo" style="color: #4B0082;">{{ branch }}</span>
+          <span class="ms-2 fw-medium text-indigo" style="color: #4B0082;">{{ selected_branch.branch }}</span>
         </div>
         {% endif %}
         <div class="d-flex gap-2 mt-auto">
@@ -48,19 +48,19 @@
           <table class="table table-sm table-borderless mb-0">
             <tbody>
               {% for branch in organization['branches'] %}
-              <tr style="border-bottom: 1px solid #4B0082;">
-                <td class="fw-medium py-2 px-3 text-indigo">
+                <tr style="border-bottom: 1px solid #4B0082; height: 32px;">
+                <td class="fw-medium py-1 px-2 text-indigo align-middle">
                   <i class="bi bi-building me-2"></i>{{ branch['branch'] }}
                 </td>
-                <td class="text-end py-2 px-3">
-                  <button class="btn btn-sm btn-indigo me-2 px-2" data-bs-toggle="modal" data-bs-target="#editBranchModal{{ branch['_id'] }}">
-                    <i class="bi bi-pencil"></i>
+                <td class="text-end py-1 px-2 align-middle">
+                  <button class="btn btn-sm btn-indigo me-1 px-1 py-0" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#editBranchModal{{ branch['_id'] }}">
+                  <i class="bi bi-pencil"></i>
                   </button>
-                  <button class="btn btn-sm btn-outline-indigo px-2" data-bs-toggle="modal" data-bs-target="#deleteBranchModal{{ branch['_id'] }}">
-                    <i class="bi bi-trash"></i>
+                  <button class="btn btn-sm btn-outline-indigo px-1 py-0" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#deleteBranchModal{{ branch['_id'] }}">
+                  <i class="bi bi-trash"></i>
                   </button>
                 </td>
-              </tr>
+                </tr>
               <!-- Edit Branch Modal -->
               <div class="modal fade" id="editBranchModal{{ branch['_id'] }}" tabindex="-1" aria-labelledby="editBranchLabel{{ branch['_id'] }}" aria-hidden="true">
                 <div class="modal-dialog">

@@ -22,20 +22,24 @@
       </thead>
       <tbody>
         {% for employee in employees %}
-        <tr class="border-bottom">
-          <td>{{ employee.username }}</td>
-          <td>{{ employee.role }}</td>
-          <td>{{ employee.branch }}</td>
-          <td>
-            <button class="btn btn-sm btn-primary me-1" data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ employee._id }}">
-              <i class="bi bi-pencil"></i>
-            </button>
-            <button class="btn btn-sm btn-warning me-1" data-bs-toggle="modal" data-bs-target="#editPasswordModal{{ employee._id }}">
-              <i class="bi bi-key"></i>
-            </button>
-            <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal{{ employee._id }}">
-              <i class="bi bi-person-x"></i>
-            </button>
+        <tr style="height:24px;">
+          <td class="py-1">{{ employee.username }}</td>
+          <td class="py-1">{{ employee.role }}</td>
+          <td class="py-1">{{ employee.branch }}</td>
+          <td class="py-1">
+            {% if user.role in ["Manager", "Branch Manager"] or employee._id|string == user._id|string %}
+              <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ employee._id }}">
+          <i class="bi bi-pencil"></i>
+              </button>
+            {% endif %}
+            {% if user.role in ["Manager", "Branch Manager"] %}
+              <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editPasswordModal{{ employee._id }}">
+          <i class="bi bi-key"></i>
+              </button>
+              <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal{{ employee._id }}">
+          <i class="bi bi-person-x"></i>
+              </button>
+            {% endif %}
           </td>
         </tr>
 
@@ -54,22 +58,28 @@
                     <label class="form-label">Username</label>
                     <input type="text" name="username" class="form-control form-control-sm" value="{{ employee.username }}" required>
                   </div>
-                  <div class="mb-2">
+                    <div class="mb-2">
                     <label class="form-label">Role</label>
-                    <select name="role" class="form-select form-select-sm" required>
+                    <select name="role" class="form-select form-select-sm" required {% if user.role != "Manager" %}disabled{% endif %}>
                       <option value="Manager" {% if employee.role == "Manager" %}selected{% endif %}>Manager</option>
                       <option value="Branch Manager" {% if employee.role == "Branch Manager" %}selected{% endif %}>Branch Manager</option>
                       <option value="Sales Person" {% if employee.role == "Sales Person" %}selected{% endif %}>Sales Person</option>
                     </select>
-                  </div>
-<div class="mb-2">
-  <label class="form-label">Branch</label>
-  <select name="branch_id" class="form-select form-select-sm" required>
-    {% for branch in organization['branches'] %}
-      <option value="{{ branch['_id'] }}" {% if branch['_id']|string == employee.branch_id|string %}selected{% endif %}>{{ branch['branch'] }}</option>
-    {% endfor %}
-  </select>
-</div>
+                    {% if user.role != "Manager" %}
+                      <input type="hidden" name="role" value="{{ employee.role }}">
+                    {% endif %}
+                    </div>
+                    <div class="mb-2">
+                    <label class="form-label">Branch</label>
+                    <select name="branch_id" class="form-select form-select-sm" required {% if user.role != "Manager" %}disabled{% endif %}>
+                      {% for branch in organization['branches'] %}
+                      <option value="{{ branch['_id'] }}" {% if branch['_id']|string == employee.branch_id|string %}selected{% endif %}>{{ branch['branch'] }}</option>
+                      {% endfor %}
+                    </select>
+                    {% if user.role != "Manager" %}
+                      <input type="hidden" name="branch_id" value="{{ employee.branch_id }}">
+                    {% endif %}
+                    </div>
                 </div>
                 <div class="modal-footer">
                   <button type="submit" class="btn btn-primary btn-sm">Save Changes</button>
@@ -149,12 +159,30 @@
             </div>
             <div class="mb-2">
               <label class="form-label">Password</label>
-              <input type="password" name="password" class="form-control form-control-sm" required>
+              <input type="password" name="password" class="form-control form-control-sm" id="addPassword" required>
             </div>
             <div class="mb-2">
               <label class="form-label">Confirm Password</label>
-              <input type="password" name="confirm_password" class="form-control form-control-sm" required>
+              <input type="password" name="confirm_password" class="form-control form-control-sm" id="addConfirmPassword" required>
+              <div class="invalid-feedback">
+                Passwords do not match.
+              </div>
             </div>
+            <script>
+              document.addEventListener('DOMContentLoaded', function() {
+                var password = document.getElementById('addPassword');
+                var confirm = document.getElementById('addConfirmPassword');
+                function validate() {
+                  if (confirm.value && password.value !== confirm.value) {
+                    confirm.classList.add('is-invalid');
+                  } else {
+                    confirm.classList.remove('is-invalid');
+                  }
+                }
+                password.addEventListener('input', validate);
+                confirm.addEventListener('input', validate);
+              });
+            </script>
 <div class="mb-2">
   <label class="form-label">Role</label>
   <select name="role" class="form-select form-select-sm" required>

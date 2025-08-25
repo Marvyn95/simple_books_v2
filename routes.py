@@ -291,6 +291,7 @@ def add_item():
         "name": name,
         "branch_id": branch_id,
         "organization_id": ObjectId(organization_id),
+        "quantity": 0,
     })
     flash('Item added successfully!', 'success')
     return redirect(url_for('stock'))
@@ -374,7 +375,10 @@ def employees():
     user['organization'] = organization.get('organization')
     selected_branch = session.get("branch")
 
-    employees = list(db.Users.find({"organization_id": ObjectId(user.get("organization_id"))}))
+    if selected_branch == None:
+        employees = list(db.Users.find({"organization_id": ObjectId(user.get("organization_id"))}))
+    else:
+        employees = list(db.Users.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}))
 
     for e in employees:
         e['branch'] = next((item for item in organization.get("branches", []) if item["_id"] == e.get("branch_id")), {}).get("branch")
@@ -581,16 +585,18 @@ def transactions():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     organization = db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))})
     employees = list(db.Users.find({"organization_id": ObjectId(user.get("organization_id"))}))
-    stock_items = list(db.Stock.find({"organization_id": ObjectId(user.get("organization_id"))}))
     selected_branch = session.get("branch")
     user["organization"] = organization.get('organization')
 
     if selected_branch is None:
         sales = list(db.Sales.find({"organization_id": ObjectId(user.get("organization_id"))}).sort("date", -1))
         expenses = list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id"))}).sort("date", -1))
+        stock_items = list(db.Stock.find({"organization_id": ObjectId(user.get("organization_id"))}).sort("name", 1))
+
     else:
         sales = list(db.Sales.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}).sort("date", -1))
         expenses = list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}).sort("date", -1))
+        stock_items = list(db.Stock.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}).sort("name", 1))
 
     for sale in sales:
         sale["type"] = "Sale"
@@ -675,8 +681,8 @@ def edit_sale():
     if str(new_item_id) == str(old_item_id):
         db.Stock.update_one({"_id": ObjectId(old_item_id)}, {"$set": {"quantity": item.get("quantity", 0) + tx.get("quantity", 0) - quantity}})
     elif str(new_item_id) != str(old_item_id):
-        db.Stock.update_one({"_id": ObjectId(old_item_id)}, {"$inc": {"quantity": -tx.get("quantity", 0)}})
-        db.Stock.update_one({"_id": ObjectId(new_item_id)}, {"$inc": {"quantity": quantity}})
+        db.Stock.update_one({"_id": ObjectId(old_item_id)}, {"$inc": {"quantity": tx.get("quantity", 0)}})
+        db.Stock.update_one({"_id": ObjectId(new_item_id)}, {"$inc": {"quantity": -quantity}})
 
     db.Sales.update_one({"_id": ObjectId(tx_id)}, {"$set": {
         "item_id": new_item_id,
@@ -697,32 +703,25 @@ def edit_sale():
 
 
 
-@app.route('/clear_credit/<sale_id>', methods=['POST'])
-def clear_credit(sale_id):
-    user = current_user()
-    if not user:
-        return redirect(url_for('login'))
-    sale = db.Transactions.find_one({"_id": ObjectId(sale_id)})
-    if not sale or sale.get("type") != "Sale":
-        flash('Sale not found.', 'error')
-        return redirect(url_for('transactions'))
-    amt = float(request.form.get('amount', 0))
-    pd = sale.get('payment_details') or {}
-    left = pd.get('amount_left', 0)
-    if amt <= 0 or left <= 0:
-        return redirect(url_for('transactions'))
-    new_left = max(left - amt, 0)
-    history = pd.get('clearance_history', [])
-    history.append({"date": datetime.datetime.now(), "amount_paid": amt})
-    update = {
-        "payment_details": {"amount_left": new_left, "clearance_history": history},
-        "amount": sale.get("amount", 0) + amt
-    }
-    if new_left == 0:
-        update["status"] = "paid"
-    db.Transactions.update_one({"_id": ObjectId(sale_id)}, {"$set": update})
-    flash('Credit cleared.' if new_left == 0 else 'Credit payment recorded.', 'success')
+@app.route('/clear_credit', methods=['POST'])
+def clear_credit():
+    user_id = request.form.get('user_id')
+    tx_id = request.form.get('tx_id')
+    amount_paid = int(request.form.get('amount', 0))
+
+    db.Sales.update_one({"_id": ObjectId(tx_id)}, {"$push": {"payment_details.clearance_history": {"date": datetime.datetime.now(), "amount_paid": amount_paid}}})
+
+    transaction = db.Sales.find_one({"_id": ObjectId(tx_id)})
+    total_paid = sum(entry.get("amount_paid", 0) for entry in transaction.get("payment_details", {}).get("clearance_history", []))
+    amount_left = transaction.get("quantity", 0) * transaction.get("unit_price", 0) - total_paid
+
+    db.Sales.update_one({"_id": ObjectId(tx_id)}, {"$set": {
+        "payment_details.status": "paid" if amount_left <= 0 else "credit",
+        "payment_details.amount_left": amount_left
+    }})
+    flash('Credit cleared.', 'success')
     return redirect(url_for('transactions'))
+
 
 @app.route('/new_expense', methods=['POST'])
 def new_expense():
