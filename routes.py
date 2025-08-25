@@ -6,8 +6,11 @@ import json, secrets, datetime
 from bson.objectid import ObjectId
 from collections import defaultdict
 from datetime import timedelta
+from collections import defaultdict
 
 
+
+# authentication
 @app.route("/", methods=["GET", "POST"])
 @app.route("/login", methods=["GET", "POST"])
 def login():
@@ -41,7 +44,15 @@ def login():
 
 
 
+@app.route("/logout")
+def logout():
+    session.clear()
+    flash("You have been logged out successfully!", "success")
+    return redirect(url_for("login"))
 
+
+
+# registration
 @app.route("/register", methods=["GET", "POST"])
 def register():
 
@@ -90,15 +101,9 @@ def register():
         flash("You have been registered successfully!", "success")
         return redirect(url_for("login"))
 
-@app.route("/logout")
-def logout():
-    session.clear()
-    flash("You have been logged out successfully!", "success")
-    return redirect(url_for("login"))
 
 
-
-
+# branch selection
 @app.route('/change_branch', methods=["POST"])
 def change_branch():
     organization_id = request.form.get("organization_id")
@@ -123,7 +128,12 @@ def profile():
     user['organization'] = organization.get('organization')
     selected_branch = session.get("branch")
 
-    return render_template('profile.html', user=user, selected_branch=selected_branch, organization=organization)
+    return render_template('profile.html',
+                           user=user,
+                           selected_branch=selected_branch,
+                           organization=organization,
+                           now=datetime.datetime.now()
+                           )
 
 
 
@@ -243,6 +253,7 @@ def add_branch():
 
 
 
+# stock management
 @app.route('/stock', methods=['GET'])
 def stock():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
@@ -272,7 +283,8 @@ def stock():
                            organization=organization,
                            branch=branch,
                            stock=stock,
-                           stock_history=stock_history
+                           stock_history=stock_history,
+                           now=datetime.datetime.now()
                            )
 
 
@@ -367,6 +379,7 @@ def delete_item():
 
 
 
+
 # employees
 @app.route('/employees')
 def employees():
@@ -387,8 +400,9 @@ def employees():
                            user=user,
                            selected_branch=selected_branch,
                            organization=organization,
-                           employees=employees)
-
+                           employees=employees,
+                           now=datetime.datetime.now()
+                           )
 
 
 @app.route('/add_employee', methods=['POST'])
@@ -481,26 +495,7 @@ def delete_employee():
 
 
 
-@app.route('/reports')
-def reports():
-    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
-    organization = db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))})
-    user['organization'] = organization.get('organization')
-    selected_branch = session.get("branch_id")
-    branch = session.get("branch")
-
-    return render_template('reports.html', user=user, selected_branch=selected_branch, organization=organization, branch=branch)
-
-@app.route('/performance')
-def performance():
-    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
-    organization = db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))})
-    user['organization'] = organization.get('organization')
-    selected_branch = session.get("branch_id")
-    branch = session.get("branch")
-
-    return render_template('performance.html', user=user, selected_branch=selected_branch, organization=organization, branch=branch)
-
+# stock movement
 @app.route('/stock_movement')
 def stock_movement():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
@@ -527,7 +522,8 @@ def stock_movement():
                            selected_branch=selected_branch,
                            organization=organization,
                            branch=branch,
-                           stock_history=stock_history
+                           stock_history=stock_history,
+                           now=datetime.datetime.now()
                            )
 
 
@@ -579,7 +575,9 @@ def delete_stock_movement():
 
 
 
-# transactions
+
+
+# transactions (sales / expenses)
 @app.route('/transactions')
 def transactions():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
@@ -619,7 +617,9 @@ def transactions():
                            organization=organization,
                            employees=employees,
                            stock_items=stock_items,
-                           selected_branch=selected_branch)
+                           selected_branch=selected_branch,
+                           now=datetime.datetime.now()
+                       )
 
 @app.route('/new_sale', methods=['POST'])
 def new_sale():
@@ -655,8 +655,6 @@ def new_sale():
     db.Stock.update_one({"_id": ObjectId(item_id)}, {"$inc": {"quantity": -quantity}})
     flash('Sale recorded.', 'success')
     return redirect(url_for('transactions'))
-
-
 
 
 
@@ -725,59 +723,258 @@ def clear_credit():
 
 @app.route('/new_expense', methods=['POST'])
 def new_expense():
-    user = current_user()
-    if not user:
-        return redirect(url_for('login'))
-    purpose = request.form.get('purpose')
+    user_id = request.form.get('user_id')
+    org_id = request.form.get('org_id')
+    branch_id = request.form.get('branch_id')
+    purpose = request.form.get('purpose').strip()
     amount = float(request.form.get('amount', 0))
-    branch_id = request.form.get('branch_id') or user.get("branch_id")
-    auth_by = request.form.get('authorized_by') or None
-    authorizer = None
-    if auth_by:
-        au = db.Users.find_one({"_id": ObjectId(auth_by)})
-        if au:
-            authorizer = au.get("username")
-    tx = {
-        "type": "Expense",
-        "organization_id": user.get("organization_id"),
+    authorized_by = request.form.get('authorized_by') or None
+
+    db.Expenses.insert_one({
+        "user_id": ObjectId(user_id),
+        "organization_id": ObjectId(org_id),
         "branch_id": branch_id,
-        "description": purpose,
+        "purpose": purpose,
         "amount": amount,
-        "status": None,
-        "authorized_by": auth_by,
-        "authorizer": authorizer,
-        "user_id": str(user["_id"]),
+        "authorized_by": authorized_by,
         "date": datetime.datetime.now()
-    }
-    db.Transactions.insert_one(tx)
-    flash('Expense saved.', 'success')
+    })
+
+    flash('Expense recorded.', 'success')
     return redirect(url_for('transactions'))
 
-@app.route('/edit_expense/<expense_id>', methods=['POST'])
-def edit_expense(expense_id):
-    user = current_user()
-    if not user:
-        return redirect(url_for('login'))
-    exp = db.Transactions.find_one({"_id": ObjectId(expense_id)})
-    if not exp or exp.get("type") != "Expense":
-        flash('Expense not found.', 'error')
-        return redirect(url_for('transactions'))
-    purpose = request.form.get('purpose')
-    amount = float(request.form.get('amount', 0))
-    auth_by = request.form.get('authorized_by') or None
-    authorizer = None
-    if auth_by:
-        au = db.Users.find_one({"_id": ObjectId(auth_by)})
-        if au:
-            authorizer = au.get("username")
-    db.Transactions.update_one(
-        {"_id": ObjectId(expense_id)},
-        {"$set": {
-            "description": purpose,
-            "amount": amount,
-            "authorized_by": auth_by,
-            "authorizer": authorizer
-        }}
-    )
+
+@app.route('/edit_expense', methods=['POST'])
+def edit_expense():
+
+    tx_id = request.form.get('tx_id')
+    purpose = request.form.get('purpose').strip()
+    amount = request.form.get('amount', 0)
+    authorized_by = request.form.get('authorized_by') or None
+
+    db.Expenses.update_one({"_id": ObjectId(tx_id)}, {"$set": {
+        "purpose": purpose,
+        "amount": float(amount),
+        "authorized_by": authorized_by
+    }})
+
     flash('Expense updated.', 'success')
     return redirect(url_for('transactions'))
+
+@app.route('/delete_transaction', methods=['POST'])
+def delete_transaction():
+    tx_id = request.form.get('tx_id')
+    tx_type = request.form.get('tx_type')
+
+    if tx_type == "Sale":
+        tx = db.Sales.find_one({"_id": ObjectId(tx_id)})
+        db.Stock.update_one({"_id": ObjectId(tx.get("item_id"))}, {"$inc": {"quantity": tx.get("quantity", 0)}})
+        db.Sales.delete_one({"_id": ObjectId(tx_id)})
+    else:
+        db.Expenses.delete_one({"_id": ObjectId(tx_id)})
+
+    flash('Transaction deleted.', 'success')
+    return redirect(url_for('transactions'))
+
+
+# performance
+@app.route('/performance')
+def performance():
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    organization = db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))})
+    user['organization'] = organization.get('organization')
+    selected_branch = session.get("branch")
+
+    if selected_branch is None:
+        sales = db.Sales.find({"organization_id": organization.get("_id")})
+        expenses = db.Expenses.find({"organization_id": organization.get("_id")})
+        stock_movement = db.Stock_movement.find({"organization_id": organization.get("_id")})
+    else:
+        sales = db.Sales.find({"organization_id": organization.get("_id"), "branch_id": selected_branch.get("_id")})
+        expenses = db.Expenses.find({"organization_id": organization.get("_id"), "branch_id": selected_branch.get("_id")})
+        stock_movement = db.Stock_movement.find({"organization_id": organization.get("_id"), "branch_id": selected_branch.get("_id")})
+
+    
+    monthly_sales = defaultdict(float)
+    for sale in sales:
+        month = sale.get("date").strftime("%B-%Y")
+        monthly_sales[month] += sale.get("quantity", 0) * sale.get("unit_price", 0)
+
+    monthly_expenses = defaultdict(float)
+    for expense in expenses:
+        month = expense.get("date").strftime("%B-%Y")
+        monthly_expenses[month] += expense.get("amount", 0)
+
+    monthly_stock_cost = defaultdict(float)
+    for stock in stock_movement:
+        month = stock.get("date").strftime("%B-%Y")
+        monthly_stock_cost[month] += stock.get("quantity_updated", 0) * stock.get("unit_cost", 0)
+
+    all_months = sorted(set(monthly_sales.keys()) | set(monthly_expenses.keys()) | set(monthly_stock_cost.keys()))
+    
+    performance_data = []
+    for month in all_months:
+        sales_total = monthly_sales.get(month, 0)
+        expenses_total = monthly_expenses.get(month, 0)
+        stock_cost_total = monthly_stock_cost.get(month, 0)
+        profit = sales_total - expenses_total - stock_cost_total
+        profit_margin = (profit / sales_total)*100 if sales_total != 0 else 0
+        performance_data.append({
+            "month": month,
+            "sales": sales_total,
+            "expenses": expenses_total,
+            "stock_cost": stock_cost_total,
+            "profit": profit,
+            "profit_margin": profit_margin
+        })
+
+    return render_template('performance.html',
+                           user=user,
+                           selected_branch=selected_branch,
+                           organization=organization,
+                           performance_data=performance_data,
+                           now=datetime.datetime.now()
+                       )
+
+
+
+# reports
+@app.route('/reports')
+def reports():
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    organization = db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))})
+    user['organization'] = organization.get('organization')
+    selected_branch = session.get("branch")
+
+    return render_template('reports.html',
+                           user=user,
+                           selected_branch=selected_branch,
+                           organization=organization,
+                           now=datetime.datetime.now()
+                           )
+
+@app.route('/generate_report', methods=['POST'])
+def generate_report():
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    start_date = request.form.get('start_date')
+    end_date = request.form.get('end_date')
+    data = request.form.get('data')
+    branch_id = request.form.get('branch_id')
+
+
+    start_date = datetime.datetime.strptime(start_date, "%Y-%m-%d").date()
+    end_date = datetime.datetime.strptime(end_date, "%Y-%m-%d").date()
+
+    if start_date > end_date:
+        flash('Invalid date range. Please try again.', 'error')
+        return redirect(url_for('reports'))
+
+
+    if branch_id == "all":
+        branch_name = "all"
+    else:
+        for branch in db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))}).get("branches", []):
+            if branch.get("_id") == branch_id:
+                branch_name = branch.get("branch")
+                break
+
+    if data == "sales":
+        if branch_id == "all":
+            sales = list(db.Sales.find({"organization_id": ObjectId(user.get("organization_id"))}))
+        else:
+            sales = list(db.Sales.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": branch_id}))
+        sales = [s for s in sales if start_date <= s.get("date").date() <= end_date]
+        
+        required_data = []
+        users = list(db.Users.find({"organization_id": ObjectId(user.get("organization_id"))}))
+        stock_items = list(db.Stock.find({"organization_id": ObjectId(user.get("organization_id"))}))
+        for i in sales:
+            required_data.append({
+                "date": i.get("date").date().strftime("%d %B %Y"),
+                "sales person": next((u["username"] for u in users if str(u["_id"]) == str(i["user_id"])), "Unknown"),
+                "product/service": next((s["name"] for s in stock_items if str(s["_id"]) == str(i["item_id"])), "Unknown"),
+                "quantity": i.get("quantity"),
+                "unit price": i.get("unit_price"),
+                "amount": sum(float(k["amount_paid"]) for k in  i.get("payment_details", {}).get("clearance_history", [])),
+                "status": i.get("payment_details", {}).get("status"),
+                "client name": i.get("client_name"),
+                "client contact": i.get("client_contact")
+            })
+
+        df = pd.DataFrame(required_data)
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Sheet1")
+        output.seek(0)
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=f"{branch_name}-sales-{start_date.strftime('%d-%b-%Y')}--{end_date.strftime('%d-%b-%Y')}.xlsx",
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    
+
+    if data == "expenses":
+        if branch_id == "all":
+            expenses = list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id"))}))
+        else:
+            expenses = list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": branch_id}))
+        expenses = [e for e in expenses if start_date <= e.get("date").date() <= end_date]
+
+        required_data = []
+        users = list(db.Users.find({"organization_id": ObjectId(user.get("organization_id"))}))
+        for i in expenses:
+            required_data.append({
+                "date": i.get("date").date().strftime("%d %B %Y"),
+                "spend by": next((u["username"] for u in users if str(u["_id"]) == str(i["user_id"])), "Unknown"),
+                "expense": i.get("purpose"),
+                "amount": i.get("amount")
+            })
+
+        df = pd.DataFrame(required_data)
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Sheet1")
+        output.seek(0)
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=f"{branch_name}-expenses-{start_date.strftime('%d-%b-%Y')}--{end_date.strftime('%d-%b-%Y')}.xlsx",
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+    
+
+    if data == "stock_movement":
+        if branch_id == "all":
+            stock_movements = list(db.Stock_movement.find({"organization_id": ObjectId(user.get("organization_id"))}))
+        else:
+            stock_movements = list(db.Stock_movement.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": branch_id}))
+        stock_movements = [sm for sm in stock_movements if start_date <= sm.get("date").date() <= end_date]
+
+        required_data = []
+        users = list(db.Users.find({"organization_id": ObjectId(user.get("organization_id"))}))
+        stock_items = list(db.Stock.find({"organization_id": ObjectId(user.get("organization_id"))}))
+        for i in stock_movements:
+            required_data.append({
+                "date": i.get("date").date().strftime("%d %B %Y"),
+                "updated by": next((u["username"] for u in users if str(u["_id"]) == str(i["updater_id"])), "Unknown"),
+                "item": next((si["name"] for si in stock_items if str(si["_id"]) == str(i["item_id"])), "Unknown"),
+                "quantity": i.get("quantity_updated"),
+                "unit cost": i.get("unit_cost"),
+                "amount": float(i.get("quantity_updated"))*float(i.get("unit_cost")),
+            })
+
+        df = pd.DataFrame(required_data)
+        output = BytesIO()
+        with pd.ExcelWriter(output, engine="openpyxl") as writer:
+            df.to_excel(writer, index=False, sheet_name="Sheet1")
+        output.seek(0)
+        return send_file(
+            output,
+            as_attachment=True,
+            download_name=f"{branch_name}-stock-movement-{start_date.strftime('%d-%b-%Y')}--{end_date.strftime('%d-%b-%Y')}.xlsx",
+            mimetype="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+
+    flash('Report generation failed. Please try again.', 'error')
+    return redirect(url_for('reports'))

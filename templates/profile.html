@@ -1,66 +1,60 @@
 {% extends "base.html" %}
 
 {% block content %}
-
 <div class="container-fluid" style="max-width: 800px;">
-  <div class="card rounded-4 shadow p-4 mb-4 bg-secondary-subtle">
-    <h5 class="mb-4 text-center fw-bold" style="color: #4B0082;">User Profile</h5>
-    <div class="row g-4" style="min-height: 300px;">
-      <!-- Profile Info -->
-      <div class="col-12 col-md-6 d-flex flex-column">
-        <div class="mb-3">
-          <label class="form-label fw-semibold mb-1">Username:</label>
-          <span class="ms-2 fw-medium text-indigo" style="color: #4B0082;">{{ user.username }}</span>
-        </div>
-        <div class="mb-3">
-          <label class="form-label fw-semibold mb-1">Role:</label>
-          <span class="ms-2 fw-medium text-indigo" style="color: #4B0082;">{{ user.role }}</span>
-        </div>
-        <div class="mb-3">
-          <label class="form-label fw-semibold mb-1">Organization:</label>
-          <span class="ms-2 fw-medium text-indigo" style="color: #4B0082;">{{ user.organization }}</span>
-        </div>
-        {% if user.role != "Manager" %}
-        <div class="mb-3">
-          <label class="form-label fw-semibold mb-1">Branch:</label>
-          <span class="ms-2 fw-medium text-indigo" style="color: #4B0082;">{{ selected_branch.branch }}</span>
-        </div>
+    <div class="d-flex justify-content-between align-items-center mb-3">
+      <h4 class="fw-bold mb-0" style="color: #4B0082;">Your Profile</h4>
+      <div class="d-flex gap-2">
+        <button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#editProfileModal">
+          <i class="bi bi-pencil me-1"></i> Edit Profile
+        </button>
+        <button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#updatePasswordModal">
+          <i class="bi bi-key me-1"></i> Update Password
+        </button>
+        {% if user.role == "Manager" %}
+        <button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#addBranchModal">
+          <i class="bi bi-plus me-1"></i> Add Branch
+        </button>
         {% endif %}
-        <div class="d-flex gap-2 mt-auto">
-<button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#editProfileModal">
-  <i class="bi bi-pencil me-1"></i> Edit Profile
-</button>
-<button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#updatePasswordModal">
-  <i class="bi bi-key me-1"></i> Update Password
-</button>
-        </div>
       </div>
-      <!-- Branches Table (for Managers) -->
-      {% if user.role == "Manager" %}
-      <div class="col-12 col-md-6 d-flex flex-column">
-        <div class="d-flex justify-content-between align-items-center mb-3">
-          <span class="fw-semibold text-indigo" style="color: #4B0082;">Branches</span>
-<button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#addBranchModal">
-  <i class="bi bi-plus me-1"></i> Add Branch
-</button>
-        </div>
-        <div style="max-height: 240px; overflow-y: auto; flex-grow: 1;">
-          <table class="table table-sm table-borderless mb-0">
-            <tbody>
-              {% for branch in organization['branches'] %}
-                <tr style="border-bottom: 1px solid #4B0082; height: 32px;">
+    </div>
+    <div class="mb-3">
+      <div class="d-flex flex-wrap gap-4 align-items-center">
+      <div>
+        <label class="form-label fw-semibold mb-0 me-1" style="color: #4B0082;">Username:</label>
+        <span class="fw-medium text-indigo">{{ user.username }}</span>
+      </div>
+      <div>
+        <label class="form-label fw-semibold mb-0 me-1" style="color: #4B0082;">Role:</label>
+        <span class="fw-medium text-indigo">{{ user.role }}</span>
+      </div>
+      <div>
+        <label class="form-label fw-semibold mb-0 me-1" style="color: #4B0082;">Organization:</label>
+        <span class="fw-medium text-indigo">{{ user.organization }}</span>
+      </div>
+      </div>
+    </div>
+    <div>
+      <label class="form-label fw-semibold mb-2" style="color: #4B0082;">Branches</label>
+      <div style="max-height: 240px; overflow-y: auto;">
+        <table class="table table-sm table-borderless mb-0">
+          <tbody>
+            {% for branch in organization['branches'] %}
+              <tr style="border-bottom: 1px solid #4B0082; height: 32px;">
                 <td class="fw-medium py-1 px-2 text-indigo align-middle">
                   <i class="bi bi-building me-2"></i>{{ branch['branch'] }}
+                  {% if user.role == "Manager" %}
+                  <span class="float-end">
+                    <button class="btn btn-sm btn-indigo me-1 px-1 py-0" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#editBranchModal{{ branch['_id'] }}">
+                      <i class="bi bi-pencil"></i>
+                    </button>
+                    <button class="btn btn-sm btn-outline-indigo px-1 py-0" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#deleteBranchModal{{ branch['_id'] }}">
+                      <i class="bi bi-trash"></i>
+                    </button>
+                  </span>
+                  {% endif %}
                 </td>
-                <td class="text-end py-1 px-2 align-middle">
-                  <button class="btn btn-sm btn-indigo me-1 px-1 py-0" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#editBranchModal{{ branch['_id'] }}">
-                  <i class="bi bi-pencil"></i>
-                  </button>
-                  <button class="btn btn-sm btn-outline-indigo px-1 py-0" style="font-size: 0.9rem;" data-bs-toggle="modal" data-bs-target="#deleteBranchModal{{ branch['_id'] }}">
-                  <i class="bi bi-trash"></i>
-                  </button>
-                </td>
-                </tr>
+              </tr>
               <!-- Edit Branch Modal -->
               <div class="modal fade" id="editBranchModal{{ branch['_id'] }}" tabindex="-1" aria-labelledby="editBranchLabel{{ branch['_id'] }}" aria-hidden="true">
                 <div class="modal-dialog">
@@ -107,14 +101,11 @@
                   </form>
                 </div>
               </div>
-              {% endfor %}
-            </tbody>
-          </table>
-        </div>
+            {% endfor %}
+          </tbody>
+        </table>
       </div>
-      {% endif %}
     </div>
-  </div>
 
   <!-- Add Branch Modal -->
   {% if user.role == "Manager" %}

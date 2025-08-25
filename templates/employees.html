@@ -3,7 +3,7 @@
 {% block content %}
 <div style="font-size: 0.95rem;">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h5 class="mb-3">Manage employees</h5>
+    <h4 class="mb-3 fw-bold" style="color: indigo;">Manage employees</h4>
 <button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
   <i class="bi bi-person-plus me-1"></i> Add Employee
 </button>
@@ -23,24 +23,43 @@
       <tbody>
         {% for employee in employees %}
         <tr style="height:24px;">
-          <td class="py-1">{{ employee.username }}</td>
-          <td class="py-1">{{ employee.role }}</td>
-          <td class="py-1">{{ employee.branch }}</td>
-          <td class="py-1">
-            {% if user.role in ["Manager", "Branch Manager"] or employee._id|string == user._id|string %}
-              <button class="btn btn-sm btn-primary" data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ employee._id }}">
-          <i class="bi bi-pencil"></i>
-              </button>
-            {% endif %}
-            {% if user.role in ["Manager", "Branch Manager"] %}
-              <button class="btn btn-sm btn-warning" data-bs-toggle="modal" data-bs-target="#editPasswordModal{{ employee._id }}">
-          <i class="bi bi-key"></i>
-              </button>
-              <button class="btn btn-sm btn-danger" data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal{{ employee._id }}">
-          <i class="bi bi-person-x"></i>
-              </button>
-            {% endif %}
-          </td>
+          <td class="py-1 text-truncate" style="max-width: 120px;" title="{{ employee.username }}">{{ employee.username }}</td>
+          <td class="py-1 text-truncate" style="max-width: 100px;" title="{{ employee.role }}">{{ employee.role }}</td>
+          <td class="py-1 text-truncate" style="max-width: 120px;" title="{{ employee.branch }}">{{ employee.branch }}</td>
+            <td class="py-0" style="max-width:220px;">
+              <div class="d-flex gap-2 justify-content-start align-items-center flex-wrap">
+                {% if user.role == "Manager" or user.role == "Branch Manager" %}
+                  <button class="btn btn-sm px-2 py-1 border-0 shadow-sm"
+                    style="color: indigo; background: #e0e7ff; border-radius: .35rem; min-width: 38px;"
+                    data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ employee._id }}"
+                    title="Edit Employee">
+                    <i class="bi bi-pencil"></i>
+                    <span class="ms-1 fw-semibold" style="font-size:.78rem; color: indigo;">Edit</span>
+                  </button>
+                  <button class="btn btn-sm px-2 py-1 border-0 shadow-sm"
+                    style="color: #ffc107; background: #fff9e0; border-radius: .35rem; min-width: 38px;"
+                    data-bs-toggle="modal" data-bs-target="#editPasswordModal{{ employee._id }}"
+                    title="Change Password">
+                    <i class="bi bi-key" style="color: indigo;"></i>
+                    {# <span class="ms-1 fw-semibold" style="font-size:.78rem; color: indigo;">Password</span> #}
+                  </button>
+                  <button class="btn btn-sm px-2 py-1 border-0 shadow-sm"
+                    style="color: #dc3545; background: #ffe0e0; border-radius: .35rem; min-width: 38px;"
+                    data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal{{ employee._id }}"
+                    title="Delete Employee">
+                    <span class="ms-1 fw-semibold" style="font-size:.78rem; color: #dc3545;">Delete</span>
+                  </button>
+                {% elif employee._id|string == user._id|string %}
+                  <button class="btn btn-sm px-2 py-1 border-0 shadow-sm"
+                    style="color: indigo; background: #e0e7ff; border-radius: .35rem; min-width: 38px;"
+                    data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ employee._id }}"
+                    title="Edit Employee">
+                    <i class="bi bi-pencil"></i>
+                    <span class="ms-1 fw-semibold" style="font-size:.78rem; color: indigo;">Edit</span>
+                  </button>
+                {% endif %}
+              </div>
+            </td>
         </tr>
 
         <!-- Edit Employee Modal -->
@@ -50,7 +69,7 @@
               <input type="hidden" name="employee_id" value="{{ employee._id }}">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h5 class="modal-title" id="editEmployeeLabel{{ employee._id }}">Edit Employee</h5>
+                  <h5 class="modal-title" id="editEmployeeLabel{{ employee._id }}">Edit {{ employee.username }}</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -96,7 +115,7 @@
               <input type="hidden" name="employee_id" value="{{ employee._id }}">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h5 class="modal-title" id="editPasswordLabel{{ employee._id }}">Change Password</h5>
+                  <h5 class="modal-title" id="editPasswordLabel{{ employee._id }}">Change {{ employee.username }}'s Password</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
@@ -124,7 +143,7 @@
               <input type="hidden" name="employee_id" value="{{ employee._id }}">
               <div class="modal-content">
                 <div class="modal-header">
-                  <h5 class="modal-title" id="deleteEmployeeLabel{{ employee._id }}">Delete Employee</h5>
+                  <h5 class="modal-title" id="deleteEmployeeLabel{{ employee._id }}">Delete {{ employee.username }}</h5>
                   <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
                 </div>
                 <div class="modal-body">
