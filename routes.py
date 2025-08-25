@@ -7,6 +7,7 @@ from bson.objectid import ObjectId
 from collections import defaultdict
 from datetime import timedelta
 from collections import defaultdict
+from utils import login_required
 
 
 
@@ -122,6 +123,7 @@ def change_branch():
 
 # profile
 @app.route('/profile')
+@login_required
 def profile():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     organization = db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))})
@@ -255,6 +257,7 @@ def add_branch():
 
 # stock management
 @app.route('/stock', methods=['GET'])
+@login_required
 def stock():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     organization = db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))})
@@ -382,6 +385,7 @@ def delete_item():
 
 # employees
 @app.route('/employees')
+@login_required
 def employees():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     organization = db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))})
@@ -497,6 +501,7 @@ def delete_employee():
 
 # stock movement
 @app.route('/stock_movement')
+@login_required
 def stock_movement():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     organization = db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))})
@@ -579,6 +584,7 @@ def delete_stock_movement():
 
 # transactions (sales / expenses)
 @app.route('/transactions')
+@login_required
 def transactions():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     organization = db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))})
@@ -779,6 +785,7 @@ def delete_transaction():
 
 # performance
 @app.route('/performance')
+@login_required
 def performance():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     organization = db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))})
@@ -840,6 +847,7 @@ def performance():
 
 # reports
 @app.route('/reports')
+@login_required
 def reports():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     organization = db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))})
@@ -854,6 +862,7 @@ def reports():
                            )
 
 @app.route('/generate_report', methods=['POST'])
+@login_required
 def generate_report():
     user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
     start_date = request.form.get('start_date')
