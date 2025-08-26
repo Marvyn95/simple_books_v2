@@ -126,6 +126,11 @@
                 <i class="bi bi-arrow-left-right me-2"></i>Stock Movement
               </a>
             </li>
+            <li class="nav-item mb-2">
+              <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'employees' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('employees') }}">
+                <i class="bi bi-people-fill me-2"></i>Employees
+              </a>
+            </li>
             {% if user.role in ['Manager', 'Branch Manager'] %}
               <li class="nav-item mb-2">
                 <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'performance' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('performance') }}">
@@ -136,11 +141,6 @@
             <li class="nav-item mb-2">
               <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'reports' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('reports') }}">
                 <i class="bi bi-bar-chart-line me-2"></i>Reports
-              </a>
-            </li>
-            <li class="nav-item mb-2">
-              <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'employees' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('employees') }}">
-                <i class="bi bi-people-fill me-2"></i>Employees
               </a>
             </li>
           </ul>
@@ -188,14 +188,14 @@
           </span>
         </div>
         <div class="col-6 col-sm-auto">
-          <span class="fw-semibold">
+          <span class="fw-semibold text-truncate">
             <i class="bi bi-building me-2" style="color: indigo;"></i>{{ user.organization }}
           </span>
         </div>
           </div>
         </div>
         <!-- Main Content Card -->
-        <div class="card flex-grow-1 shadow p-4 rounded-4 bg-white d-flex flex-column overflow-auto">
+        <div class="card flex-grow-1 shadow p-4 rounded-4 bg-light d-flex flex-column overflow-auto h-100 w-100">
           {% block content %}
           <!-- Main content goes here -->
           {% endblock %}

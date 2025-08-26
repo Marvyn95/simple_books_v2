@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-fluid" style="max-width: 1000px; font-size:.9rem;">
+<div class="container-fluid" style="font-size:.9rem;">
 
   <div class="d-flex justify-content-between align-items-center mb-3">
     <h4 class="fw-bold mb-0" style="color: indigo;">Stock Movement</h5>
@@ -13,39 +13,39 @@
     <table class="table table-hover align-middle small" style="margin-bottom: 0; font-size:0.85rem;">
       <thead class="table-primary" style="position: sticky; top: 0; z-index: 2; background:#f8f9fa;">
         <tr>
-          <th style="min-width:110px;">Date</th>
-          <th style="min-width:120px;">Updater</th>
-          <th style="min-width:120px;">Branch</th>
-          <th style="min-width:160px;">Item</th>
-          <th style="min-width:80px;">Quantity</th>
-          <th style="min-width:90px;">Unit Cost</th>
-          <th style="min-width:90px;">Actions</th>
+            <th>Date</th>
+            <th class="d-none d-md-table-cell">Updater</th>
+            <th>Branch</th>
+            <th>Item</th>
+            <th>Quantity</th>
+            <th>Unit Cost</th>
+            <th class="d-none d-md-table-cell">Actions</th>
         </tr>
       </thead>
       <tbody>
         {% for movement in stock_history|default([]) %}
         <tr style="height:24px; font-size:0.78rem;">
-          <td class="py-0 text-truncate" style="max-width:110px; overflow:hidden;">{{ movement.date.strftime('%d %b %Y') }}</td>
-          <td class="py-0 text-truncate" style="max-width:120px; overflow:hidden;">{{ movement.updater }}</td>
-          <td class="py-0 text-truncate" style="max-width:120px; overflow:hidden;">{{ movement.branch }}</td>
-          <td class="py-0 text-truncate" style="max-width:160px; overflow:hidden;">{{ movement.item }}</td>
-          <td class="py-0 text-truncate" style="max-width:80px; overflow:hidden;">{{ movement.quantity_updated }}</td>
-          <td class="py-0 text-truncate" style="max-width:90px; overflow:hidden;">{{ "{:,.0f}".format(movement.unit_cost) }}</td>
-          <td class="py-0">
+          <td class="py-0 text-truncate">{{ movement.date.strftime('%d %b %Y') }}</td>
+          <td class="py-0 text-truncate d-none d-md-table-cell">{{ movement.updater }}</td>
+          <td class="py-0 text-truncate">{{ movement.branch }}</td>
+          <td class="py-0 text-truncate">{{ movement.item }}</td>
+          <td class="py-0 text-truncate">{{ movement.quantity_updated }}</td>
+          <td class="py-0 text-truncate">{{ "{:,.0f}".format(movement.unit_cost) }}</td>
+          <td class="py-0 d-none d-md-table-cell">
             {% if user.role in ["Manager", "Branch Manager"] %}
             <div class="d-flex gap-1">
               <button class="btn btn-sm px-2 py-1 border-0 shadow-sm"
-                style="color: #0a58ca; border-radius: .35rem; min-width: 38px;"
-                data-bs-toggle="modal" data-bs-target="#editStockMovementModal_{{ movement._id }}"
-                title="Update Movement">
-                <span class="ms-1 fw-semibold" style="font-size:.78rem;">edit</span>
+          style="color: #0a58ca; border-radius: .35rem;"
+          data-bs-toggle="modal" data-bs-target="#editStockMovementModal_{{ movement._id }}"
+          title="Update Movement">
+          <span class="ms-1 fw-semibold" style="font-size:.78rem;">edit</span>
               </button>
               <button class="btn btn-sm px-2 py-1 border-0 shadow-sm"
-                style="color: #dc3545; border-radius: .35rem; min-width: 38px;"
-                data-bs-toggle="modal" data-bs-target="#deleteStockMovementModal_{{ movement._id }}"
-                title="Delete Movement">
-                <i class="bi bi-x-circle"></i>
-                <span class="ms-1 fw-semibold" style="font-size:.78rem;">Delete</span>
+          style="color: #dc3545; border-radius: .35rem;"
+          data-bs-toggle="modal" data-bs-target="#deleteStockMovementModal_{{ movement._id }}"
+          title="Delete Movement">
+          <i class="bi bi-x-circle"></i>
+          <span class="ms-1 fw-semibold" style="font-size:.78rem;">Delete</span>
               </button>
             </div>
             {% else %}

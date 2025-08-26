@@ -21,68 +21,72 @@
     <table class="table table-hover align-middle small" style="margin-bottom:0; border-top:none; font-size:.85rem;">
       <thead class="table-primary" style="position:sticky; top:0; z-index:2;">
       <tr>
-      <th style="max-width: 160px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Item</th>
-      <th style="max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Branch</th>
-      <th style="max-width: 80px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Quantity</th>
-      <th style="max-width: 120px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Selling Price</th>
-      <th style="max-width: 220px;">Actions</th>
+      <th style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Item</th>
+      <th style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Branch</th>
+      <th style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Quantity</th>
+      <th style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Selling Price</th>
+      <th class="d-none d-lg-flex gap-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">Actions</th>
       </tr>
       </thead>
       <tbody>
       {% for item in stock %}
       <tr style="height: 28px; font-size: .78rem;">
-      <td class="fw-semibold py-0" style="max-width:160px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+      <td class="fw-semibold py-0" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
         <a href="#" style="color: indigo; text-decoration: none;"
        data-bs-toggle="modal" data-bs-target="#itemDetailsModal_{{ item._id }}">
       {{ item.name }}
         </a>
       </td>
-      <td class="py-0" style="max-width:120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ item.branch }}</td>
-      <td class="py-0" style="max-width:80px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ item.quantity }}</td>
-      <td class="py-0" style="max-width:120px; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+      <td class="py-0" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ item.branch }}</td>
+      <td class="py-0" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ item.quantity }}</td>
+      <td class="py-0" style="white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
         {% if item.price %}
         ugx {{ "{:,.0f}".format(item.price) }}
         {% else %}
         Not Set
         {% endif %}
       </td>
-      <td class="py-0" style="max-width:220px;">
+      <td class="py-0" style="">
         <div class="d-flex gap-2 justify-content-start align-items-center flex-wrap">
         {% if user.role == "Manager" or user.role == "Branch Manager" %}
-        <button class="btn btn-sm px-2 py-1 border-0 shadow-sm" 
+        <button class="btn btn-sm px-2 py-1 border-0 shadow-sm d-none d-lg-inline" 
           style="color: indigo; border-radius: .35rem; min-width: 38px;" 
           data-bs-toggle="modal" data-bs-target="#itemDetailsModal_{{ item._id }}" 
           title="View Details">
           <span class="ms-1 fw-semibold" style="font-size:.78rem;">Details</span>
         </button>
-        <button class="btn btn-sm px-2 py-1 border-0 shadow-sm" 
-          style="color: #198754; border-radius: .35rem; min-width: 38px;" 
-          data-bs-toggle="modal" data-bs-target="#updateStockModal{{ item._id }}" 
-          title="Restock">
-          <i class="bi bi-plus-circle"></i>
-          <span class="ms-1 fw-semibold" style="font-size:.78rem;">Restock</span>
-        </button>
-        <button class="btn btn-sm px-2 py-1 border-0 shadow-sm" 
-          style="color: #0a58ca; border-radius: .35rem; min-width: 38px;" 
-          data-bs-toggle="modal" data-bs-target="#editItemModal{{ item._id }}" 
-          title="Edit Item">
-          <span class="ms-1 fw-semibold" style="font-size:.78rem;">Update</span>
-        </button>
-        <button class="btn btn-sm px-2 py-1 border-0 shadow-sm" 
-          style="color: #dc3545; border-radius: .35rem; min-width: 38px;" 
-          data-bs-toggle="modal" data-bs-target="#deleteItemModal{{ item._id }}" 
-          title="Delete Item">
-          <i class="bi bi-x-circle"></i>
-          <span class="ms-1 fw-semibold" style="font-size:.78rem;">Delete</span>
-        </button>
+        <div class="d-none d-lg-flex gap-2">
+          <button class="btn btn-sm px-2 py-1 border-0 shadow-sm" 
+            style="color: #198754; border-radius: .35rem; min-width: 38px;" 
+            data-bs-toggle="modal" data-bs-target="#updateStockModal{{ item._id }}" 
+            title="Restock">
+            <i class="bi bi-plus-circle"></i>
+            <span class="ms-1 fw-semibold" style="font-size:.78rem;">Restock</span>
+          </button>
+          <button class="btn btn-sm px-2 py-1 border-0 shadow-sm" 
+            style="color: #0a58ca; border-radius: .35rem; min-width: 38px;" 
+            data-bs-toggle="modal" data-bs-target="#editItemModal{{ item._id }}" 
+            title="Edit Item">
+            <span class="ms-1 fw-semibold" style="font-size:.78rem;">Update</span>
+          </button>
+          <button class="btn btn-sm px-2 py-1 border-0 shadow-sm" 
+            style="color: #dc3545; border-radius: .35rem; min-width: 38px;" 
+            data-bs-toggle="modal" data-bs-target="#deleteItemModal{{ item._id }}" 
+            title="Delete Item">
+            <i class="bi bi-x-circle"></i>
+            <span class="ms-1 fw-semibold" style="font-size:.78rem;">Delete</span>
+          </button>
+        </div>
         {% else %}
-        <button class="btn btn-sm px-2 py-1 border-0 shadow-sm" 
-          style="color: indigo; border-radius: .35rem; min-width: 38px;" 
-          data-bs-toggle="modal" data-bs-target="#itemDetailsModal_{{ item._id }}" 
-          title="View Details">
-          <i class="bi bi-info-circle"></i>
-          <span class="ms-1 fw-semibold" style="font-size:.78rem;">Details</span>
-        </button>
+        <div class="">
+          <button class="btn btn-sm px-2 py-1 border-0 shadow-sm" 
+            style="color: indigo; border-radius: .35rem; min-width: 38px;" 
+            data-bs-toggle="modal" data-bs-target="#itemDetailsModal_{{ item._id }}" 
+            title="View Details">
+            <i class="bi bi-info-circle"></i>
+            <span class="ms-1 fw-semibold" style="font-size:.78rem;">Details</span>
+          </button>
+        </div>
         {% endif %}
         </div>
       </td>

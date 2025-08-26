@@ -1,35 +1,35 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-fluid" style="max-width:1100px; font-size:.85rem;">
+<div class="container-fluid" style=" font-size:.85rem;">
   <h4 class="h4 mb-3 fw-bold" style="color: indigo;">Performance Overview</h4>
   <div class="table-responsive mb-3" style="max-height:420px; overflow-y:auto;">
-    <table class="table table-hover table-sm table-borderless align-middle small mb-0" style="margin-bottom:0; font-size:.8rem; width:100%; min-width:800px;">
+    <table class="table table-hover table-sm table-borderless align-middle small mb-0" style="margin-bottom:0; font-size:.8rem; width:100%;">
       <thead class="table-primary" style="position:sticky; top:0; z-index:2; background:#f8f9fa;">
         <tr class="text-uppercase text-muted">
-          <th>Month</th>
-          <th>Sales (UGX)</th>
-          <th>Operating Expenses (UGX)</th>
-          <th>Stocking Expenses (UGX)</th>
-          <th>Profit (UGX)</th>
-          <th>Net Profit Margin</th>
+            <th>Month</th>
+            <th>Sales (UGX)</th>
+            <th class="d-none d-md-table-cell">Operating Expenses (UGX)</th>
+            <th class="d-none d-md-table-cell">Stocking Expenses (UGX)</th>
+            <th>Profit (UGX)</th>
+            <th class="d-none d-md-table-cell">Net Profit Margin</th>
         </tr>
       </thead>
       <tbody>
         {% if performance_data and performance_data|length > 0 %}
           {% for row in performance_data %}
-          <tr class="border-bottom">
+            <tr class="border-bottom">
             <td class="fw-semibold">{{ row.month }}</td>
             <td class="fw-semibold text-success">{{ "{:,.0f}".format(row.sales) }}</td>
-            <td class="text-danger">{{ "{:,.0f}".format(row.expenses) }}</td>
-            <td class="text-danger">{{ "{:,.0f}".format(row.stock_cost) }}</td>
+            <td class="text-danger d-none d-md-table-cell">{{ "{:,.0f}".format(row.expenses) }}</td>
+            <td class="text-danger d-none d-md-table-cell">{{ "{:,.0f}".format(row.stock_cost) }}</td>
             <td class="fw-semibold {% if row.profit >= 0 %}text-success{% else %}text-danger{% endif %}">
               {{ "{:,.0f}".format(row.profit) }}
             </td>
-            <td class="{% if row.profit_margin >= 0 %}text-success{% else %}text-danger{% endif %}">
+            <td class="{% if row.profit_margin >= 0 %}text-success{% else %}text-danger{% endif %} d-none d-md-table-cell">
               {{ "{:.2f}%".format(row.profit_margin) }}
             </td>
-          </tr>
+            </tr>
           {% endfor %}
         {% else %}
           <tr>

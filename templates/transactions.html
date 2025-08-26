@@ -1,42 +1,42 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-fluid" style="max-width: 1050px; font-size:.85rem;">
+<div class="">
 
   <!-- Action Tiles -->
-  <div class="d-flex flex-wrap align-items-center justify-content-between gap-2 mb-3">
+  <div class="d-flex justify-content-between align-items-center mb-3">
     <!-- Heading on the left -->
     <h4 class="mb-0 fw-bold" style="letter-spacing:0.5px; color: indigo;">Transactions</h4>
     <!-- Buttons on the right -->
-    <div class="d-flex gap-2">
-      <button type="button" class="btn btn-sm btn-gradient-success shadow-sm px-3 py-2 d-flex align-items-center gap-2"
+    <div class="ms-auto d-flex gap-2">
+      <button type="button" class="btn btn-sm btn-gradient-success shadow-sm px-3 py-2 align-items-center gap-2"
           data-bs-toggle="modal" data-bs-target="#newSaleModal"
           style="background: linear-gradient(90deg, #28a745 60%, #218838 100%); color: #fff; border: none; font-weight: 500; border-radius: 0.4rem;">
         <i class="bi bi-cash-stack fs-5"></i>
-        <span>New Sale</span>
+        <span>Sale</span>
       </button>
-      <button type="button" class="btn btn-sm btn-gradient-danger shadow-sm px-3 py-2 d-flex align-items-center gap-2"
+      <button type="button" class="btn btn-sm btn-gradient-danger shadow-sm px-3 py-2 align-items-center gap-2"
           data-bs-toggle="modal" data-bs-target="#newExpenseModal"
           style="background: linear-gradient(90deg, #dc3545 60%, #c82333 100%); color: #fff; border: none; font-weight: 500; border-radius: 0.4rem;">
         <i class="bi bi-receipt fs-5"></i>
-        <span>New Expense</span>
+        <span>Expense</span>
       </button>
     </div>
   </div>
 
   <!-- Transactions Table -->
-  <div class="table-responsive" style="max-height: 420px; overflow-y:auto;">
-    <table class="table table-hover table-sm table-borderless align-middle small mb-8" style="margin-bottom:0; font-size:.8rem; width:100%; min-width:800px;">
+  <div class="table-responsive" style="max-height: 420px; overflow-y: auto;">
+    <table class="table table-hover table-sm table-borderless align-middle small mb-8" style="margin-bottom:0; font-size:.8rem;">
       <thead class="table-primary" style="position:sticky; top:0; z-index:2; background:#f8f9fa;">
       <tr>
-      <th style="width:90px; min-width:70px;">Date</th>
-      <th style="width:60px; min-width:60px;">Type</th>
-      <th style="width:100px; min-width:80px;">User</th>
-      <th style="width:140px; min-width:120px;">Description</th>
-      <th style="width:55px; min-width:45px;">Qty</th>
-      <th style="width:90px; min-width:80px;">Amount (UGX)</th>
-      <th style="width:60px; min-width:55px;">Status</th>
-      <th style="width:90px; min-width:80px;">Actions</th>
+      <th>Date</th>
+      <th>Type</th>
+      <th class="d-none d-sm-table-cell">User</th>
+      <th>Description</th>
+      <th>Qty</th>
+      <th>Amount (UGX)</th>
+      <th>Status</th>
+      <th class="d-none d-sm-table-cell">Actions</th>
       </tr>
       </thead>
       <tbody>
@@ -49,14 +49,14 @@
       {{ tx.type }}
       </a>
       </td>
-      <td class="text-muted text-truncate" style="max-width:100px; overflow:hidden;">{{ tx.user_name }}</td>
+      <td class="text-muted text-truncate d-none d-sm-table-cell" style="max-width:100px; overflow:hidden;">{{ tx.user_name }}</td>
       <td class="text-truncate" style="color: indigo; max-width:140px; overflow:hidden;" title="{{ tx.description }}">{{ tx.description }}</td>
       <td class="text-truncate" style="max-width:55px; overflow:hidden;">{{ tx.quantity if tx.quantity else '—' }}</td>
       <td class="text-truncate" style="max-width:90px; overflow:hidden;">{{ "{:,.0f}".format(tx.amount) }}</td>
       <td class="text-truncate" style="max-width:60px; overflow:hidden; {% if tx.status=='paid' %}color:green;{% elif tx.status=='credit' %}color:red;{% else %}color:gray;{% endif %}">
       {{ tx.status|capitalize if tx.status else '—' }}
       </td>
-      <td class="text-truncate" style="max-width:90px; overflow:hidden;">
+      <td class="text-truncate d-none d-sm-table-cell" style="max-width:90px; overflow:hidden;">
       <div class="d-flex flex-nowrap gap-1 justify-content-start align-items-center" style="flex-wrap:nowrap;">
       {% if (tx.type=='Sale' and (user._id|string)==(tx.user_id|string)) or (tx.type=='Expense' and (user._id|string)==(tx.user_id|string)) %}
       <button class="btn btn-xs px-2 py-0 rounded-pill text-primary fw-semibold"
@@ -183,6 +183,11 @@
         }
         .table td .d-flex.flex-nowrap {
           gap: 0.2rem !important;
+        }
+        /* Hide User and Actions columns on small screens */
+        .table th.d-none.d-sm-table-cell,
+        .table td.d-none.d-sm-table-cell {
+          display: none !important;
         }
       }
     </style>
