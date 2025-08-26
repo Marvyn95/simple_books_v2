@@ -1,0 +1,91 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container-fluid" style="max-width: 680px; font-size:.85rem;">
+
+  <h4 class="fw-bold mb-1" style="color:indigo;">Download Reports</h4>
+  <p class="text-muted small mb-4">Select a date range and data type to download.</p>
+
+  <div class="card shadow-sm border-0">
+    <div class="card-body py-3">
+      <form method="POST" action="{{ url_for('generate_report') }}" class="small">
+
+        <!-- Start Date -->
+        <div class="mb-2">
+          <label for="startDate" class="form-label fw-semibold text-secondary mb-1">Start Date</label>
+          <input type="date"
+                 class="form-control form-control-sm"
+                 id="startDate"
+                 name="start_date"
+                 value="{{ (now or utcnow).strftime('%Y-%m') }}-01"
+                 required>
+        </div>
+
+        <!-- End Date -->
+        <div class="mb-2">
+          <label for="endDate" class="form-label fw-semibold text-secondary mb-1">End Date</label>
+          <input type="date"
+                 class="form-control form-control-sm"
+                 id="endDate"
+                 name="end_date"
+                 value="{{ (now or utcnow).strftime('%Y-%m-%d') }}"
+                 required>
+        </div>
+
+        <!-- Data Selection -->
+        <div class="mb-2">
+          <label for="dataSelect" class="form-label fw-semibold text-secondary mb-1">Data</label>
+          <select class="form-select form-select-sm" id="dataSelect" name="data" required>
+            <option value="" disabled selected>Select Data</option>
+            <option value="sales">Sales</option>
+            <option value="expenses">Expenses</option>
+            {% if user.role != "Sales person" %}
+            <option value="stock_movement">Stock Movement</option>
+            {% endif %}
+          </select>
+        </div>
+
+        <!-- Branch Selection -->
+        <div class="mb-3">
+          <label for="branchSelectReport" class="form-label fw-semibold text-secondary mb-1">Branch</label>
+
+            {% if user.role == "Manager" %}
+            <select class="form-select form-select-sm" id="branchSelectReport" name="branch_id" required>
+              <option value="all" {% if not selected_branch %}selected{% endif %}>All Branches</option>
+              {% for branch in organization.branches %}
+              <option value="{{ branch._id }}" {% if selected_branch._id == branch._id %}selected{% endif %}>
+                {{ branch.branch }}
+              </option>
+              {% endfor %}
+            </select>
+            {% else %}
+            <select class="form-select form-select-sm" id="branchSelectReport" disabled>
+              {% if user.branch_ids %}
+                {% for branch in organization.branches %}
+                  {% if branch._id in user.branch_ids %}
+                    <option selected>{{ branch.branch }}</option>
+                  {% endif %}
+                {% endfor %}
+              {% else %}
+                <option selected>No Branch</option>
+              {% endif %}
+            </select>
+            {% if user.branch_ids %}
+              <input type="hidden" name="branch_id" value="{{ user.branch_ids[0] }}">
+            {% endif %}
+          {% endif %}
+        </div>
+
+        <!-- Submit -->
+        <div class="d-grid">
+          <button type="submit" class="btn btn-primary btn-sm">
+            <i class="bi bi-download me-1"></i>Download Records
+          </button>
+        </div>
+
+      </form>
+    </div>
+  </div>
+
+</div>
+{% endblock %}

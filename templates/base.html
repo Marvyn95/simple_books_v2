@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Simple Books</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    /* Minimal custom CSS for elements Bootstrap cannot replicate */
+    .bg-indigo {
+      background-color: indigo !important; /* Bootstrap has no indigo class */
+      color: white !important;
+    }
+    .sidebar-toggle-btn {
+      position: fixed;
+      top: 16px; /* Bootstrap's spacing utilities don't cover this exact value */
+      left: 16px;
+      z-index: 1055; /* Matches original z-index */
+    }
+    .sidebar-offcanvas {
+      z-index: 1050; /* Matches original z-index */
+    }
+  </style>
+</head>
+<body class="bg-light d-flex justify-content-center align-items-center vh-100">
+  <div id="flash-messages" style="position:fixed; top:24px; right:24px; z-index:20000; min-width:220px;">
+    {% with messages = get_flashed_messages(with_categories=true) %}
+      {% if messages %}
+        {% for category, message in messages %}
+          <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show py-1 px-2 small mb-2" role="alert" style="border-radius:0.5rem; box-shadow:0 2px 8px rgba(0,0,0,0.07);">
+            {{ message }}
+            <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="alert" aria-label="Close" style="top:2px;right:2px;"></button>
+          </div>
+        {% endfor %}
+      {% endif %}
+    {% endwith %}
+  </div>
+  <div class="card bg-light shadow rounded-4 mx-4 w-100 d-flex flex-row position-relative" style="max-width: 1200px; height: 90vh;">
+    <!-- Sidebar Toggle Button (visible on small screens) -->
+    <button class="sidebar-toggle-btn btn d-lg-none bg-indigo text-white rounded" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+      <i class="bi bi-list fs-4"></i>
+    </button>
+    <div class="card-body d-flex p-3 h-100 flex-row flex-wrap">
+      <!-- Sidebar for larger screens -->
+      <div class="card shadow rounded-4 d-flex flex-column justify-content-between flex-shrink-0 me-4 d-none d-lg-flex bg-indigo" style="width: 200px;">
+        <div class="card-body px-2 pt-3 pb-2 d-flex flex-column justify-content-start h-100">
+          <h5 class="text-center mb-3 fw-bold">
+            <i class="bi bi-book me-2"></i>Simple Books
+          </h5>
+          <ul class="nav flex-column small">
+            <li class="nav-item mb-2">
+              <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'profile' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('profile') }}">
+                <i class="bi bi-person-fill me-2"></i>Profile
+              </a>
+            </li>
+            <li class="nav-item mb-2">
+              <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'transactions' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('transactions') }}">
+                <i class="bi bi-cash-stack me-2"></i>Transactions
+              </a>
+            </li>
+            <li class="nav-item mb-2">
+              <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'stock' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('stock') }}">
+                <i class="bi bi-box-seam me-2"></i>Stock
+              </a>
+            </li>
+            {% if user.role == 'Manager' %}
+              <li class="nav-item mb-2">
+                <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'stock_movement' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('stock_movement') }}">
+                  <i class="bi bi-arrow-left-right me-2"></i>Stock Movement
+                </a>
+              </li>
+            {% endif %}
+            <li class="nav-item mb-2">
+              <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'employees' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('employees') }}">
+                <i class="bi bi-people-fill me-2"></i>Employees
+              </a>
+            </li>
+            {% if user.role in ['Manager', 'Branch Manager'] %}
+              <li class="nav-item mb-2">
+                <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'performance' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('performance') }}">
+                  <i class="bi bi-graph-up-arrow me-2"></i>Performance
+                </a>
+              </li>
+              <li class="nav-item mb-2">
+                <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'reports' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('reports') }}">
+                  <i class="bi bi-bar-chart-line me-2"></i>Reports
+                </a>
+              </li>
+            {% endif %}
+          </ul>
+          <div class="mt-auto pt-2">
+            <a class="nav-link text-danger d-flex align-items-center justify-content-center py-1 px-2" href="{{ url_for('logout') }}">
+              <i class="bi bi-box-arrow-right me-2"></i>Logout
+            </a>
+          </div>
+        </div>
+      </div>
+      <!-- Offcanvas Sidebar for small screens -->
+      <div class="offcanvas offcanvas-start sidebar-offcanvas d-lg-none bg-indigo" tabindex="-1" id="sidebarOffcanvas" aria-labelledby="sidebarOffcanvasLabel">
+        <div class="offcanvas-header d-flex align-items-center justify-content-between">
+          <h5 class="offcanvas-title text-center flex-grow-1" id="sidebarOffcanvasLabel">
+            <i class="bi bi-book me-2"></i>Simple Books
+          </h5>
+          <button type="button" class="btn-close btn-close-white" data-bs-dismiss="offcanvas" aria-label="Close"></button>
+        </div>
+        <div class="offcanvas-body px-2 pt-2 pb-2 d-flex flex-column justify-content-start h-100">
+          <ul class="nav flex-column small">
+            <li class="nav-item mb-2">
+              <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'profile' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('profile') }}">
+                <i class="bi bi-person-fill me-2"></i>Profile
+              </a>
+            </li>
+            <li class="nav-item mb-2">
+              <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'transactions' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('transactions') }}">
+                <i class="bi bi-cash-stack me-2"></i>Transactions
+              </a>
+            </li>
+            <li class="nav-item mb-2">
+              <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'stock' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('stock') }}">
+                <i class="bi bi-box-seam me-2"></i>Stock
+              </a>
+            </li>
+            <li class="nav-item mb-2">
+              <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'stock_movement' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('stock_movement') }}">
+                <i class="bi bi-arrow-left-right me-2"></i>Stock Movement
+              </a>
+            </li>
+            {% if user.role in ['Manager', 'Branch Manager'] %}
+              <li class="nav-item mb-2">
+                <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'performance' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('performance') }}">
+                  <i class="bi bi-graph-up-arrow me-2"></i>Performance
+                </a>
+              </li>
+            {% endif %}
+            <li class="nav-item mb-2">
+              <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'reports' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('reports') }}">
+                <i class="bi bi-bar-chart-line me-2"></i>Reports
+              </a>
+            </li>
+            <li class="nav-item mb-2">
+              <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'employees' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('employees') }}">
+                <i class="bi bi-people-fill me-2"></i>Employees
+              </a>
+            </li>
+          </ul>
+          <div class="mt-auto pt-2">
+            <a class="nav-link text-danger d-flex align-items-center justify-content-center py-1 px-2" href="{{ url_for('logout') }}">
+              <i class="bi bi-box-arrow-right me-2"></i>Logout
+            </a>
+          </div>
+        </div>
+      </div>
+      <!-- Main Content -->
+      <div class="flex-grow-1 d-flex flex-column h-100">
+        <!-- Top Bar: Responsive User Info -->
+        <div class="card mb-3 rounded-4 shadow-sm p-2" style="height: auto; min-width: 0;">
+          <div class="row align-items-center g-2">
+        <div class="col-12 col-sm-auto">
+          <a class="nav-link fw-semibold d-flex align-items-center py-2 px-2" href="{{ url_for('profile') }}" style="color: indigo; border-radius: 0.4rem;">
+            <i class="bi bi-person-circle me-2" style="color: indigo;"></i>{{ user.username }}
+          </a>
+        </div>
+        <div class="col-6 col-sm-auto">
+          <span class="text-indigo">
+            <i class="bi bi-person-badge-fill me-1" style="color: #4f46e5;"></i>{{ user.role }}
+          </span>
+        </div>
+        <div class="col-12 col-md-auto">
+          <span class="text-primary">
+            <i class="bi bi-geo-alt-fill me-1" style="color: #4338ca;"></i>
+            {% if user.role == 'Manager' %}
+          <form method="POST" action="{{ url_for('change_branch') }}" class="d-inline-block m-0">
+            <input type="hidden" name="organization_id" value="{{ user.organization_id }}">
+            <select name="branch_id" class="form-select form-select-sm d-inline-block w-auto" style="min-width: 120px; max-width: 200px;" onchange="this.form.submit()">
+              <option value="">All branches</option>
+              {% for branch in organization['branches'] %}
+            <option value="{{ branch['_id'] }}"
+              {% if branch['_id'] | string == selected_branch._id | string %}selected{% endif %}>
+              {{ branch['branch'] }}
+            </option>
+              {% endfor %}
+            </select>
+          </form>
+            {% else %}
+          {{ selected_branch.branch }}
+            {% endif %}
+          </span>
+        </div>
+        <div class="col-6 col-sm-auto">
+          <span class="fw-semibold">
+            <i class="bi bi-building me-2" style="color: indigo;"></i>{{ user.organization }}
+          </span>
+        </div>
+          </div>
+        </div>
+        <!-- Main Content Card -->
+        <div class="card flex-grow-1 shadow p-4 rounded-4 bg-white d-flex flex-column overflow-auto">
+          {% block content %}
+          <!-- Main content goes here -->
+          {% endblock %}
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <script>
+    // Ensure offcanvas works correctly
+    document.addEventListener('DOMContentLoaded', function () {
+      var offcanvasElement = document.getElementById('sidebarOffcanvas');
+      var offcanvas = new bootstrap.Offcanvas(offcanvasElement);
+    });
+  </script>
+</body>
+</html>

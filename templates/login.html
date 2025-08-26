@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Simple Books</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css" rel="stylesheet">
+  <style>
+    .btn-indigo {
+      background-color: indigo;
+      color: white;
+      font-weight: 600;
+      border-radius: 0.5rem;
+      border: none;
+    }
+    .btn-indigo:hover {
+      background-color: #4338ca;
+    }
+    .sidebar-card, .login-card {
+      border-radius: 1rem;
+      box-shadow: 0 2px 8px rgb(0 0 0 / 0.08);
+      min-height: 350px;
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+    .sidebar-card {
+      background: indigo;
+      color: #fff;
+    }
+    .sidebar-card h2 {
+      font-size: 1.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+    }
+    .sidebar-card p {
+      font-size: 1rem;
+      line-height: 1.5;
+      margin-bottom: 0.5rem;
+    }
+    .form-label {
+      font-weight: 500;
+      color: #374151;
+    }
+    .form-control {
+      border-radius: 0.5rem;
+    }
+    .modal-title {
+      color: indigo;
+    }
+    .flash-message {
+      font-size: 0.9rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+    @media (max-width: 991.98px) {
+      .sidebar-card, .login-card {
+        min-height: 250px;
+      }
+    }
+  </style>
+</head>
+<body class="bg-light d-flex align-items-center justify-content-center min-vh-100">
+  <div class="container" style="max-width: 900px;">
+    <div class="row g-4 align-items-stretch">
+      <!-- Sidebar Info -->
+      <div class="col-12 col-lg-5 d-flex">
+        <div class="sidebar-card p-4 w-100">
+          <h2 class="text-center"><i class="bi bi-book me-2"></i>Simple Books</h2>
+          <p class="text-center mb-2">Manage your business finances with ease.</p>
+          <p class="text-center mb-2">Track expenses, monitor income, and get insightful reports—all in one place.</p>
+          <p class="text-center mb-2">Simple Books is designed for small businesses and entrepreneurs who want to focus on growth, not paperwork. Our intuitive platform helps you stay organized, save time, and make smarter decisions.</p>
+          <p class="text-center mb-0">Join hundreds of users who trust Simple Books to simplify their accounting and empower their business journey.</p>
+        </div>
+      </div>
+      <!-- Login Form -->
+      <div class="col-12 col-lg-7 d-flex">
+        <div class="login-card bg-white p-4 w-100">
+          <h3 class="text-center mb-3" style="color: indigo; font-weight: 700;">
+            Login
+          </h3>
+          {% with messages = get_flashed_messages(with_categories=true) %}
+          {% if messages %}
+            <div id="flash-container" class="mb-2">
+              {% for category, message in messages %}
+                <div class="alert alert-{{ 'danger' if category == 'error' else 'success' if category == 'success' else 'info' }} alert-dismissible fade show flash-message" role="alert">
+                  {{ message }}
+                  <button type="button" class="btn-close btn-sm" data-bs-dismiss="alert" aria-label="Close"></button>
+                </div>
+              {% endfor %}
+            </div>
+          {% endif %}
+          {% endwith %}
+          <form action="{{ url_for('login') }}" method="POST">
+            <div class="mb-3">
+              <label for="username" class="form-label">Username</label>
+              <input type="text" id="username" name="username" required class="form-control" />
+            </div>
+            <div class="mb-3">
+              <label for="password" class="form-label">Password</label>
+              <input type="password" id="password" name="password" required class="form-control" />
+            </div>
+            <button type="submit" class="btn btn-indigo w-100 mt-2">Login</button>
+          </form>
+          <p class="mt-3 text-center small">
+            Don’t have an account?
+            <a href="#" class="text-decoration-underline" style="color: indigo;" data-bs-toggle="modal" data-bs-target="#contactModal">Sign up</a>
+          </p>
+<!-- Modal -->
+<div class="modal fade" id="contactModal" tabindex="-1" aria-labelledby="contactModalLabel" aria-hidden="true">
+  <div class="modal-dialog modal-dialog-centered">
+    <div class="modal-content border-0 shadow rounded-4">
+      <div class="modal-header bg-indigo text-white rounded-top-4">
+        <h5 class="modal-title" id="contactModalLabel">
+          <i class="bi bi-person-plus me-2"></i>Register for Simple Books
+        </h5>
+        <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+      </div>
+      <div class="modal-body">
+        <p class="mb-2">To create an account, please contact one of our team members:</p>
+        <ul class="list-unstyled mb-0">
+          <li class="mb-2">
+            <i class="bi bi-person-circle me-1"></i>
+            <strong>Blaise Mwebe</strong>:
+            <a href="tel:+256753041006" class="text-decoration-none text-indigo">+256 753 041 006</a>
+          </li>
+          <li>
+            <i class="bi bi-person-circle me-1"></i>
+            <strong>Marvin Luyombya</strong>:
+            <a href="tel:+256701056967" class="text-decoration-none text-indigo">+256 701 056 967</a>
+          </li>
+        </ul>
+      </div>
+      <div class="modal-footer bg-light rounded-bottom-4">
+        <button type="button" class="btn btn-indigo px-4" data-bs-dismiss="modal">
+          <i class="bi bi-x-lg me-1"></i>Close
+        </button>
+      </div>
+    </div>
+  </div>
+</div>
+<style>
+  .bg-indigo { background-color: indigo !important; }
+  .text-indigo { color: indigo !important; }
+</style>
+        </div>
+      </div>
+    </div>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>
