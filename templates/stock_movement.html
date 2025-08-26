@@ -61,23 +61,28 @@
               <input type="hidden" name="movement_id" value="{{ movement._id }}">
               <input type="hidden" name="item_id" value="{{ movement.item_id }}">
               <div class="modal-content rounded-3">
-                <div class="modal-header py-2">
-                  <h6 class="modal-title" id="editStockMovementLabel_{{ movement._id }}">Edit Movement</h6>
-                  <button type="button" class="btn-close" data-bs-dismiss="modal" style="transform:scale(.8);"></button>
-                </div>
-                <div class="modal-body py-2">
-                  <div class="mb-2">
-                    <label class="form-label small mb-1">Quantity</label>
-                    <input type="number" name="quantity" class="form-control form-control-sm" value="{{ movement.quantity_updated }}" required>
-                  </div>
-                  <div class="mb-2">
-                    <label class="form-label small mb-1">Unit Cost</label>
-                    <input type="number" name="unit_cost" class="form-control form-control-sm" value="{{ movement.unit_cost }}" required>
-                  </div>
-                </div>
-                <div class="modal-footer py-2">
-                  <button type="submit" class="btn btn-sm btn-primary">Save</button>
-                </div>
+          <div class="modal-header py-2">
+            <h6 class="modal-title" id="editStockMovementLabel_{{ movement._id }}">Edit Movement</h6>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" style="transform:scale(.8);"></button>
+          </div>
+          <div class="modal-body py-2">
+            <div class="mb-2">
+              <label class="form-label small mb-1">Date</label>
+              <input type="date" name="date" class="form-control form-control-sm"
+                value="{{ movement.date.strftime('%Y-%m-%d') }}" required>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small mb-1">Quantity</label>
+              <input type="number" name="quantity" class="form-control form-control-sm" value="{{ movement.quantity_updated }}" required>
+            </div>
+            <div class="mb-2">
+              <label class="form-label small mb-1">Unit Cost</label>
+              <input type="number" name="unit_cost" class="form-control form-control-sm" value="{{ movement.unit_cost }}" required>
+            </div>
+          </div>
+          <div class="modal-footer py-2">
+            <button type="submit" class="btn btn-sm btn-primary">Save</button>
+          </div>
               </div>
             </form>
           </div>

@@ -343,9 +343,10 @@ def update_stock():
     organization_id = request.form.get('organization_id')
     updater_id = request.form.get('user_id')
     branch_id = request.form.get('branch_id')
+    date = datetime.datetime.strptime(request.form.get('date'), "%Y-%m-%d")
 
     db.Stock_movement.insert_one({
-            "date": datetime.datetime.now(),
+            "date": date,
             "organization_id": ObjectId(organization_id),
             "branch_id": branch_id,
             "updater_id": ObjectId(updater_id),
@@ -542,6 +543,7 @@ def edit_stock_movement():
     item_id = request.form.get('item_id')
     new_quantity = int(request.form.get('quantity'))
     new_unit_cost = int(request.form.get('unit_cost'))
+    date = datetime.datetime.strptime(request.form.get('date'), "%Y-%m-%d")
 
     item = db.Stock.find_one({"_id": ObjectId(item_id)})
     movement = db.Stock_movement.find_one({"_id": ObjectId(movement_id)})
@@ -551,6 +553,7 @@ def edit_stock_movement():
         {"$set": {
             "quantity_updated": new_quantity,
             "unit_cost": new_unit_cost,
+            "date": date
         }}
     )
 

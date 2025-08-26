@@ -254,6 +254,10 @@
           </div>
           <div class="modal-body">
             <div class="mb-3">
+              <label class="form-label text-indigo fw-medium">Date</label>
+              <input type="date" name="date" class="form-control form-control-sm" required value="{{ now.strftime('%Y-%m-%d') }}">
+            </div>
+            <div class="mb-3">
               <label class="form-label text-indigo fw-medium">New Quantity</label>
               <input type="number" name="quantity" class="form-control form-control-sm" required>
             </div>
