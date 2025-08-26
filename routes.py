@@ -220,6 +220,14 @@ def delete_branch():
     if len(list(db.Users.find({"branch_id": branch_id}))) > 0:
         flash('Branch cannot be deleted because it has users.', 'error')
         return redirect(url_for('profile'))
+    
+    if len(list(db.Stock.find({"branch_id": branch_id}))) > 0:
+        flash('Branch cannot be deleted because it has stock items.', 'error')
+        return redirect(url_for('profile'))
+    
+    if len(list(db.Sales.find({"branch_id": branch_id}))) > 0:
+        flash('Branch cannot be deleted because it has sales records.', 'error')
+        return redirect(url_for('profile'))
 
     db.Organizations.update_one(
         {"_id": ObjectId(organization_id)},

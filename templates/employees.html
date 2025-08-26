@@ -28,7 +28,7 @@
           <td class="py-1 text-truncate" style="max-width: 120px;" title="{{ employee.branch }}">{{ employee.branch }}</td>
           <td class="py-0" style="max-width:220px;">
             <div class="d-flex gap-2 justify-content-start align-items-center flex-wrap d-none d-sm-flex">
-              {% if user.role == "Manager" or user.role == "Branch Manager" %}
+          {% if user.role == "Manager" or user.role == "Branch Manager" %}
           <button class="btn btn-sm px-2 py-1 border-0 shadow-sm"
             style="color: indigo; background: #e0e7ff; border-radius: .35rem; min-width: 38px;"
             data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ employee._id }}"
@@ -42,13 +42,18 @@
             title="Change Password">
             <i class="bi bi-key" style="color: indigo;"></i>
           </button>
+          {% endif %}
+
+          {% if employee._id|string != user._id|string and user.role in ["Manager"] %}
           <button class="btn btn-sm px-2 py-1 border-0 shadow-sm"
             style="color: #dc3545; background: #ffe0e0; border-radius: .35rem; min-width: 38px;"
             data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal{{ employee._id }}"
             title="Delete Employee">
             <span class="ms-1 fw-semibold" style="font-size:.78rem; color: #dc3545;">Delete</span>
           </button>
-              {% elif employee._id|string == user._id|string %}
+          {% endif %}
+
+          {% if employee._id|string == user._id|string %}
           <button class="btn btn-sm px-2 py-1 border-0 shadow-sm"
             style="color: indigo; background: #e0e7ff; border-radius: .35rem; min-width: 38px;"
             data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ employee._id }}"
@@ -56,7 +61,7 @@
             <i class="bi bi-pencil"></i>
             <span class="ms-1 fw-semibold" style="font-size:.78rem; color: indigo;">Edit</span>
           </button>
-              {% endif %}
+          {% endif %}
             </div>
           </td>
         </tr>
