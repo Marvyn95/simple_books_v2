@@ -3,7 +3,7 @@
 {% block content %}
 <div class="container-fluid" style="max-width: 900px;">
   <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="fw-bold mb-0" style="color: indigo;">Stock Items</h4>
+    <h4 class="fw-bold mb-0" style="color: indigo;">Stock</h4>
     {% if user.role == "Manager" or user.role == "Branch Manager" %}
       <button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color:#fff; border-radius:.4rem; border:1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#addItemModal">
         <i class="bi bi-plus-lg me-1"></i> Add New Item
