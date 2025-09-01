@@ -91,11 +91,11 @@ def register():
             "branches": [{"_id": secrets.token_hex(32), "branch": branch.strip()} for branch in request.form.getlist("branches") if branch != ""]
         })
 
-        org = db.Organizations.find_one({"organization": form_info["organization"]})
+        org = db.Organizations.find_one({"organization": form_info.get("organization").strip()})
 
         db.Users.insert_one({
             "username": form_info.get("username").strip(),
-            "email": form_info.get("email").strip(),
+            "email": form_info.get("email"),
             "password": bcrypt.generate_password_hash(form_info["password"]).decode("utf-8"),
             "role": "Manager",
             "organization_id": org.get("_id"),
@@ -110,6 +110,7 @@ def register():
 
 # branch selection
 @app.route('/change_branch', methods=["POST"])
+@login_required
 def change_branch():
     organization_id = request.form.get("organization_id")
     branch_id = request.form.get("branch_id")
@@ -144,6 +145,7 @@ def profile():
 
 
 @app.route('/edit_profile', methods=['POST'])
+@login_required
 def edit_profile():
     username = request.form.get('username').strip() if request.form.get('username') else None
     organization_name = request.form.get('organization').strip() if request.form.get('organization') else None
@@ -180,6 +182,7 @@ def edit_profile():
 
 
 @app.route('/update_password', methods=['POST'])
+@login_required
 def update_password():
     user_id = session.get('userid')
     password = request.form.get('password')
@@ -199,6 +202,7 @@ def update_password():
 
 
 @app.route('/edit_branch', methods=['POST'])
+@login_required
 def edit_branch():
     branch_id = request.form.get('branch_id')
     branch_name = request.form.get('branch')
@@ -213,6 +217,7 @@ def edit_branch():
 
 
 @app.route('/delete_branch', methods=['POST'])
+@login_required
 def delete_branch():
     branch_id = request.form.get('branch_id')
     organization_id = request.form.get('organization_id')
@@ -238,6 +243,7 @@ def delete_branch():
 
 
 @app.route('/add_branch', methods=['POST'])
+@login_required
 def add_branch():
     organization_id = request.form.get('organization_id')
     user_id = request.form.get('user_id')
@@ -305,6 +311,7 @@ def stock():
 
 
 @app.route('/add_item', methods=['POST'])
+@login_required
 def add_item():
     name = request.form.get('name').strip()
     branch_id = request.form.get('branch_id')
@@ -326,6 +333,7 @@ def add_item():
 
 
 @app.route('/edit_item', methods=['POST'])
+@login_required
 def edit_item():
     item_id = request.form.get('item_id')
     organization_id = request.form.get('organization_id')
@@ -344,6 +352,7 @@ def edit_item():
 
 
 @app.route('/update_stock', methods=['POST'])
+@login_required
 def update_stock():
     item_id = request.form.get('item_id')
     quantity = int(request.form.get('quantity'))
@@ -378,6 +387,7 @@ def update_stock():
 
 
 @app.route('/delete_item', methods=['POST'])
+@login_required
 def delete_item():
     item_id = request.form.get('item_id')
     
@@ -423,6 +433,7 @@ def employees():
 
 
 @app.route('/add_employee', methods=['POST'])
+@login_required
 def add_employee():
     username = request.form.get('username').strip()
     password = request.form.get('password')
@@ -454,6 +465,7 @@ def add_employee():
 
 
 @app.route('/edit_employee', methods=['POST'])
+@login_required
 def edit_employee():
     employee_id = request.form.get('employee_id')
     username = request.form.get('username').strip()
@@ -478,6 +490,7 @@ def edit_employee():
 
 
 @app.route('/edit_employee_password', methods=['POST'])
+@login_required
 def edit_employee_password():
     employee_id = request.form.get('employee_id')
     password = request.form.get('password').strip()
@@ -498,6 +511,7 @@ def edit_employee_password():
 
 
 @app.route('/delete_employee', methods=['POST'])
+@login_required
 def delete_employee():
     employee_id = request.form.get('employee_id')
 
@@ -546,6 +560,7 @@ def stock_movement():
 
 
 @app.route('/edit_stock_movement', methods=['POST'])
+@login_required
 def edit_stock_movement():
     movement_id = request.form.get('movement_id')
     item_id = request.form.get('item_id')
@@ -577,6 +592,7 @@ def edit_stock_movement():
 
 
 @app.route('/delete_stock_movement', methods=['POST'])
+@login_required
 def delete_stock_movement():
     movement_id = request.form.get('movement_id')
     item_id = request.form.get('item_id')
@@ -643,6 +659,7 @@ def transactions():
                        )
 
 @app.route('/new_sale', methods=['POST'])
+@login_required
 def new_sale():
     user_id = request.form.get('user_id')
     org_id = request.form.get('org_id')
@@ -680,6 +697,7 @@ def new_sale():
 
 
 @app.route('/edit_sale', methods=['POST'])
+@login_required
 def edit_sale():
     user = request.form.get('user_id')
     tx_id = request.form.get('tx_id')
@@ -723,6 +741,7 @@ def edit_sale():
 
 
 @app.route('/clear_credit', methods=['POST'])
+@login_required
 def clear_credit():
     user_id = request.form.get('user_id')
     tx_id = request.form.get('tx_id')
@@ -742,6 +761,7 @@ def clear_credit():
     return redirect(url_for('transactions'))
 
 @app.route('/print_receipt', methods=['POST'])
+@login_required
 def print_receipt():
     date = request.form.get('date')
     organization_id = request.form.get('organization_id')
@@ -828,6 +848,7 @@ def print_receipt():
 
 
 @app.route('/new_expense', methods=['POST'])
+@login_required
 def new_expense():
     user_id = request.form.get('user_id')
     org_id = request.form.get('org_id')
@@ -851,6 +872,7 @@ def new_expense():
 
 
 @app.route('/edit_expense', methods=['POST'])
+@login_required
 def edit_expense():
 
     tx_id = request.form.get('tx_id')
