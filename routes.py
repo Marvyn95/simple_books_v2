@@ -50,6 +50,7 @@ def login():
 
 
 @app.route("/logout")
+@login_required
 def logout():
     session.clear()
     flash("You have been logged out successfully!", "success")
@@ -268,9 +269,6 @@ def add_branch():
 
     flash('Branch added successfully!', 'success')
     return redirect(url_for('profile'))
-
-
-
 
 
 # stock management
