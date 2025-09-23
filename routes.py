@@ -1002,7 +1002,9 @@ def generate_report():
     if branch_id == "all":
         branch_name = "all"
     else:
-        for branch in db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))}).get("branches", []):
+        org_info = db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))})
+        branch_name = "unknown"
+        for branch in org_info.get("branches", []):
             if branch.get("_id") == branch_id:
                 branch_name = branch.get("branch")
                 break

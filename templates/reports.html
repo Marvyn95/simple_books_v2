@@ -59,19 +59,19 @@
               {% endfor %}
             </select>
             {% else %}
-            <select class="form-select form-select-sm" id="branchSelectReport" disabled>
-              {% if user.branch_ids %}
-                {% for branch in organization.branches %}
-                  {% if branch._id in user.branch_ids %}
-                    <option selected>{{ branch.branch }}</option>
-                  {% endif %}
-                {% endfor %}
+            <select class="form-select form-select-sm" id="branchSelectReport" name="branch_id" disabled>
+              {% if user.branch_id %}
+              {% for branch in organization.branches %}
+                {% if branch._id | string == user.branch_id | string %}
+                <option value="{{ user.branch_id }}" selected>{{ branch.branch }}</option>
+                {% endif %}
+              {% endfor %}
               {% else %}
-                <option selected>No Branch</option>
+              <option value="" selected>No Branch</option>
               {% endif %}
             </select>
-            {% if user.branch_ids %}
-              <input type="hidden" name="branch_id" value="{{ user.branch_ids[0] }}">
+            {% if user.branch_id %}
+            <input type="hidden" name="branch_id" value="{{ user.branch_id }}">
             {% endif %}
           {% endif %}
         </div>
