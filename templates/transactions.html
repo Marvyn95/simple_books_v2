@@ -33,7 +33,6 @@
       <th>Type</th>
       <th class="d-none d-sm-table-cell">User</th>
       <th>Description</th>
-      <th>Qty</th>
       <th>Amount (UGX)</th>
       <th>Status</th>
       <th class="d-none d-sm-table-cell">Actions</th>
@@ -51,7 +50,6 @@
       </td>
       <td class="text-muted text-truncate d-none d-sm-table-cell" style="max-width:100px; overflow:hidden;">{{ tx.user_name }}</td>
       <td class="text-truncate" style="color: indigo; max-width:140px; overflow:hidden;" title="{{ tx.description }}">{{ tx.description }}</td>
-      <td class="text-truncate" style="max-width:55px; overflow:hidden;">{{ tx.quantity if tx.quantity else '—' }}</td>
       <td class="text-truncate" style="max-width:90px; overflow:hidden;">{{ "{:,.0f}".format(tx.amount) }}</td>
       <td class="text-truncate" style="max-width:60px; overflow:hidden; {% if tx.status=='paid' %}color:green;{% elif tx.status=='credit' %}color:red;{% else %}color:gray;{% endif %}">
       {{ tx.status|capitalize if tx.status else '—' }}
@@ -87,8 +85,6 @@
         <input type="hidden" name="date" value="{{ tx.date.strftime('%d %b %Y') }}">
         <input type="hidden" name="client_name" value="{{ tx.client_name or '' }}">
         <input type="hidden" name="client_contact" value="{{ tx.client_contact or '' }}">
-        <input type="hidden" name="item" value="{{ tx.description }}">
-        <input type="hidden" name="quantity" value="{{ tx.quantity }}">
         <input type="hidden" name="seller" value="{{ tx.user_name }}">
         <input type="hidden" name="branch_id" value="{{ tx.branch_id }}">
         <button type="submit"
@@ -214,41 +210,234 @@
             <div class="mb-2">
               <label class="form-label fw-semibold text-dark">Branch</label>
               <select name="branch_id" class="form-select form-select-sm" required>
-                <option value="" disabled selected>Select Branch</option>
-                {% for branch in organization.branches %}
-                  <option value="{{ branch._id }}"
-                    {% if branch._id == selected_branch._id %}selected{% endif %}>
-                    {{ branch.branch }}
-                  </option>
-                {% endfor %}
+          <option value="" disabled selected>Select Branch</option>
+          {% for branch in organization.branches %}
+            <option value="{{ branch._id }}"
+              {% if branch._id == selected_branch._id %}selected{% endif %}>
+              {{ branch.branch }}
+            </option>
+          {% endfor %}
               </select>
             </div>
           {% else %}
             <input type="hidden" name="branch_id" value="{{ selected_branch._id }}">
           {% endif %}
-          <div class="mb-2">
-            <label class="form-label fw-semibold text-dark">Item</label>
-            <select name="item_id" id="saleItemSelect" class="form-select form-select-sm" required>
-              <option value="" disabled selected>Select Item</option>
-                {% for item in stock_items %}
-                <option value="{{ item._id }}" data-price="{{ item.price }}">
-                  {{ item.name }}{% if item.price %} (ugx {{ "{:,.0f}".format(item.price) }}){% endif %}
-                </option>
-                {% endfor %}
-            </select>
+          <div id="saleItemsContainer">
+            <div class="row mb-2 g-2 sale-item-row">
+              <div class="col-5">
+          <label class="form-label fw-semibold text-dark">Item</label>
+          <select class="form-select form-select-sm saleItemSelect" required>
+            <option value="" disabled selected>Select Item</option>
+            {% for item in stock_items %}
+            <option value="{{ item._id }}" data-price="{{ item.price }}">
+              {{ item.name }}{% if item.price %} (ugx {{ "{:,.0f}".format(item.price) }}){% endif %}
+            </option>
+            {% endfor %}
+          </select>
+          <input type="hidden" name="item_id[]" class="saleItemIdInput">
+              </div>
+              <div class="col-3">
+          <label class="form-label fw-semibold text-dark">Quantity</label>
+          <input type="number" name="quantity[]" min="1" step="1" class="form-control form-control-sm saleQty" required>
+              </div>
+              <div class="col-4">
+          <label class="form-label fw-semibold text-dark">Unit Price (UGX)</label>
+          <input type="number" name="unit_price[]" min="0" step="1" class="form-control form-control-sm saleUnitPrice" required style="color:blue; font-weight:500;" readonly>
+              </div>
+            </div>
           </div>
-            <div class="mb-2">
-            <label class="form-label fw-semibold text-dark">Quantity</label>
-            <input type="number" name="quantity" id="saleQty" min="1" step="1" class="form-control form-control-sm" required>
+            <div class="mb-2 d-flex gap-2">
+            <button type="button" class="btn btn-sm btn-outline-primary" id="addSaleItemRow">
+              <i class="bi bi-plus-circle"></i> Add sale item
+            </button>
+            <button type="button" class="btn btn-sm btn-outline-danger" id="removeSaleItemRow">
+              <i class="bi bi-dash-circle"></i> Remove last item
+            </button>
+            <script>
+              document.addEventListener("DOMContentLoaded", function() {
+              const container = document.getElementById("saleItemsContainer");
+              const removeBtn = document.getElementById("removeSaleItemRow");
+              removeBtn.addEventListener("click", function() {
+                const rows = container.querySelectorAll(".sale-item-row");
+                if (rows.length > 1) {
+                rows[rows.length - 1].remove();
+                // Update totals and credit requirement after removal
+                if (typeof updateTotalAmount === "function") updateTotalAmount();
+                if (typeof updateCreditRequirement === "function") updateCreditRequirement();
+                }
+              });
+              });
+            </script>
             </div>
-            <div class="mb-2">
-            <label class="form-label fw-semibold text-dark">Unit Price (UGX)</label>
-            <input type="number" name="unit_price" id="saleUnitPrice" min="0" step="1" class="form-control form-control-sm" required style="color:blue; font-weight:500;">
-            </div>
+          <script>
+          document.addEventListener("DOMContentLoaded", function() {
+            function updateUnitPrice(row) {
+              const select = row.querySelector(".saleItemSelect");
+              const unitPriceInput = row.querySelector(".saleUnitPrice");
+              const itemIdInput = row.querySelector(".saleItemIdInput");
+              const selectedOpt = select.options[select.selectedIndex];
+              const price = selectedOpt ? selectedOpt.getAttribute("data-price") : "";
+              unitPriceInput.value = price ? parseFloat(price).toFixed(0) : "";
+              itemIdInput.value = select.value;
+            }
+
+            function attachRowEvents(row) {
+              const select = row.querySelector(".saleItemSelect");
+              const qtyInput = row.querySelector(".saleQty");
+              select.addEventListener("change", function() {
+          updateUnitPrice(row);
+          updateTotalAmount();
+          updateCreditRequirement();
+              });
+              qtyInput.addEventListener("input", function() {
+          updateTotalAmount();
+          updateCreditRequirement();
+              });
+              // Initial update
+              updateUnitPrice(row);
+            }
+
+            function updateTotalAmount() {
+              const rows = document.querySelectorAll("#saleItemsContainer .sale-item-row");
+              let total = 0;
+              rows.forEach(row => {
+          const qty = parseFloat(row.querySelector(".saleQty").value) || 0;
+          const price = parseFloat(row.querySelector(".saleUnitPrice").value) || 0;
+          total += qty * price;
+              });
+              const amountPaidInput = document.getElementById("saleAmountPaid");
+              if (amountPaidInput) {
+          amountPaidInput.value = total > 0 ? total.toFixed(0) : "";
+              }
+            }
+
+            function updateCreditRequirement() {
+              const rows = document.querySelectorAll("#saleItemsContainer .sale-item-row");
+              let total = 0;
+              rows.forEach(row => {
+          const qty = parseFloat(row.querySelector(".saleQty").value) || 0;
+          const price = parseFloat(row.querySelector(".saleUnitPrice").value) || 0;
+          total += qty * price;
+              });
+              const amountPaidInput = document.getElementById("saleAmountPaid");
+              const paid = parseFloat(amountPaidInput.value) || 0;
+              const clientName = document.getElementById("saleClientName");
+              const clientContact = document.getElementById("saleClientContact");
+              const clientNameOpt = document.getElementById("saleClientNameOpt");
+              const clientContactOpt = document.getElementById("saleClientContactOpt");
+              if (total > 0 && paid < total) {
+          clientName.required = true;
+          clientContact.required = true;
+          clientNameOpt.textContent = "";
+          clientContactOpt.textContent = "";
+              } else {
+          clientName.required = false;
+          clientContact.required = false;
+          clientNameOpt.textContent = "(Optional)";
+          clientContactOpt.textContent = "(Optional)";
+              }
+            }
+
+            const container = document.getElementById("saleItemsContainer");
+            const addBtn = document.getElementById("addSaleItemRow");
+            attachRowEvents(container.querySelector(".sale-item-row"));
+
+            addBtn.addEventListener("click", function() {
+              const firstRow = container.querySelector(".sale-item-row");
+              if (!firstRow) return;
+              const newRow = firstRow.cloneNode(true);
+              // Clear values in cloned row
+              newRow.querySelectorAll("select, input").forEach(el => {
+          if (el.classList.contains("saleItemSelect")) el.selectedIndex = 0;
+          else el.value = "";
+              });
+              attachRowEvents(newRow);
+              container.appendChild(newRow);
+              updateTotalAmount();
+              updateCreditRequirement();
+            });
+
+            // Update total and credit requirement if any row changes (for initial row)
+            container.querySelectorAll(".saleQty, .saleItemSelect").forEach(el => {
+              el.addEventListener("input", function() {
+          updateTotalAmount();
+          updateCreditRequirement();
+              });
+              el.addEventListener("change", function() {
+          updateTotalAmount();
+          updateCreditRequirement();
+              });
+            });
+
+            // Also update credit requirement if amount paid is changed (should be readonly, but for safety)
+            const amountPaidInput = document.getElementById("saleAmountPaid");
+            if (amountPaidInput) {
+              amountPaidInput.addEventListener("input", updateCreditRequirement);
+              amountPaidInput.addEventListener("change", updateCreditRequirement);
+            }
+
+            // On form submit, collect all sale items into a list of dicts
+            const saleForm = container.closest("form");
+            if (saleForm) {
+              saleForm.addEventListener("submit", function(e) {
+              // Collect sale items
+              const rows = container.querySelectorAll(".sale-item-row");
+              const items = [];
+              rows.forEach(row => {
+                const item_id = row.querySelector(".saleItemSelect").value;
+                const unit_price = row.querySelector(".saleUnitPrice").value;
+                const quantity = row.querySelector(".saleQty").value;
+                if (item_id && unit_price && quantity) {
+                items.push({
+                  item_id: item_id,
+                  unit_price: unit_price,
+                  quantity: quantity
+                });
+                }
+              });
+              // Set to hidden input
+              let itemsInput = saleForm.querySelector("input[name='sale_items']");
+              if (!itemsInput) {
+                itemsInput = document.createElement("input");
+                itemsInput.type = "hidden";
+                itemsInput.name = "sale_items";
+                saleForm.appendChild(itemsInput);
+              }
+              itemsInput.value = JSON.stringify(items);
+              // The backend should parse sale_items as a JSON list of dicts
+              });
+            }
+
+            // Initial requirement check
+            updateCreditRequirement();
+          });
+          </script>
             <div class="mb-2">
             <label class="form-label fw-semibold text-dark">Amount Paid (UGX)</label>
             <input type="number" name="amount_paid" id="saleAmountPaid" min="0" step="1" class="form-control form-control-sm" required>
             </div>
+            <script>
+            // Ensure total updates when sale item rows are removed
+            document.addEventListener("DOMContentLoaded", function() {
+              const container = document.getElementById("saleItemsContainer");
+              const amountPaidInput = document.getElementById("saleAmountPaid");
+              function updateTotalAmount() {
+              const rows = container.querySelectorAll(".sale-item-row");
+              let total = 0;
+              rows.forEach(row => {
+                const qty = parseFloat(row.querySelector(".saleQty").value) || 0;
+                const price = parseFloat(row.querySelector(".saleUnitPrice").value) || 0;
+                total += qty * price;
+              });
+              if (amountPaidInput) {
+                amountPaidInput.value = total > 0 ? total.toFixed(0) : "";
+              }
+              }
+              // Listen for DOM changes in saleItemsContainer (row removal)
+              const observer = new MutationObserver(updateTotalAmount);
+              observer.observe(container, { childList: true });
+            });
+            </script>
           <div class="mb-2">
             <label class="form-label text-dark">Client Name <span class="text-muted" id="saleClientNameOpt">(Optional)</span></label>
             <input type="text" name="client_name" id="saleClientName" class="form-control form-control-sm">
@@ -338,27 +527,29 @@
         </div>
         <div class="modal-body px-3 py-2">
           <div class="mb-2 pb-2 border-bottom">
-            <div class="row g-2">
+            <div class="row g-2 mb-4">
               <div class="col-6"><strong>Date:</strong> {{ tx.date.strftime('%d %b %Y') }}</div>
               <div class="col-6"><strong>Time:</strong> {{ tx.date.strftime('%I:%M %p') }}</div>
-              <div class="col-6"><strong>Client:</strong> {{ tx.client_name or '—' }}</div>
-              <div class="col-6"><strong>Contact:</strong> {{ tx.client_contact or '—' }}</div>
-              <div class="col-6"><strong>Qty:</strong> {{ tx.quantity or '—' }}</div>
+              <div class="col-6"><strong>Client:</strong> {{ tx.client_name or 'Not recorded' }}</div>
+              <div class="col-6"><strong>Contact:</strong> {{ tx.client_contact or 'Not recorded' }}</div>
               <div class="col-6"><strong>Status:</strong>
           <span style="{% if tx.status=='paid' %}color:green;{% elif tx.status=='credit' %}color:red;{% else %}color:gray;{% endif %}">
             {{ tx.status|capitalize }}
           </span>
               </div>
-              <div class="col-6"><strong>Total Amount:</strong> 
+              <div class="col-6"><strong>Items: </strong>
+                <span>{{ tx.description }}</span>
+              </div>
+              <div class="col-6"><strong>Amount paid:</strong> 
           <span class="text-primary">
             {{ "{:,.0f}".format(tx.quantity * tx.unit_price if tx.quantity and tx.unit_price else tx.amount) }}
           </span>
               </div>
               {% if tx.status=='credit' %}
-              <div class="col-12"><strong>Amount Left:</strong>
-          <span class="text-danger">
-            {{ "{:,.0f}".format(tx.payment_details.amount_left) }}
-          </span>
+              <div class="col-6"><strong>Amount Left:</strong>
+                <span class="text-danger">
+                  {{ "{:,.0f}".format(tx.payment_details.amount_left) }}
+                </span>
               </div>
               {% endif %}
             </div>
@@ -386,44 +577,211 @@
             <form method="POST" action="{{ url_for('edit_sale') }}">
             <input type="hidden" name="user_id" value="{{ tx.user_id }}">
             <input type="hidden" name="tx_id" value="{{ tx._id }}">
-            <input type="hidden" name="old_item_id" value="{{ tx.item_id }}">
-            <div class="row g-1">
-              <div class="col-12 mb-1">
-              <label class="form-label fw-semibold text-dark" style="font-size:.72rem;">Item</label>
-              <select name="new_item_id" class="form-select form-select-sm" id="editSaleItem_{{ tx._id }}" required style="font-size:.72rem; padding:.2rem .4rem;">
-              <option value="" disabled>Select Item</option>
-              {% for item in stock_items %}
-              <option value="{{ item._id }}" data-price="{{ item.price }}"
-                {% if item.name == tx.description %}selected{% endif %}>
-                {{ item.name }}{% if item.price %} (ugx {{ "{:,.0f}".format(item.price) }}){% endif %}
-              </option>
-              {% endfor %}
-              </select>
+            <div id="editSaleItemsContainer_{{ tx._id }}">
+              {% for sale_item in tx.sale_items %}
+                <div class="row mb-2 g-2 sale-item-row" style="font-size:0.72rem;">
+                <div class="col-5">
+                  <label class="form-label fw-semibold text-dark" style="font-size:0.72rem;">Item</label>
+                  <select class="form-select form-select-sm saleItemSelect" required style="font-size:0.72rem;">
+                  <option value="" disabled>Select Item</option>
+                  {% for item in stock_items %}
+                  <option value="{{ item._id }}" data-price="{{ item.price }}"
+                    {% if sale_item.item_id | string == item._id | string %}selected{% endif %}>
+                    {{ item.name }}{% if item.price %} (ugx {{ "{:,.0f}".format(item.price) }}){% endif %}
+                  </option>
+                  {% endfor %}
+                  </select>
+                  <input type="hidden" name="item_id[]" class="saleItemIdInput" value="{{ sale_item.item_id }}">
+                </div>
+                <div class="col-3">
+                  <label class="form-label fw-semibold text-dark" style="font-size:0.72rem;">Quantity</label>
+                  <input type="number" name="quantity[]" min="1" step="1" class="form-control form-control-sm saleQty" required value="{{ sale_item.quantity }}" style="font-size:0.72rem;">
+                </div>
+                <div class="col-4">
+                  <label class="form-label fw-semibold text-dark" style="font-size:0.72rem;">Unit Price (UGX)</label>
+                  <input type="number" name="unit_price[]" min="0" step="1" class="form-control form-control-sm saleUnitPrice" required style="color:blue; font-weight:500; font-size:0.72rem;" readonly value="{{ sale_item.unit_price }}">
+                </div>
+                </div>
+                {% endfor %}
               </div>
-              <div class="col-6 mb-1">
-              <label class="form-label fw-semibold text-dark" style="font-size:.72rem;">Qty</label>
-              <input type="number" name="quantity" id="editSaleQty_{{ tx._id }}" min="1" value="{{ tx.quantity }}" class="form-control form-control-sm" required style="font-size:.72rem; padding:.2rem .4rem;">
+              <div class="mb-2 d-flex gap-2">
+                <button type="button" class="btn btn-sm btn-outline-primary" id="addEditSaleItemRow_{{ tx._id }}" style="font-size:0.72rem;">
+                <i class="bi bi-plus-circle"></i> Add sale item
+                </button>
+                <button type="button" class="btn btn-sm btn-outline-danger" id="removeEditSaleItemRow_{{ tx._id }}" style="font-size:0.72rem;">
+                <i class="bi bi-dash-circle"></i> Remove last item
+                </button>
               </div>
-              <div class="col-6 mb-1">
-              <label class="form-label fw-semibold text-dark" style="font-size:.72rem;">Unit Price (UGX)</label>
-              <input type="number" name="unit_price" id="editSaleUnitPrice_{{ tx._id }}" min="0" step="0.01" value="{{ tx.unit_price or '' }}" class="form-control form-control-sm" required style="font-size:.72rem; padding:.2rem .4rem;">
-              </div>
-              <div class="col-12 mb-1">
-              <label class="form-label fw-semibold text-dark" style="font-size:.72rem;">Amount Paid (UGX)</label>
-              <input type="number" name="amount_paid" id="editSaleAmountPaid_{{ tx._id }}" min="0" step="0.01" value="{{ tx.amount }}" class="form-control form-control-sm" required style="font-size:.72rem; padding:.2rem .4rem;">
-              </div>
-              <div class="col-6 mb-1">
-              <label class="form-label text-dark" style="font-size:.72rem;">Client Name <span class="text-muted" style="font-size:.7em;">(Optional)</span></label>
-              <input type="text" name="client_name" value="{{ tx.client_name or '' }}" class="form-control form-control-sm" style="font-size:.72rem; padding:.2rem .4rem;">
-              </div>
-              <div class="col-6 mb-1">
-              <label class="form-label text-dark" style="font-size:.72rem;">Client Contact <span class="text-muted" style="font-size:.7em;">(Optional)</span></label>
-              <input type="text" name="client_contact" value="{{ tx.client_contact or '' }}" class="form-control form-control-sm" style="font-size:.72rem; padding:.2rem .4rem;">
-              </div>
+            <script>
+            document.addEventListener("DOMContentLoaded", function() {
+              const container = document.getElementById("editSaleItemsContainer_{{ tx._id }}");
+              const addBtn = document.getElementById("addEditSaleItemRow_{{ tx._id }}");
+              const removeBtn = document.getElementById("removeEditSaleItemRow_{{ tx._id }}");
+              const amountPaidInput = document.getElementById("editSaleAmountPaid_{{ tx._id }}");
+              const clientName = document.getElementById("editSaleClientName_{{ tx._id }}");
+              const clientContact = document.getElementById("editSaleClientContact_{{ tx._id }}");
+              const clientNameOpt = document.getElementById("editSaleClientNameOpt_{{ tx._id }}");
+              const clientContactOpt = document.getElementById("editSaleClientContactOpt_{{ tx._id }}");
+
+              function updateUnitPrice(row) {
+                const select = row.querySelector(".saleItemSelect");
+                const unitPriceInput = row.querySelector(".saleUnitPrice");
+                const itemIdInput = row.querySelector(".saleItemIdInput");
+                const selectedOpt = select.options[select.selectedIndex];
+                const price = selectedOpt ? selectedOpt.getAttribute("data-price") : "";
+                unitPriceInput.value = price ? parseFloat(price).toFixed(0) : "";
+                itemIdInput.value = select.value;
+              }
+
+              function attachRowEvents(row) {
+                const select = row.querySelector(".saleItemSelect");
+                const qtyInput = row.querySelector(".saleQty");
+                select.addEventListener("change", function() {
+                  updateUnitPrice(row);
+                  updateTotalAmount();
+                  updateCreditRequirement();
+                });
+                qtyInput.addEventListener("input", function() {
+                  updateTotalAmount();
+                  updateCreditRequirement();
+                });
+                // Initial update
+                updateUnitPrice(row);
+              }
+
+              function updateTotalAmount() {
+                const rows = container.querySelectorAll(".sale-item-row");
+                let total = 0;
+                rows.forEach(row => {
+                  const qty = parseFloat(row.querySelector(".saleQty").value) || 0;
+                  const price = parseFloat(row.querySelector(".saleUnitPrice").value) || 0;
+                  total += qty * price;
+                });
+                if (amountPaidInput) {
+                  amountPaidInput.value = total > 0 ? total.toFixed(0) : "";
+                }
+              }
+
+              function updateCreditRequirement() {
+                const rows = container.querySelectorAll(".sale-item-row");
+                let total = 0;
+                rows.forEach(row => {
+                  const qty = parseFloat(row.querySelector(".saleQty").value) || 0;
+                  const price = parseFloat(row.querySelector(".saleUnitPrice").value) || 0;
+                  total += qty * price;
+                });
+                const paid = parseFloat(amountPaidInput.value) || 0;
+                if (total > 0 && paid < total) {
+                  if (clientName) clientName.required = true;
+                  if (clientContact) clientContact.required = true;
+                  if (clientNameOpt) clientNameOpt.textContent = "";
+                  if (clientContactOpt) clientContactOpt.textContent = "";
+                } else {
+                  if (clientName) clientName.required = false;
+                  if (clientContact) clientContact.required = false;
+                  if (clientNameOpt) clientNameOpt.textContent = "(Optional)";
+                  if (clientContactOpt) clientContactOpt.textContent = "(Optional)";
+                }
+              }
+
+              // Attach events to initial row
+              container.querySelectorAll(".sale-item-row").forEach(attachRowEvents);
+
+              addBtn.addEventListener("click", function() {
+                const firstRow = container.querySelector(".sale-item-row");
+                if (!firstRow) return;
+                const newRow = firstRow.cloneNode(true);
+                // Clear values in cloned row
+                newRow.querySelectorAll("select, input").forEach(el => {
+                  if (el.classList.contains("saleItemSelect")) el.selectedIndex = 0;
+                  else el.value = "";
+                });
+                attachRowEvents(newRow);
+                container.appendChild(newRow);
+                updateTotalAmount();
+                updateCreditRequirement();
+              });
+
+              removeBtn.addEventListener("click", function() {
+                const rows = container.querySelectorAll(".sale-item-row");
+                if (rows.length > 1) {
+                  rows[rows.length - 1].remove();
+                  updateTotalAmount();
+                  updateCreditRequirement();
+                }
+              });
+
+              // Update total and credit requirement if any row changes (for initial row)
+              container.querySelectorAll(".saleQty, .saleItemSelect").forEach(el => {
+                el.addEventListener("input", function() {
+                  updateTotalAmount();
+                  updateCreditRequirement();
+                });
+                el.addEventListener("change", function() {
+                  updateTotalAmount();
+                  updateCreditRequirement();
+                });
+              });
+
+              // Also update credit requirement if amount paid is changed
+              if (amountPaidInput) {
+                amountPaidInput.addEventListener("input", updateCreditRequirement);
+                amountPaidInput.addEventListener("change", updateCreditRequirement);
+              }
+
+              // On form submit, collect all sale items into a list of dicts
+              const saleForm = container.closest("form");
+              if (saleForm) {
+                saleForm.addEventListener("submit", function(e) {
+                  const rows = container.querySelectorAll(".sale-item-row");
+                  const items = [];
+                  rows.forEach(row => {
+                    const item_id = row.querySelector(".saleItemSelect").value;
+                    const unit_price = row.querySelector(".saleUnitPrice").value;
+                    const quantity = row.querySelector(".saleQty").value;
+                    if (item_id && unit_price && quantity) {
+                      items.push({
+                        item_id: item_id,
+                        unit_price: unit_price,
+                        quantity: quantity
+                      });
+                    }
+                  });
+                  // Set to hidden input
+                  let itemsInput = saleForm.querySelector("input[name='sale_items']");
+                  if (!itemsInput) {
+                    itemsInput = document.createElement("input");
+                    itemsInput.type = "hidden";
+                    itemsInput.name = "sale_items";
+                    saleForm.appendChild(itemsInput);
+                  }
+                  itemsInput.value = JSON.stringify(items);
+                });
+              }
+
+              // Initial requirement check
+              updateCreditRequirement();
+
+              // Ensure total updates when sale item rows are removed
+              const observer = new MutationObserver(updateTotalAmount);
+              observer.observe(container, { childList: true });
+            });
+            </script>
+            <div class="mb-2">
+              <label class="form-label fw-semibold text-dark" style="font-size:0.72rem;">Amount Paid (UGX)</label>
+              <input type="number" name="amount_paid" id="editSaleAmountPaid_{{ tx._id }}" min="0" step="1" class="form-control form-control-sm" required value="{{ tx.amount }}" style="font-size:0.72rem;">
+            </div>
+            <div class="mb-2">
+              <label class="form-label text-dark" style="font-size:0.72rem;">Client Name <span class="text-muted" id="editSaleClientNameOpt_{{ tx._id }}" style="font-size:0.72rem;">(Optional)</span></label>
+              <input type="text" name="client_name" id="editSaleClientName_{{ tx._id }}" class="form-control form-control-sm" value="{{ tx.client_name or '' }}" style="font-size:0.72rem;">
+            </div>
+            <div>
+              <label class="form-label text-dark" style="font-size:0.72rem;">Client Contact <span class="text-muted" id="editSaleClientContactOpt_{{ tx._id }}" style="font-size:0.72rem;">(Optional)</span></label>
+              <input type="text" name="client_contact" id="editSaleClientContact_{{ tx._id }}" class="form-control form-control-sm" value="{{ tx.client_contact or '' }}" style="font-size:0.72rem;">
             </div>
             <div class="modal-footer py-2">
-              <button type="button" class="btn btn-sm btn-secondary" style="font-size:.72rem;" data-bs-dismiss="modal">Cancel</button>
-              <button type="submit" class="btn btn-sm btn-success" style="font-size:.72rem;">Save Sale</button>
+              <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal" style="font-size:0.72rem;">Cancel</button>
+              <button type="submit" class="btn btn-sm btn-success" style="font-size:0.72rem;">Save Sale</button>
             </div>
             </form>
           {% else %}
@@ -536,83 +894,10 @@
 
 <!-- Scripts -->
 <script>
-document.addEventListener("DOMContentLoaded", () => {
-  const saleItemSelect = document.getElementById("saleItemSelect");
-  const saleUnitPrice = document.getElementById("saleUnitPrice");
-  const saleQty = document.getElementById("saleQty");
-  const saleAmountPaid = document.getElementById("saleAmountPaid");
-  const clientName = document.getElementById("saleClientName");
-  const clientContact = document.getElementById("saleClientContact");
-  const clientNameOpt = document.getElementById("saleClientNameOpt");
-  const clientContactOpt = document.getElementById("saleClientContactOpt");
-
-  function computeSaleTotal() {
-    const q = parseFloat(saleQty.value) || 0;
-    const u = parseFloat(saleUnitPrice.value) || 0;
-    if (q && u) {
-      saleAmountPaid.value = (q * u).toFixed(2);
-    }
-    updateCreditRequirement();
-  }
-
-  function updateCreditRequirement() {
-    const q = parseFloat(saleQty.value) || 0;
-    const u = parseFloat(saleUnitPrice.value) || 0;
-    const paid = parseFloat(saleAmountPaid.value) || 0;
-    const total = q * u;
-    if (total > 0 && paid < total) {
-      clientName.required = true;
-      clientContact.required = true;
-      clientNameOpt.textContent = "";
-      clientContactOpt.textContent = "";
-    } else {
-      clientName.required = false;
-      clientContact.required = false;
-      clientNameOpt.textContent = "(Optional)";
-      clientContactOpt.textContent = "(Optional)";
-    }
-  }
-
-  if (saleItemSelect) {
-    saleItemSelect.addEventListener("change", () => {
-      const opt = saleItemSelect.options[saleItemSelect.selectedIndex];
-      const price = opt.getAttribute("data-price") || 0;
-      saleUnitPrice.value = parseFloat(price).toFixed(2);
-      computeSaleTotal();
-    });
-  }
-  ["input","change"].forEach(ev => {
-    if (saleQty) saleQty.addEventListener(ev, computeSaleTotal);
-    if (saleUnitPrice) saleUnitPrice.addEventListener(ev, computeSaleTotal);
-    if (saleAmountPaid) saleAmountPaid.addEventListener(ev, updateCreditRequirement);
-  });
-
-  // Edit sale modals dynamic logic
-  {% for tx in transactions %}
-    {% if tx.type=='Sale' %}
-      (function() {
-        const itemSel = document.getElementById("editSaleItem_{{ tx._id }}");
-        const qty = document.getElementById("editSaleQty_{{ tx._id }}");
-        const unit = document.getElementById("editSaleUnitPrice_{{ tx._id }}");
-        const amt = document.getElementById("editSaleAmountPaid_{{ tx._id }}");
-        if (!itemSel || !qty || !unit || !amt) return;
-        function recompute() {
-          const q = parseFloat(qty.value)||0;
-          const u = parseFloat(unit.value)||0;
-          if (q && u) amt.value = (q*u).toFixed(2);
-        }
-        itemSel.addEventListener("change", () => {
-          const o = itemSel.options[itemSel.selectedIndex];
-          const p = o.getAttribute("data-price") || 0;
-            unit.value = parseFloat(p).toFixed(2);
-            recompute();
-        });
-        qty.addEventListener("input", recompute);
-        unit.addEventListener("input", recompute);
-      })();
-    {% endif %}
-  {% endfor %}
-});
+// The code in $SELECTION_PLACEHOLDER$ is now redundant and can be removed.
+// Your "New Sale" modal uses a new script block (with dynamic row logic) that covers all sale item/amount/credit logic.
+// The edit sale modal logic is also handled inline per modal.
+// You can safely delete the entire $SELECTION_PLACEHOLDER$ block.
 </script>
 
 {% endblock %}

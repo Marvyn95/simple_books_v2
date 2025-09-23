@@ -634,7 +634,11 @@ def transactions():
     for sale in sales:
         sale["type"] = "Sale"
         sale["user_name"] = next((emp.get("username") for emp in employees if str(emp.get("_id")) == str(sale.get("user_id"))), "Unknown")
-        sale["description"] = next((item.get("name") for item in stock_items if str(item.get("_id")) == str(sale.get("item_id"))), "Unknown Item")
+        sale["description"] = []
+        for item in sale.get("sale_items", []):
+            item_name = next((stock_item.get("name") for stock_item in stock_items if str(stock_item.get("_id")) == str(item.get("item_id"))), "Unknown Item")
+            sale["description"].append(f'{item_name} ({item.get("quantity", 0)})')
+        sale["description"] = ", ".join(sale["description"])
         sale["status"] = sale.get("payment_details", {}).get("status", "Unknown")
         sale["amount"] = sum(int(k["amount_paid"]) for k in sale.get("payment_details", {}).get("clearance_history", []))
 
@@ -662,23 +666,22 @@ def new_sale():
     user_id = request.form.get('user_id')
     org_id = request.form.get('org_id')
     branch_id = request.form.get('branch_id')
-    item_id = request.form.get('item_id')
-    quantity = int(request.form.get('quantity', 0))
-    unit_price = float(request.form.get('unit_price', 0))
+    sale_items = request.form.get('sale_items')
     amount_paid = float(request.form.get('amount_paid', 0))
     client_name = request.form.get('client_name') or None
     client_contact = request.form.get('client_contact') or None
 
-    total = quantity * unit_price
-    
+    sale_items = json.loads(sale_items)
+    total = int(sum(float(i.get('quantity', 0)) * float(i.get('unit_price', 0)) for i in sale_items))
+
+    print(total, amount_paid)
+
     db.Sales.insert_one({
         "organization_id":ObjectId(org_id),
         "user_id": ObjectId(user_id),
         "branch_id": branch_id,
-        "item_id": item_id,
         "date": datetime.datetime.now(),
-        "quantity": quantity,
-        "unit_price": unit_price,
+        "sale_items": sale_items,
         "client_name": client_name,
         "client_contact": client_contact,
         "payment_details": {
@@ -688,7 +691,11 @@ def new_sale():
         }
     })
 
-    db.Stock.update_one({"_id": ObjectId(item_id)}, {"$inc": {"quantity": -quantity}})
+    for item in sale_items:
+        item_id = item.get('item_id')
+        quantity = int(item.get('quantity', 0))
+        db.Stock.update_one({"_id": ObjectId(item_id)}, {"$inc": {"quantity": -quantity}})
+
     flash('Sale recorded.', 'success')
     return redirect(url_for('transactions'))
 
@@ -697,32 +704,30 @@ def new_sale():
 @app.route('/edit_sale', methods=['POST'])
 @login_required
 def edit_sale():
-    user = request.form.get('user_id')
+    user_id = request.form.get('user_id')
     tx_id = request.form.get('tx_id')
-    old_item_id = request.form.get('old_item_id')
-    new_item_id = request.form.get('new_item_id')
-    
-    quantity = int(request.form.get('quantity', 0))
-    unit_price = float(request.form.get('unit_price', 0))
+    sale_items = request.form.get('sale_items')
     amount_paid = float(request.form.get('amount_paid', 0))
     client_name = request.form.get('client_name') or None
     client_contact = request.form.get('client_contact') or None
 
-    total = quantity * unit_price
+    sale_items = json.loads(sale_items)
+    total = int(sum(float(i.get('quantity', 0)) * float(i.get('unit_price', 0)) for i in sale_items))
 
-    item = db.Stock.find_one({"_id": ObjectId(old_item_id)})
-    tx = db.Sales.find_one({"_id": ObjectId(tx_id)})
+    old_tx = db.Sales.find_one({"_id": ObjectId(tx_id)})
+    old_items = old_tx.get("sale_items", [])
+    for old_item in old_items:
+        old_item_id = old_item.get("item_id")
+        old_quantity = int(old_item.get("quantity", 0))
+        db.Stock.update_one({"_id": ObjectId(old_item_id)}, {"$inc": {"quantity": old_quantity}})
 
-    if str(new_item_id) == str(old_item_id):
-        db.Stock.update_one({"_id": ObjectId(old_item_id)}, {"$set": {"quantity": item.get("quantity", 0) + tx.get("quantity", 0) - quantity}})
-    elif str(new_item_id) != str(old_item_id):
-        db.Stock.update_one({"_id": ObjectId(old_item_id)}, {"$inc": {"quantity": tx.get("quantity", 0)}})
-        db.Stock.update_one({"_id": ObjectId(new_item_id)}, {"$inc": {"quantity": -quantity}})
+    for new_item in sale_items:
+        new_item_id = new_item.get("item_id")
+        new_quantity = int(new_item.get("quantity", 0))
+        db.Stock.update_one({"_id": ObjectId(new_item_id)}, {"$inc": {"quantity": -new_quantity}})
 
     db.Sales.update_one({"_id": ObjectId(tx_id)}, {"$set": {
-        "item_id": new_item_id,
-        "quantity": quantity,
-        "unit_price": unit_price,
+        "sale_items": sale_items,
         "client_name": client_name,
         "client_contact": client_contact,
         "payment_details": {
@@ -749,14 +754,17 @@ def clear_credit():
 
     transaction = db.Sales.find_one({"_id": ObjectId(tx_id)})
     total_paid = sum(entry.get("amount_paid", 0) for entry in transaction.get("payment_details", {}).get("clearance_history", []))
-    amount_left = transaction.get("quantity", 0) * transaction.get("unit_price", 0) - total_paid
+    amount_left = int(sum(float(item.get("quantity", 0)) * float(item.get("unit_price", 0)) for item in transaction.get("sale_items", []))) - total_paid
 
     db.Sales.update_one({"_id": ObjectId(tx_id)}, {"$set": {
         "payment_details.status": "paid" if amount_left <= 0 else "credit",
         "payment_details.amount_left": amount_left
     }})
+
     flash('Credit cleared.', 'success')
     return redirect(url_for('transactions'))
+
+
 
 @app.route('/print_receipt', methods=['POST'])
 @login_required
@@ -765,8 +773,6 @@ def print_receipt():
     organization_id = request.form.get('organization_id')
     client_name = request.form.get('client_name')
     client_contact = request.form.get('client_contact')
-    item = request.form.get('item')
-    quantity = request.form.get('quantity')
     seller = request.form.get('seller')
     branch_id = request.form.get('branch_id')
     tx_id = request.form.get('tx_id')
@@ -774,6 +780,9 @@ def print_receipt():
     organization = db.Organizations.find_one({"_id": ObjectId(organization_id)})
     branch = next((b for b in organization.get("branches", []) if str(b.get("_id")) == str(branch_id)), None)
     transaction = db.Sales.find_one({"_id": ObjectId(tx_id)})
+    sale_items = transaction.get("sale_items", [])
+    
+    stock_items = list(db.Stock.find({"organization_id": ObjectId(organization_id)}))
 
     buf = BytesIO()
     c = canvas.Canvas(buf, pagesize=letter)
@@ -799,9 +808,12 @@ def print_receipt():
     c.setDash(3, 2)
     c.line(15*mm, y, w - 15*mm, y)
     y -= 6*mm
-    line("Item:    " + (item if item else "N/A"))
-    line("Quantity:    " + (str(quantity) if quantity else "N/A"))
-    line("Unit Price:    " + "{:,}".format(transaction.get("unit_price", 0)))
+
+    for k in sale_items:
+        item_name = next((stock_item.get("name") for stock_item in stock_items if str(stock_item.get("_id")) == str(k.get("item_id"))), "Unknown Item")
+        item_str = f"Item: {item_name}        Quantity: {k.get('quantity', 'N/A')}        Unit Price: {'{:,}'.format(int(k.get('unit_price', 0)))}"
+        line(item_str)
+        y -= 4*mm
 
     c.line(15*mm, y, w - 15*mm, y)
     y -= 6*mm
@@ -825,7 +837,7 @@ def print_receipt():
     c.line(15*mm, y, w - 15*mm, y)
     y -= 6*mm
     line("Receipt ID:    " + str(tx_id))
-    line("Organization ID    :" + str(organization_id))
+    # line("Organization ID    :" + str(organization_id))
 
     c.setDash()
     c.line(15*mm, y, w - 15*mm, y)
@@ -894,7 +906,8 @@ def delete_transaction():
 
     if tx_type == "Sale":
         tx = db.Sales.find_one({"_id": ObjectId(tx_id)})
-        db.Stock.update_one({"_id": ObjectId(tx.get("item_id"))}, {"$inc": {"quantity": tx.get("quantity", 0)}})
+        for item in tx.get("sale_items", []):
+            db.Stock.update_one({"_id": ObjectId(item.get("item_id"))}, {"$inc": {"quantity": item.get("quantity", 0)}})
         db.Sales.delete_one({"_id": ObjectId(tx_id)})
     else:
         db.Expenses.delete_one({"_id": ObjectId(tx_id)})
@@ -925,7 +938,8 @@ def performance():
     monthly_sales = defaultdict(float)
     for sale in sales:
         month = sale.get("date").strftime("%B-%Y")
-        monthly_sales[month] += sale.get("quantity", 0) * sale.get("unit_price", 0)
+        for sale_item in sale.get("sale_items", []):
+            monthly_sales[month] += int(float(sale_item.get("quantity", 0)) * float(sale_item.get("unit_price", 0)))
 
     monthly_expenses = defaultdict(float)
     for expense in expenses:
@@ -1019,14 +1033,18 @@ def generate_report():
         required_data = []
         users = list(db.Users.find({"organization_id": ObjectId(user.get("organization_id"))}))
         stock_items = list(db.Stock.find({"organization_id": ObjectId(user.get("organization_id"))}))
+        
         for i in sales:
+            items = []
+            for k in i.get("sale_items", []):
+                item_name = next((s["name"] for s in stock_items if str(s["_id"]) == str(k["item_id"])), "Unknown")
+                items.append(f'{item_name} ({k.get("quantity", 0)} x {k.get("unit_price", 0)})')
+            items = ", ".join(items)
             required_data.append({
                 "date": i.get("date").date().strftime("%d %B %Y"),
                 "sales person": next((u["username"] for u in users if str(u["_id"]) == str(i["user_id"])), "Unknown"),
-                "product/service": next((s["name"] for s in stock_items if str(s["_id"]) == str(i["item_id"])), "Unknown"),
-                "quantity": i.get("quantity"),
-                "unit price": i.get("unit_price"),
-                "amount": sum(float(k["amount_paid"]) for k in  i.get("payment_details", {}).get("clearance_history", [])),
+                "products/services": items,
+                "amount paid": sum(float(k["amount_paid"]) for k in  i.get("payment_details", {}).get("clearance_history", [])),
                 "status": i.get("payment_details", {}).get("status"),
                 "client name": i.get("client_name"),
                 "client contact": i.get("client_contact")
