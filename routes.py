@@ -140,7 +140,8 @@ def profile():
                            user=user,
                            selected_branch=selected_branch,
                            organization=organization,
-                           now=datetime.datetime.now()
+                           now=datetime.datetime.now(),
+                           organizations=list(db.Organizations.find())
                            )
 
 
@@ -303,7 +304,8 @@ def stock():
                            branch=branch,
                            stock=stock,
                            stock_history=stock_history,
-                           now=datetime.datetime.now()
+                           now=datetime.datetime.now(),
+                           organizations=list(db.Organizations.find())
                            )
 
 
@@ -426,7 +428,8 @@ def employees():
                            selected_branch=selected_branch,
                            organization=organization,
                            employees=employees,
-                           now=datetime.datetime.now()
+                           now=datetime.datetime.now(),
+                           organizations=list(db.Organizations.find())
                            )
 
 
@@ -553,7 +556,8 @@ def stock_movement():
                            organization=organization,
                            branch=branch,
                            stock_history=stock_history,
-                           now=datetime.datetime.now()
+                           now=datetime.datetime.now(),
+                           organizations=list(db.Organizations.find())
                            )
 
 
@@ -657,8 +661,8 @@ def transactions():
                            employees=employees,
                            stock_items=stock_items,
                            selected_branch=selected_branch,
-                           now=datetime.datetime.now()
-                       )
+                           now=datetime.datetime.now(),
+                           organizations=list(db.Organizations.find()))
 
 @app.route('/new_sale', methods=['POST'])
 @login_required
@@ -974,7 +978,8 @@ def performance():
                            selected_branch=selected_branch,
                            organization=organization,
                            performance_data=performance_data,
-                           now=datetime.datetime.now()
+                           now=datetime.datetime.now(),
+                           organizations=list(db.Organizations.find())
                        )
 
 
@@ -992,7 +997,8 @@ def reports():
                            user=user,
                            selected_branch=selected_branch,
                            organization=organization,
-                           now=datetime.datetime.now()
+                           now=datetime.datetime.now(),
+                            organizations=list(db.Organizations.find())
                            )
 
 @app.route('/generate_report', methods=['POST'])
@@ -1127,3 +1133,16 @@ def generate_report():
 
     flash('Report generation failed. Please try again.', 'error')
     return redirect(url_for('reports'))
+
+@app.route('/change_organization', methods=['POST'])
+@login_required
+def change_organization():
+    organization_id = request.form.get('organization_id')
+    user = db.Users.find_one({"_id": ObjectId(session.get("userid"))})
+    if user.get("role") == "Admin":
+        session.pop("branch", None)
+        db.Users.update_one({"_id": ObjectId(session.get("userid"))}, {"$set": {"organization_id": ObjectId(organization_id)}})
+        flash('Organization changed successfully.', 'success')
+    else:
+        flash('Failed to change organization. Please try again.', 'error')
+    return redirect(url_for('transactions'))

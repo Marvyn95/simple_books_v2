@@ -206,7 +206,7 @@
         </div>
         <div class="modal-body px-3 py-2">
           <input type="hidden" name="user_id" value="{{ user._id }}">
-          {% if user.role=='Manager' %}
+          {% if user.role in ['Manager', 'Admin'] %}
             <div class="mb-2">
               <label class="form-label fw-semibold text-dark">Branch</label>
               <select name="branch_id" class="form-select form-select-sm" required>
@@ -470,7 +470,7 @@
         <div class="modal-body px-3 py-2">
           <input type="hidden" name="user_id" value="{{ user._id }}">
           <input type="hidden" name="org_id" value="{{ user.organization_id }}">
-          {% if user.role=='Manager' %}
+          {% if user.role in ['Manager', 'Admin'] %}
             <div class="mb-2">
             <label class="form-label fw-semibold text-dark">Branch</label>
             <select name="branch_id" class="form-select form-select-sm" required>

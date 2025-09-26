@@ -64,7 +64,7 @@
                 <i class="bi bi-box-seam me-2"></i>Stock
               </a>
             </li>
-            {% if user.role == 'Manager' %}
+            {% if user.role in ['Manager', 'Admin'] %}
               <li class="nav-item mb-2">
                 <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'stock_movement' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('stock_movement') }}">
                   <i class="bi bi-arrow-left-right me-2"></i>Stock Movement
@@ -76,7 +76,7 @@
                 <i class="bi bi-people-fill me-2"></i>Employees
               </a>
             </li>
-            {% if user.role in ['Manager', 'Branch Manager'] %}
+            {% if user.role in ['Manager', 'Branch Manager', 'Admin'] %}
               <li class="nav-item mb-2">
                 <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'performance' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('performance') }}">
                   <i class="bi bi-graph-up-arrow me-2"></i>Performance
@@ -131,7 +131,7 @@
                 <i class="bi bi-people-fill me-2"></i>Employees
               </a>
             </li>
-            {% if user.role in ['Manager', 'Branch Manager'] %}
+            {% if user.role in ['Manager', 'Admin', 'Branch Manager'] %}
               <li class="nav-item mb-2">
                 <a class="nav-link text-white d-flex align-items-center py-2 px-2 {% if request.endpoint == 'performance' %}active bg-white bg-opacity-25 fw-bold rounded-3{% endif %}" href="{{ url_for('performance') }}">
                   <i class="bi bi-graph-up-arrow me-2"></i>Performance
@@ -166,10 +166,11 @@
             <i class="bi bi-person-badge-fill me-1" style="color: #4f46e5;"></i>{{ user.role }}
           </span>
         </div>
+
         <div class="col-12 col-md-auto">
           <span class="text-primary">
             <i class="bi bi-geo-alt-fill me-1" style="color: #4338ca;"></i>
-            {% if user.role == 'Manager' %}
+            {% if user.role in ['Manager', 'Admin'] %}
           <form method="POST" action="{{ url_for('change_branch') }}" class="d-inline-block m-0">
             <input type="hidden" name="organization_id" value="{{ user.organization_id }}">
             <select name="branch_id" class="form-select form-select-sm d-inline-block w-auto" style="min-width: 120px; max-width: 200px;" onchange="this.form.submit()">
@@ -187,13 +188,30 @@
             {% endif %}
           </span>
         </div>
-        <div class="col-6 col-sm-auto">
-          <span class="fw-semibold text-truncate">
-            <i class="bi bi-building me-2" style="color: indigo;"></i>{{ user.organization }}
+
+        
+        <div class="col-12 col-md-auto">
+          <span class="text-primary">
+            <i class="bi bi-building me-1" style="color: #4338ca;"></i>
+            {% if user.role == 'Admin' %}
+          <form method="POST" action="{{ url_for('change_organization') }}" class="d-inline-block m-0">
+            <select name="organization_id" class="form-select form-select-sm d-inline-block w-auto" style="min-width: 120px; max-width: 200px;" onchange="this.form.submit()">
+              {% for org in organizations %}
+            <option value="{{ org['_id'] }}" {% if org['_id'] | string == user.organization_id | string %}selected{% endif %}>
+              {{ org['organization'] }}
+            </option>
+              {% endfor %}
+            </select>
+          </form>
+            {% else %}
+          {{ user.organization }}
+            {% endif %}
           </span>
         </div>
+        
           </div>
         </div>
+
         <!-- Main Content Card -->
         <div class="card flex-grow-1 shadow p-4 rounded-4 bg-light d-flex flex-column overflow-auto h-100 w-100">
           {% block content %}

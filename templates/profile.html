@@ -11,7 +11,7 @@
         <button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#updatePasswordModal">
           <i class="bi bi-key me-1"></i> Update Password
         </button>
-        {% if user.role == "Manager" %}
+        {% if user.role in ["Manager", "Admin"] %}
         <button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#addBranchModal">
           <i class="bi bi-plus me-1"></i> Add Branch
         </button>

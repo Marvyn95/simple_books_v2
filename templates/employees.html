@@ -29,7 +29,7 @@
           <td class="py-0" style="max-width:220px;">
             <div class="d-flex gap-2 justify-content-start align-items-center flex-wrap d-none d-sm-flex">
           
-          {% if user.role == "Manager" or user.role == "Branch Manager" or employee._id|string == user._id|string %}
+          {% if user.role in ["Manager", "Admin"] or user.role == "Branch Manager" or employee._id|string == user._id|string %}
           <button class="btn btn-sm px-2 py-1 border-0 shadow-sm"
             style="color: indigo; background: #e0e7ff; border-radius: .35rem; min-width: 38px;"
             data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ employee._id }}"
@@ -39,7 +39,7 @@
           </button>
           {% endif %}
 
-          {% if user.role == "Manager" or user.role == "Branch Manager" %}
+          {% if user.role in ["Manager", "Admin"] or user.role == "Branch Manager" %}
           <button class="btn btn-sm px-2 py-1 border-0 shadow-sm"
             style="color: #ffc107; background: #fff9e0; border-radius: .35rem; min-width: 38px;"
             data-bs-toggle="modal" data-bs-target="#editPasswordModal{{ employee._id }}"
@@ -48,7 +48,7 @@
           </button>
           {% endif %}
 
-          {% if employee._id|string != user._id|string and user.role in ["Manager", "Branch Manager"] %}
+          {% if employee._id|string != user._id|string and user.role in ["Manager", "Branch Manager", "Admin"] %}
           <button class="btn btn-sm px-2 py-1 border-0 shadow-sm"
             style="color: #dc3545; background: #ffe0e0; border-radius: .35rem; min-width: 38px;"
             data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal{{ employee._id }}"
