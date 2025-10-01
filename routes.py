@@ -420,8 +420,8 @@ def employees():
     else:
         employees = list(db.Users.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}))
 
-    sales = list(db.Sales.find({"organization_id": ObjectId(user.get("organization_id"))}))
-    expenses = list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id"))}))
+    sales = sorted(list(db.Sales.find({"organization_id": ObjectId(user.get("organization_id"))})), key=lambda x: x.get("date", datetime.datetime.min), reverse=True)[:100]
+    expenses = sorted(list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id"))})), key=lambda x: x.get("date", datetime.datetime.min), reverse=True)[:100]
 
     stock_items = list(db.Stock.find({"organization_id": ObjectId(user.get("organization_id"))}))
 
