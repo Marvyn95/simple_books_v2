@@ -24,9 +24,11 @@
         {% for employee in employees %}
         <tr style="height:24px;">
             <td class="py-1" style="max-width: 120px;">
-            <button class="btn btn-link p-0 text-decoration-none fw-semibold" style="color: indigo;" data-bs-toggle="modal" data-bs-target="#employeeDetailsModal{{ employee._id }}" title="View Employee Details">
-              {{ employee.username }}
-            </button>
+            <div class="text-start">
+              <button class="btn btn-link p-0 text-decoration-none fw-semibold" style="color: indigo;" data-bs-toggle="modal" data-bs-target="#employeeDetailsModal{{ employee._id }}" title="View Employee Details">
+                {{ employee.username }}
+              </button>
+            </div>
 
 <!-- Employee Details Modal -->
 <div class="modal fade" id="employeeDetailsModal{{ employee._id }}" tabindex="-1" aria-labelledby="employeeDetailsLabel{{ employee._id }}" aria-hidden="true">
