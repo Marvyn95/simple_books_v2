@@ -222,9 +222,11 @@
         
           </div>
         </div>
-
         <!-- Main Content Card -->
-        <div class="card flex-grow-1 shadow p-4 rounded-4 bg-light d-flex flex-column overflow-auto h-100 w-100">
+        <div class="card flex-grow-1 shadow p-4 rounded-4 bg-light d-flex flex-column overflow-auto h-100 w-100" style="scrollbar-width: none; -ms-overflow-style: none;">
+          <style>
+            .card.flex-grow-1::-webkit-scrollbar { display: none; }
+          </style>
           {% block content %}
           <!-- Main content goes here -->
           {% endblock %}

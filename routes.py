@@ -560,18 +560,27 @@ def stock_movement():
     selected_branch = session.get("branch")
     branch = session.get("branch")
 
+    per_page = 100
+    page = int(request.args.get('page', 1))
+
     if session.get("branch") is None:
-        stock_history = list(db.Stock_movement.find({"organization_id": organization.get("_id")}).sort("date", -1))
+        stock_history = list(db.Stock_movement.find({"organization_id": organization.get("_id")}).sort("date", -1))[:300]
         for movement in stock_history:
             movement["updater"] = db.Users.find_one({"_id": ObjectId(movement.get("updater_id"))}).get("username", "")
             movement["item"] = db.Stock.find_one({"_id": ObjectId(movement.get("item_id"))}).get("name", "")
             movement["branch"] = next((b for b in organization.get("branches", []) if b.get("_id") == movement.get("branch_id")), {}).get("branch", "")
     else:
-        stock_history = list(db.Stock_movement.find({"organization_id": organization.get("_id"), "branch_id": branch.get("_id")}).sort("date", -1))
+        stock_history = list(db.Stock_movement.find({"organization_id": organization.get("_id"), "branch_id": branch.get("_id")}).sort("date", -1))[:300]
         for movement in stock_history:
             movement["updater"] = db.Users.find_one({"_id": ObjectId(movement.get("updater_id"))}).get("username", "")
             movement["item"] = db.Stock.find_one({"_id": ObjectId(movement.get("item_id"))}).get("name", "")
             movement["branch"] = next((b for b in organization.get("branches", []) if b.get("_id") == movement.get("branch_id")), {}).get("branch", "")
+
+    total = len(stock_history)
+    total_pages = (total + per_page - 1) // per_page
+    start = (page - 1) * per_page
+    end = start + per_page
+    stock_history = stock_history[start:end]
 
     return render_template('stock_movement.html',
                            user=user,
@@ -580,7 +589,9 @@ def stock_movement():
                            branch=branch,
                            stock_history=stock_history,
                            now=datetime.datetime.now(),
-                           organizations=list(db.Organizations.find())
+                           organizations=list(db.Organizations.find()),
+                           page=page,
+                           total_pages=total_pages
                            )
 
 
@@ -648,14 +659,16 @@ def transactions():
     selected_branch = session.get("branch")
     user["organization"] = organization.get('organization')
 
-    if selected_branch is None:
-        sales = list(db.Sales.find({"organization_id": ObjectId(user.get("organization_id"))}).sort("date", -1))
-        expenses = list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id"))}).sort("date", -1))
-        stock_items = list(db.Stock.find({"organization_id": ObjectId(user.get("organization_id"))}).sort("name", 1))
+    per_page = 100
+    page = int(request.args.get('page', 1))
 
+    if selected_branch is None:
+        sales = list(db.Sales.find({"organization_id": ObjectId(user.get("organization_id"))}).sort("date", -1))[:300]
+        expenses = list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id"))}).sort("date", -1))[:300]
+        stock_items = list(db.Stock.find({"organization_id": ObjectId(user.get("organization_id"))}).sort("name", 1))
     else:
-        sales = list(db.Sales.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}).sort("date", -1))
-        expenses = list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}).sort("date", -1))
+        sales = list(db.Sales.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}).sort("date", -1))[:300]
+        expenses = list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}).sort("date", -1))[:300]
         stock_items = list(db.Stock.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}).sort("name", 1))
 
     for sale in sales:
@@ -677,6 +690,13 @@ def transactions():
 
     transactions = sorted(sales + expenses, key=lambda x: x.get("date"), reverse=True)
 
+    total = len(transactions)
+    total_pages = (total + per_page - 1) // per_page
+    start = (page - 1) * per_page
+    end = start + per_page
+    transactions = transactions[start:end]
+
+
     return render_template("transactions.html",
                            transactions=transactions,
                            user=user,
@@ -685,7 +705,10 @@ def transactions():
                            stock_items=stock_items,
                            selected_branch=selected_branch,
                            now=datetime.datetime.now(),
-                           organizations=list(db.Organizations.find()))
+                           organizations=list(db.Organizations.find()),
+                           page=page,
+                           total_pages=total_pages,
+                           total=total)
 
 @app.route('/new_sale', methods=['POST'])
 @login_required
