@@ -28,14 +28,25 @@
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
-          <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show py-1 px-2 small mb-2" role="alert" style="border-radius:0.5rem; box-shadow:0 2px 8px rgba(0,0,0,0.07);">
+            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show py-1 px-2 small mb-2" role="alert" style="border-radius:0.5rem; box-shadow:0 2px 8px rgba(0,0,0,0.07);">
             {{ message }}
-            <button type="button" class="btn-close btn-close-white btn-sm" data-bs-dismiss="alert" aria-label="Close" style="top:2px;right:2px;"></button>
-          </div>
+            <button type="button" class="btn-close btn-close-white btn-sm d-none" data-bs-dismiss="alert" aria-label="Close" style="top:2px;right:2px;"></button>
+            </div>
         {% endfor %}
       {% endif %}
     {% endwith %}
   </div>
+  <script>
+    // Auto-dismiss flash messages after 3 seconds
+    document.addEventListener('DOMContentLoaded', function () {
+      setTimeout(function () {
+        document.querySelectorAll('#flash-messages .alert').forEach(function (el) {
+          var alert = bootstrap.Alert.getOrCreateInstance(el);
+          alert.close();
+        });
+      }, 3000);
+    });
+  </script>
   <div class="card bg-light shadow rounded-4 mx-4 w-100 d-flex flex-row position-relative" style="max-width: 1200px; height: 90vh;">
     <!-- Sidebar Toggle Button (visible on small screens) -->
     <button class="sidebar-toggle-btn btn d-lg-none bg-indigo text-white rounded" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">

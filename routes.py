@@ -420,6 +420,28 @@ def employees():
     else:
         employees = list(db.Users.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}))
 
+    sales = list(db.Sales.find({"organization_id": ObjectId(user.get("organization_id"))}))
+    expenses = list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id"))}))
+
+    stock_items = list(db.Stock.find({"organization_id": ObjectId(user.get("organization_id"))}))
+
+    for sale in sales:
+        sale['type'] = 'Sale'
+        sale['desc'] = []
+        for item in sale.get("sale_items", []):
+            item_name = next((stock_item.get("name") for stock_item in stock_items if str(stock_item.get("_id")) == str(item.get("item_id"))), "Unknown Item")
+            sale['desc'].append(f'{item_name} ({item.get("quantity", 0)})')
+        sale['desc'] = ", ".join(sale['desc'])
+        sale['status'] = sale.get("payment_details", {}).get("status", "Unknown")
+        sale['amount'] = sum(int(k["amount_paid"]) for k in sale.get("payment_details", {}).get("clearance_history", []))
+
+        for expense in expenses:
+            expense['type'] = 'Expense'
+            expense['desc'] = expense.get("purpose", "")
+            expense['authorizer'] = next((emp.get("username") for emp in employees if str(emp.get("_id")) == str(expense.get("authorized_by"))), "Unknown")
+
+    transactions = sorted(sales + expenses, key=lambda x: x.get("date"), reverse=True)
+
     for e in employees:
         e['branch'] = next((item for item in organization.get("branches", []) if item["_id"] == e.get("branch_id")), {}).get("branch")
 
@@ -429,7 +451,8 @@ def employees():
                            organization=organization,
                            employees=employees,
                            now=datetime.datetime.now(),
-                           organizations=list(db.Organizations.find())
+                           organizations=list(db.Organizations.find()),
+                           transactions=transactions
                            )
 
 

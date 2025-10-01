@@ -230,7 +230,7 @@
             <option value="" disabled selected>Select Item</option>
             {% for item in stock_items %}
             <option value="{{ item._id }}" data-price="{{ item.price }}">
-              {{ item.name }}{% if item.price %} (ugx {{ "{:,.0f}".format(item.price) }}){% endif %}
+              {{ item.name }}{% if item.price %} <!-- (ugx {{ "{:,.0f}".format(item.price) }}) --> {% endif %}
             </option>
             {% endfor %}
           </select>
@@ -587,7 +587,7 @@
                   {% for item in stock_items %}
                   <option value="{{ item._id }}" data-price="{{ item.price }}"
                     {% if sale_item.item_id | string == item._id | string %}selected{% endif %}>
-                    {{ item.name }}{% if item.price %} (ugx {{ "{:,.0f}".format(item.price) }}){% endif %}
+                    {{ item.name }}{% if item.price %} <!-- (ugx {{ "{:,.0f}".format(item.price) }}) --> {% endif %}
                   </option>
                   {% endfor %}
                   </select>
