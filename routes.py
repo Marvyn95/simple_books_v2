@@ -284,14 +284,14 @@ def stock():
 
     if selected_branch is None:
         stock = list(db.Stock.find({"organization_id": ObjectId(organization.get("_id"))}).sort("name", 1))
-        stock_history = list(db.Stock_movement.find({"organization_id": ObjectId(organization.get("_id"))}).sort("date", -1))
+        stock_history = list(db.Stock_movement.find({"organization_id": ObjectId(organization.get("_id"))}).sort("date", -1)[:500])
         for item in stock:
             item['branch'] = next((b for b in organization.get("branches", []) if b.get("_id") == item.get("branch_id")), {}).get("branch")
         for item in stock_history:
             item['updater'] = db.Users.find_one({"_id": ObjectId(item.get("updater_id"))}).get("username")
     else:
         stock = list(db.Stock.find({ "organization_id": ObjectId(organization.get("_id")), "branch_id": branch.get("_id") }).sort("name", 1))
-        stock_history = list(db.Stock_movement.find({"organization_id": ObjectId(organization.get("_id")), "branch_id": branch.get("_id")}).sort("date", -1))
+        stock_history = list(db.Stock_movement.find({"organization_id": ObjectId(organization.get("_id")), "branch_id": branch.get("_id")}).sort("date", -1)[:500])
         for item in stock:
             item['branch'] = next((b for b in organization.get("branches", []) if b.get("_id") == item.get("branch_id")), {}).get("branch")
         for item in stock_history:
