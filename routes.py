@@ -1001,7 +1001,7 @@ def performance():
         month = stock.get("date").strftime("%B-%Y")
         monthly_stock_cost[month] += stock.get("quantity_updated", 0) * stock.get("unit_cost", 0)
 
-    all_months = sorted(set(monthly_sales.keys()) | set(monthly_expenses.keys()) | set(monthly_stock_cost.keys()))
+    all_months = set(monthly_sales.keys()) | set(monthly_expenses.keys()) | set(monthly_stock_cost.keys())
     
     performance_data = []
     for month in all_months:
@@ -1018,6 +1018,8 @@ def performance():
             "profit": profit,
             "profit_margin": profit_margin
         })
+    
+    performance_data = sorted(performance_data, key=lambda x: datetime.datetime.strptime(x["month"], "%B-%Y"), reverse=True)
 
     return render_template('performance.html',
                            user=user,
