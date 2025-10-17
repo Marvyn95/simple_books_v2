@@ -116,7 +116,7 @@
 
     <!-- Delete Transaction Modals -->
     {% for tx in transactions %}
-      {% if (user._id|string)==(tx.user_id|string) %}
+      {% if user.role == 'Manager' %}
       <div class="modal fade" id="deleteTxModal_{{ tx._id }}" tabindex="-1" aria-labelledby="deleteTxLabel_{{ tx._id }}" aria-hidden="true">
       <div class="modal-dialog">
         <form method="POST" action="{{ url_for('delete_transaction') }}">
