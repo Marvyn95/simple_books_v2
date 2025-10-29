@@ -288,14 +288,14 @@ def stock():
         for item in stock:
             item['branch'] = next((b for b in organization.get("branches", []) if b.get("_id") == item.get("branch_id")), {}).get("branch")
         for item in stock_history:
-            item['updater'] = db.Users.find_one({"_id": ObjectId(item.get("updater_id"))}).get("username")
+            item['updater'] = db.Users.find_one({"_id": ObjectId(item.get("updater_id"))}).get("username") if db.Users.find_one({"_id": ObjectId(item.get("updater_id"))}) else "Unknown"
     else:
         stock = list(db.Stock.find({ "organization_id": ObjectId(organization.get("_id")), "branch_id": branch.get("_id") }).sort("name", 1))
         stock_history = list(db.Stock_movement.find({"organization_id": ObjectId(organization.get("_id")), "branch_id": branch.get("_id")}).sort("date", -1)[:500])
         for item in stock:
             item['branch'] = next((b for b in organization.get("branches", []) if b.get("_id") == item.get("branch_id")), {}).get("branch")
         for item in stock_history:
-            item['updater'] = db.Users.find_one({"_id": ObjectId(item.get("updater_id"))}).get("username")
+            item['updater'] = db.Users.find_one({"_id": ObjectId(item.get("updater_id"))}).get("username") if db.Users.find_one({"_id": ObjectId(item.get("updater_id"))}) else "Unknown"
 
     return render_template('stock.html',
                            user=user,
@@ -566,7 +566,7 @@ def stock_movement():
     if session.get("branch") is None:
         stock_history = list(db.Stock_movement.find({"organization_id": organization.get("_id")}).sort("date", -1))[:300]
         for movement in stock_history:
-            movement["updater"] = db.Users.find_one({"_id": ObjectId(movement.get("updater_id"))}).get("username", "")
+            movement["updater"] = db.Users.find_one({"_id": ObjectId(movement.get("updater_id"))}).get("username", "") if db.Users.find_one({"_id": ObjectId(movement.get("updater_id"))}) else "Unknown"
             movement["item"] = db.Stock.find_one({"_id": ObjectId(movement.get("item_id"))}).get("name", "")
             movement["branch"] = next((b for b in organization.get("branches", []) if b.get("_id") == movement.get("branch_id")), {}).get("branch", "")
     else:
