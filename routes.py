@@ -14,7 +14,6 @@ from reportlab.lib.units import mm
 
 
 
-
 # authentication
 @app.route("/", methods=["GET", "POST"])
 @app.route("/login", methods=["GET", "POST"])
@@ -723,8 +722,6 @@ def new_sale():
 
     sale_items = json.loads(sale_items)
     total = int(sum(float(i.get('quantity', 0)) * float(i.get('unit_price', 0)) for i in sale_items))
-
-    print(total, amount_paid)
 
     db.Sales.insert_one({
         "organization_id":ObjectId(org_id),
