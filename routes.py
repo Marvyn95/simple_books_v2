@@ -315,9 +315,18 @@ def add_item():
     name = request.form.get('name').strip()
     branch_id = request.form.get('branch_id')
     organization_id = request.form.get('organization_id')
+    barcode = request.form.get('barcode').strip() if request.form.get('barcode') else None
 
-    if len(list(db.Stock.find({"name": name, "branch": branch_id, "organization_id": ObjectId(organization_id)}))) > 0:
+
+    if len(list(db.Stock.find({"name": name, "branch_id": branch_id, "organization_id": ObjectId(organization_id)}))) > 0:
         flash('Item with the same name already exists in this branch.', 'error')
+        return redirect(url_for('stock'))
+    
+    if barcode:
+        item = db.Stock.find_one({"barcode": barcode, "branch_id": branch_id, "organization_id": ObjectId(organization_id)})
+        
+    if barcode and item:
+        flash(f'Item ({item.get("name")}) with the same barcode already exists in this branch.', 'error')
         return redirect(url_for('stock'))
 
     db.Stock.insert_one({
@@ -325,6 +334,7 @@ def add_item():
         "branch_id": branch_id,
         "organization_id": ObjectId(organization_id),
         "quantity": 0,
+        "barcode": barcode
     })
     flash('Item added successfully!', 'success')
     return redirect(url_for('stock'))
@@ -339,10 +349,17 @@ def edit_item():
     branch_id = request.form.get('branch_id')
     name = request.form.get('name').strip()
     price = int(request.form.get('price'))
+    barcode = request.form.get('barcode').strip() if request.form.get('barcode') else None
+
+    item = db.Stock.find_one({"barcode": barcode, "branch_id": branch_id, "organization_id": ObjectId(organization_id)}) if barcode else None
+
+    if barcode and item and str(item.get("_id")) != item_id:
+        flash(f'Item ({item.get("name")}) with the same barcode already exists in this branch.', 'error')
+        return redirect(url_for('stock'))
 
     db.Stock.update_one(
         {"_id": ObjectId(item_id)},
-        {"$set": {"name": name, "branch_id": branch_id, "price": price}}
+        {"$set": {"name": name, "branch_id": branch_id, "price": price, "barcode": barcode}}
     )
 
     flash('Item updated successfully!', 'success')

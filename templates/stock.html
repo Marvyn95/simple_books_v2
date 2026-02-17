@@ -133,6 +133,14 @@
                 <small style="color: indigo;">Branch</small><br>
                 <span class="fw-semibold">{{ item.branch }}</span>
               </div>
+              <div>
+                <small style="color: indigo;">Barcode</small><br>
+                {% if item.barcode %}
+                  <span class="fw-semibold">{{ item.barcode }}</span>
+                {% else %}
+                  <span class="text-muted fst-italic">Not Set</span>
+                {% endif %}
+              </div>
             </div>
           </div>
 
@@ -204,22 +212,32 @@
             <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
           <div class="modal-body">
-            <div class="mb-3">
-              <label class="form-label text-indigo fw-medium">Branch</label>
-              {% if user.role == "Manager" %}
-              <select name="branch_id" class="form-select form-select-sm" required>
+            <div class="row g-2">
+              <div class="col-6">
+              <div class="mb-3">
+                <label class="form-label text-indigo fw-medium">Branch</label>
+                {% if user.role == "Manager" %}
+                <select name="branch_id" class="form-select form-select-sm" required>
                 {% for branch in organization['branches'] %}
                   <option value="{{ branch._id }}" {% if item.branch_id|string == branch._id|string %}selected{% endif %}>
-                    {{ branch['branch'] }}
+                  {{ branch['branch'] }}
                   </option>
                 {% endfor %}
-              </select>
-              {% else %}
-              <input type="text" class="form-control form-control-sm"
-                     value="{% for branch in organization['branches'] %}{% if item.branch_id|string == branch._id|string %}{{ branch['branch'] }}{% endif %}{% endfor %}"
-                     disabled>
-              <input type="hidden" name="branch_id" value="{{ item.branch_id }}">
-              {% endif %}
+                </select>
+                {% else %}
+                <input type="text" class="form-control form-control-sm"
+                   value="{% for branch in organization['branches'] %}{% if item.branch_id|string == branch._id|string %}{{ branch['branch'] }}{% endif %}{% endfor %}"
+                   disabled>
+                <input type="hidden" name="branch_id" value="{{ item.branch_id }}">
+                {% endif %}
+              </div>
+              </div>
+              <div class="col-6">
+              <div class="mb-3">
+                <label class="form-label text-indigo fw-medium">Barcode</label>
+                <input type="text" name="barcode" class="form-control form-control-sm" value="{{ item.barcode if item.barcode else '' }}" placeholder="Optional" pattern="[A-Za-z0-9]*">
+              </div>
+              </div>
             </div>
             <div class="mb-3">
               <label class="form-label text-indigo fw-medium">Item Name</label>
@@ -325,6 +343,10 @@
           <div class="mb-3">
             <label class="form-label text-indigo fw-medium">Item Name</label>
             <input type="text" name="name" class="form-control form-control-sm" required>
+          </div>
+          <div class="mb-3">
+            <label class="form-label text-indigo fw-medium">Barcode</label>
+            <input type="text" name="barcode" class="form-control form-control-sm" autocomplete="off" placeholder="Optional" pattern="[A-Za-z0-9]*">
           </div>
         </div>
         <div class="modal-footer">
