@@ -238,11 +238,11 @@
               </div>
               <div class="col-3">
           <label class="form-label fw-semibold text-dark">Quantity</label>
-          <input type="number" name="quantity[]" min="1" step="1" class="form-control form-control-sm saleQty" required>
+          <input type="number" name="quantity[]" min="1" step="1" class="form-control form-control-sm saleQty" value=1 required>
               </div>
               <div class="col-4">
           <label class="form-label fw-semibold text-dark">Unit Price (UGX)</label>
-          <input type="number" name="unit_price[]" min="0" step="1" class="form-control form-control-sm saleUnitPrice" required style="color:blue; font-weight:500;" readonly>
+          <input type="number" name="unit_price[]" min="0" step="1" class="form-control form-control-sm saleUnitPrice" readonly required style="color:blue; font-weight:500;">
               </div>
             </div>
           </div>
@@ -253,6 +253,7 @@
             <button type="button" class="btn btn-sm btn-outline-danger" id="removeSaleItemRow">
               <i class="bi bi-dash-circle"></i> Remove last item
             </button>
+            
             <script>
               document.addEventListener("DOMContentLoaded", function() {
               const container = document.getElementById("saleItemsContainer");
@@ -351,6 +352,10 @@
           if (el.classList.contains("saleItemSelect")) el.selectedIndex = 0;
           else el.value = "";
               });
+
+const qtyInput = newRow.querySelector(".saleQty");
+if (qtyInput) qtyInput.value = 1;
+
               attachRowEvents(newRow);
               container.appendChild(newRow);
               updateTotalAmount();
