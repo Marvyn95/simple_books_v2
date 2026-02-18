@@ -23,7 +23,7 @@
   </div>
 
   <!-- Transactions Table -->
-  <div class="table-responsive" style="max-height: 375px; overflow-y: auto;">
+  <div class="table-responsive">
     <table class="table table-hover table-sm table-borderless align-middle small mb-8" style="margin-bottom:0; font-size:.8rem;">
       <thead class="table-primary" style="position:sticky; top:0; z-index:2; background:#f8f9fa;">
       <tr>
@@ -49,7 +49,7 @@
       <td class="text-muted text-truncate d-none d-sm-table-cell" style="max-width:100px; overflow:hidden;">{{ tx.user_name }}</td>
       <td class="text-truncate" style="color: indigo; max-width:140px; overflow:hidden;" title="{{ tx.description }}">{{ tx.description }}</td>
       <td class="text-truncate" style="max-width:90px; overflow:hidden;">{{ "{:,.0f}".format(tx.amount) }}</td>
-      <td class="text-truncate" style="max-width:60px; overflow:hidden; {% if tx.status=='paid' %}color:green;{% elif tx.status=='credit' %}color:red;{% else %}color:gray;{% endif %}">
+      <td class="text-truncate {% if tx.status=='paid' %}status-paid{% elif tx.status=='credit' %}status-credit{% else %}status-other{% endif %}" style="max-width:60px; overflow:hidden;">
       {{ tx.status|capitalize if tx.status else '—' }}
       </td>
       <td class="text-truncate d-none d-sm-table-cell" style="max-width:90px; overflow:hidden;">
@@ -149,10 +149,35 @@
       {% endif %}
     {% endfor %}
     <style>
+      .table-responsive {
+        height: calc(100vh - 250px);
+        display: flex;
+        flex-direction: column;
+      }
+      .table-responsive table {
+        height: 100%;
+      }
+      .table thead {
+        flex-shrink: 0;
+      }
+      .table tbody {
+        flex: 1;
+        overflow-y: auto;
+      }
       .table td.text-truncate, .table th.text-truncate {
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
+      }
+      /* Status color classes */
+      .table td.status-paid {
+        color: green;
+      }
+      .table td.status-credit {
+        color: red;
+      }
+      .table td.status-other {
+        color: gray;
       }
       /* Prevent action buttons from wrapping to next line */
       .table td .d-flex.flex-nowrap {
@@ -166,6 +191,9 @@
         line-height: 1.2;
       }
       @media (max-width: 600px) {
+        .table-responsive {
+          height: calc(100vh - 200px);
+        }
         .table td, .table th {
           font-size: 0.72rem;
         }
@@ -1044,7 +1072,7 @@ form.addEventListener('keydown', e => {
   {% endif %}
 {% endfor %}
 
-<div class="d-flex justify-content-center mt-2">
+<div class="d-flex justify-content-center mt-0" style="position: sticky; bottom: 0; background-color: #fff; padding: 0; z-index: 10; border-top: 1px solid #dee2e6;">
   <nav>
     <ul class="pagination pagination-sm mb-0">
       <li class="page-item {% if page <= 1 %}disabled{% endif %}">
