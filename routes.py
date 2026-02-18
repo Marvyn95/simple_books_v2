@@ -296,6 +296,7 @@ def stock():
         for item in stock_history:
             item['updater'] = db.Users.find_one({"_id": ObjectId(item.get("updater_id"))}).get("username") if db.Users.find_one({"_id": ObjectId(item.get("updater_id"))}) else "Unknown"
 
+
     return render_template('stock.html',
                            user=user,
                            selected_branch=selected_branch,

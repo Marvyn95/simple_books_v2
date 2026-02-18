@@ -9,17 +9,15 @@
     <h4 class="mb-0 fw-bold d-none d-sm-block" style="letter-spacing:0.5px; color: indigo;">Transactions</h4>
     <!-- Buttons on the right -->
     <div class="ms-auto d-flex gap-2">
-      <button type="button" class="btn btn-sm btn-gradient-success shadow-sm px-3 py-2 align-items-center gap-2"
+      <button type="button" class="btn btn-sm shadow-sm px-3 py-2" 
           data-bs-toggle="modal" data-bs-target="#newSaleModal"
-          style="background: linear-gradient(90deg, #28a745 60%, #218838 100%); color: #fff; border: none; font-weight: 500; border-radius: 0.4rem;">
-        <i class="bi bi-cash-stack fs-5"></i>
-        <span>Sale</span>
+          style="background-color: #10b981; color: #fff; border: none; font-weight: 600; border-radius: 0.5rem; font-size: 0.875rem; transition: all 0.2s ease;">
+        <i class="bi bi-plus-circle me-2"></i>New Sale
       </button>
-      <button type="button" class="btn btn-sm btn-gradient-danger shadow-sm px-3 py-2 align-items-center gap-2"
+      <button type="button" class="btn btn-sm shadow-sm px-3 py-2" 
           data-bs-toggle="modal" data-bs-target="#newExpenseModal"
-          style="background: linear-gradient(90deg, #dc3545 60%, #c82333 100%); color: #fff; border: none; font-weight: 500; border-radius: 0.4rem;">
-        <i class="bi bi-receipt fs-5"></i>
-        <span>Expense</span>
+          style="background-color: #ef4444; color: #fff; border: none; font-weight: 600; border-radius: 0.5rem; font-size: 0.875rem; transition: all 0.2s ease;">
+        <i class="bi bi-plus-circle me-2"></i>New Expense
       </button>
     </div>
   </div>
@@ -191,275 +189,421 @@
 
 </div>
 
+
+
 <!-- New Sale Modal -->
 <div class="modal fade" id="newSaleModal" tabindex="-1" aria-labelledby="newSaleModalLabel" aria-hidden="true">
-  <div class="modal-dialog">
-    <form method="POST" action="{{ url_for('new_sale') }}">
-      <input type="hidden" name="user_id" value="{{ user._id }}">
-      <input type="hidden" name="org_id" value="{{ organization._id }}">
-      <div class="modal-content" style="background-color:#f8f9ff; font-size:.75rem;">
+  <div class="modal-dialog modal-lg">
+    <form id="newSaleForm" method="POST" action="{{ url_for('new_sale') }}">
+      
+      <!-- Hidden fields -->
+      <input type="hidden" name="user_id"          value="{{ user._id }}">
+      <input type="hidden" name="org_id"           value="{{ organization._id }}">
+      <input type="hidden" name="sale_items"       id="hiddenSaleItemsJson">
+
+      <div class="modal-content" style="background-color: #f8f9ff; font-size: 0.75rem;">
+        
+        <!-- Header -->
         <div class="modal-header border-bottom py-2">
           <h6 class="modal-title fw-semibold text-success" id="newSaleModalLabel">
             <i class="bi bi-cash-stack me-2"></i>New Sale
           </h6>
-          <button type="button" class="btn-close" data-bs-dismiss="modal" style="transform:scale(.85);"></button>
+          <button type="button" class="btn-close" data-bs-dismiss="modal" style="transform: scale(0.85);"></button>
         </div>
+
+        <!-- Body -->
         <div class="modal-body px-3 py-2">
-          <input type="hidden" name="user_id" value="{{ user._id }}">
-          {% if user.role in ['Manager', 'Admin'] %}
-            <div class="mb-2">
-              <label class="form-label fw-semibold text-dark">Branch</label>
-              <select name="branch_id" class="form-select form-select-sm" required>
-          <option value="" disabled selected>Select Branch</option>
-          {% for branch in organization.branches %}
-            <option value="{{ branch._id }}"
-              {% if branch._id == selected_branch._id %}selected{% endif %}>
-              {{ branch.branch }}
-            </option>
-          {% endfor %}
-              </select>
+
+          <!-- Branch + Barcode row -->
+          <div class="row g-3 mb-3 align-items-end">
+            {% if user.role in ['Manager', 'Admin'] %}
+              <div class="col-md-6">
+                <label class="form-label fw-semibold text-dark">Branch</label>
+                <select name="branch_id" class="form-select form-select-sm" required>
+                  <option value="" disabled selected>Select Branch</option>
+                  {% for branch in organization.branches %}
+                    <option value="{{ branch._id }}"
+                            {% if branch._id == selected_branch._id %}selected{% endif %}>
+                      {{ branch.branch }}
+                    </option>
+                  {% endfor %}
+                </select>
+              </div>
+            {% else %}
+              <input type="hidden" name="branch_id" value="{{ selected_branch._id }}">
+            {% endif %}
+
+            <div class="{% if user.role in ['Manager', 'Admin'] %}col-md-6{% else %}col-12{% endif %}">
+              <label class="form-label fw-semibold text-dark">Scan / Enter Barcode</label>
+              <input type="text" id="barcodeInput" class="form-control form-control-sm"
+                     placeholder="Scan barcode..." autocomplete="off" autofocus>
             </div>
-          {% else %}
-            <input type="hidden" name="branch_id" value="{{ selected_branch._id }}">
-          {% endif %}
-          <div id="saleItemsContainer">
-            <div class="row mb-2 g-2 sale-item-row">
-              <div class="col-5">
-          <label class="form-label fw-semibold text-dark">Item</label>
-          <select class="form-select form-select-sm saleItemSelect" required>
-            <option value="" disabled selected>Select Item</option>
-            {% for item in stock_items %}
-            <option value="{{ item._id }}" data-price="{{ item.price }}">
-              {{ item.name }}{% if item.price %} <!-- (ugx {{ "{:,.0f}".format(item.price) }}) --> {% endif %}
-            </option>
-            {% endfor %}
-          </select>
-          <input type="hidden" name="item_id[]" class="saleItemIdInput">
+          </div>
+
+          <!-- Sale Items Section -->
+          <div class="mb-3">
+            <div class="d-flex justify-content-between align-items-center mb-2">
+              <label class="form-label fw-semibold text-dark mb-0">Sale Items</label>
+              <div class="btn-group btn-group-sm">
+                <button type="button" class="btn btn-outline-primary" id="btnAddItem">
+                  <i class="bi bi-plus-circle"></i> Add Item
+                </button>
+                <button type="button" class="btn btn-outline-danger" id="btnRemoveLastItem">
+                  <i class="bi bi-dash-circle"></i> Remove Last
+                </button>
               </div>
-              <div class="col-3">
-          <label class="form-label fw-semibold text-dark">Quantity</label>
-          <input type="number" name="quantity[]" min="1" step="1" class="form-control form-control-sm saleQty" value=1 required>
-              </div>
-              <div class="col-4">
-          <label class="form-label fw-semibold text-dark">Unit Price (UGX)</label>
-          <input type="number" name="unit_price[]" min="0" step="1" class="form-control form-control-sm saleUnitPrice" readonly required style="color:blue; font-weight:500;">
+            </div>
+
+            <div id="saleItemsContainer">
+              <!-- Template / initial empty row -->
+              <div class="row g-2 mb-2 sale-item-row align-items-end">
+                <div class="col-5">
+                  <label class="form-label fw-semibold text-dark">Item</label>
+                  <select class="form-select form-select-sm sale-item-select" required>
+                    <option value="" disabled selected>Select Item</option>
+                    {% for item in stock_items %}
+                      <option value="{{ item._id }}"
+                              data-price="{{ item.price }}"
+                              data-barcode="{{ item.barcode or '' }}">
+                        {{ item.name }}
+                        {% if item.price %} (UGX {{ "{:,.0f}".format(item.price) }}) {% endif %}
+                      </option>
+                    {% endfor %}
+                  </select>
+                  <input type="hidden" name="item_id[]" class="sale-item-id">
+                </div>
+                <div class="col-3">
+                  <label class="form-label fw-semibold text-dark">Qty</label>
+                  <input type="number" name="quantity[]" class="form-control form-control-sm sale-qty"
+                         min="1" value="1" step="1" required>
+                </div>
+                <div class="col-4">
+                  <label class="form-label fw-semibold text-dark">Unit Price (UGX)</label>
+                  <input type="number" name="unit_price[]" class="form-control form-control-sm sale-unit-price"
+                         readonly style="color: blue; font-weight: 500;">
+                </div>
               </div>
             </div>
           </div>
-            <div class="mb-2 d-flex gap-2">
-            <button type="button" class="btn btn-sm btn-outline-primary" id="addSaleItemRow">
-              <i class="bi bi-plus-circle"></i> Add sale item
-            </button>
-            <button type="button" class="btn btn-sm btn-outline-danger" id="removeSaleItemRow">
-              <i class="bi bi-dash-circle"></i> Remove last item
-            </button>
-            
-            <script>
-              document.addEventListener("DOMContentLoaded", function() {
-              const container = document.getElementById("saleItemsContainer");
-              const removeBtn = document.getElementById("removeSaleItemRow");
-              removeBtn.addEventListener("click", function() {
-                const rows = container.querySelectorAll(".sale-item-row");
-                if (rows.length > 1) {
-                rows[rows.length - 1].remove();
-                // Update totals and credit requirement after removal
-                if (typeof updateTotalAmount === "function") updateTotalAmount();
-                if (typeof updateCreditRequirement === "function") updateCreditRequirement();
-                }
-              });
-              });
-            </script>
+
+          <!-- Payment & Customer Info -->
+          <div class="row g-3">
+            <div class="col-md-4">
+              <label class="form-label fw-semibold text-dark">Amount Paid (UGX)</label>
+              <input type="number" name="amount_paid" id="amountPaid" class="form-control form-control-sm"
+                     min="0" step="1" required>
             </div>
-          <script>
-          document.addEventListener("DOMContentLoaded", function() {
-            function updateUnitPrice(row) {
-              const select = row.querySelector(".saleItemSelect");
-              const unitPriceInput = row.querySelector(".saleUnitPrice");
-              const itemIdInput = row.querySelector(".saleItemIdInput");
-              const selectedOpt = select.options[select.selectedIndex];
-              const price = selectedOpt ? selectedOpt.getAttribute("data-price") : "";
-              unitPriceInput.value = price ? parseFloat(price).toFixed(0) : "";
-              itemIdInput.value = select.value;
-            }
-
-            function attachRowEvents(row) {
-              const select = row.querySelector(".saleItemSelect");
-              const qtyInput = row.querySelector(".saleQty");
-              select.addEventListener("change", function() {
-          updateUnitPrice(row);
-          updateTotalAmount();
-          updateCreditRequirement();
-              });
-              qtyInput.addEventListener("input", function() {
-          updateTotalAmount();
-          updateCreditRequirement();
-              });
-              // Initial update
-              updateUnitPrice(row);
-            }
-
-            function updateTotalAmount() {
-              const rows = document.querySelectorAll("#saleItemsContainer .sale-item-row");
-              let total = 0;
-              rows.forEach(row => {
-          const qty = parseFloat(row.querySelector(".saleQty").value) || 0;
-          const price = parseFloat(row.querySelector(".saleUnitPrice").value) || 0;
-          total += qty * price;
-              });
-              const amountPaidInput = document.getElementById("saleAmountPaid");
-              if (amountPaidInput) {
-          amountPaidInput.value = total > 0 ? total.toFixed(0) : "";
-              }
-            }
-
-            function updateCreditRequirement() {
-              const rows = document.querySelectorAll("#saleItemsContainer .sale-item-row");
-              let total = 0;
-              rows.forEach(row => {
-          const qty = parseFloat(row.querySelector(".saleQty").value) || 0;
-          const price = parseFloat(row.querySelector(".saleUnitPrice").value) || 0;
-          total += qty * price;
-              });
-              const amountPaidInput = document.getElementById("saleAmountPaid");
-              const paid = parseFloat(amountPaidInput.value) || 0;
-              const clientName = document.getElementById("saleClientName");
-              const clientContact = document.getElementById("saleClientContact");
-              const clientNameOpt = document.getElementById("saleClientNameOpt");
-              const clientContactOpt = document.getElementById("saleClientContactOpt");
-              if (total > 0 && paid < total) {
-          clientName.required = true;
-          clientContact.required = true;
-          clientNameOpt.textContent = "";
-          clientContactOpt.textContent = "";
-              } else {
-          clientName.required = false;
-          clientContact.required = false;
-          clientNameOpt.textContent = "(Optional)";
-          clientContactOpt.textContent = "(Optional)";
-              }
-            }
-
-            const container = document.getElementById("saleItemsContainer");
-            const addBtn = document.getElementById("addSaleItemRow");
-            attachRowEvents(container.querySelector(".sale-item-row"));
-
-            addBtn.addEventListener("click", function() {
-              const firstRow = container.querySelector(".sale-item-row");
-              if (!firstRow) return;
-              const newRow = firstRow.cloneNode(true);
-              // Clear values in cloned row
-              newRow.querySelectorAll("select, input").forEach(el => {
-          if (el.classList.contains("saleItemSelect")) el.selectedIndex = 0;
-          else el.value = "";
-              });
-
-const qtyInput = newRow.querySelector(".saleQty");
-if (qtyInput) qtyInput.value = 1;
-
-              attachRowEvents(newRow);
-              container.appendChild(newRow);
-              updateTotalAmount();
-              updateCreditRequirement();
-            });
-
-            // Update total and credit requirement if any row changes (for initial row)
-            container.querySelectorAll(".saleQty, .saleItemSelect").forEach(el => {
-              el.addEventListener("input", function() {
-          updateTotalAmount();
-          updateCreditRequirement();
-              });
-              el.addEventListener("change", function() {
-          updateTotalAmount();
-          updateCreditRequirement();
-              });
-            });
-
-            // Also update credit requirement if amount paid is changed (should be readonly, but for safety)
-            const amountPaidInput = document.getElementById("saleAmountPaid");
-            if (amountPaidInput) {
-              amountPaidInput.addEventListener("input", updateCreditRequirement);
-              amountPaidInput.addEventListener("change", updateCreditRequirement);
-            }
-
-            // On form submit, collect all sale items into a list of dicts
-            const saleForm = container.closest("form");
-            if (saleForm) {
-              saleForm.addEventListener("submit", function(e) {
-              // Collect sale items
-              const rows = container.querySelectorAll(".sale-item-row");
-              const items = [];
-              rows.forEach(row => {
-                const item_id = row.querySelector(".saleItemSelect").value;
-                const unit_price = row.querySelector(".saleUnitPrice").value;
-                const quantity = row.querySelector(".saleQty").value;
-                if (item_id && unit_price && quantity) {
-                items.push({
-                  item_id: item_id,
-                  unit_price: unit_price,
-                  quantity: quantity
-                });
-                }
-              });
-              // Set to hidden input
-              let itemsInput = saleForm.querySelector("input[name='sale_items']");
-              if (!itemsInput) {
-                itemsInput = document.createElement("input");
-                itemsInput.type = "hidden";
-                itemsInput.name = "sale_items";
-                saleForm.appendChild(itemsInput);
-              }
-              itemsInput.value = JSON.stringify(items);
-              // The backend should parse sale_items as a JSON list of dicts
-              });
-            }
-
-            // Initial requirement check
-            updateCreditRequirement();
-          });
-          </script>
-            <div class="mb-2">
-            <label class="form-label fw-semibold text-dark">Amount Paid (UGX)</label>
-            <input type="number" name="amount_paid" id="saleAmountPaid" min="0" step="1" class="form-control form-control-sm" required>
+            <div class="col-md-4">
+              <label class="form-label text-dark">
+                Client Name <span class="text-muted" id="clientNameOptional">(Optional)</span>
+              </label>
+              <input type="text" name="client_name" id="clientName" class="form-control form-control-sm">
             </div>
-            <script>
-            // Ensure total updates when sale item rows are removed
-            document.addEventListener("DOMContentLoaded", function() {
-              const container = document.getElementById("saleItemsContainer");
-              const amountPaidInput = document.getElementById("saleAmountPaid");
-              function updateTotalAmount() {
-              const rows = container.querySelectorAll(".sale-item-row");
-              let total = 0;
-              rows.forEach(row => {
-                const qty = parseFloat(row.querySelector(".saleQty").value) || 0;
-                const price = parseFloat(row.querySelector(".saleUnitPrice").value) || 0;
-                total += qty * price;
-              });
-              if (amountPaidInput) {
-                amountPaidInput.value = total > 0 ? total.toFixed(0) : "";
-              }
-              }
-              // Listen for DOM changes in saleItemsContainer (row removal)
-              const observer = new MutationObserver(updateTotalAmount);
-              observer.observe(container, { childList: true });
-            });
-            </script>
-          <div class="mb-2">
-            <label class="form-label text-dark">Client Name <span class="text-muted" id="saleClientNameOpt">(Optional)</span></label>
-            <input type="text" name="client_name" id="saleClientName" class="form-control form-control-sm">
+            <div class="col-md-4">
+              <label class="form-label text-dark">
+                Client Contact <span class="text-muted" id="clientContactOptional">(Optional)</span>
+              </label>
+              <input type="text" name="client_contact" id="clientContact" class="form-control form-control-sm">
+            </div>
           </div>
-          <div>
-            <label class="form-label text-dark">Client Contact <span class="text-muted" id="saleClientContactOpt">(Optional)</span></label>
-            <input type="text" name="client_contact" id="saleClientContact" class="form-control form-control-sm">
-          </div>
+
         </div>
+
+        <!-- Footer -->
         <div class="modal-footer py-2">
           <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Cancel</button>
           <button type="submit" class="btn btn-sm btn-success">Save Sale</button>
         </div>
+
       </div>
     </form>
   </div>
 </div>
+
+
+<!-- ──────────────────────────────────────────────── -->
+<!-- JavaScript ────────────────────────────────────── -->
+<!-- ──────────────────────────────────────────────── -->
+
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+  const form               = document.getElementById('newSaleForm');
+  const container          = document.getElementById('saleItemsContainer');
+  const addBtn             = document.getElementById('btnAddItem');
+  const removeBtn          = document.getElementById('btnRemoveLastItem');
+  const amountPaidInput    = document.getElementById('amountPaid');
+  const clientNameInput    = document.getElementById('clientName');
+  const clientContactInput = document.getElementById('clientContact');
+  const clientNameOpt      = document.getElementById('clientNameOptional');
+  const clientContactOpt   = document.getElementById('clientContactOptional');
+  const hiddenItemsJson    = document.getElementById('hiddenSaleItemsJson');
+  const barcodeInput       = document.getElementById('barcodeInput');
+
+  // ─── Core calculation helpers ────────────────────────────────
+  function getTotal() {
+    let total = 0;
+    container.querySelectorAll('.sale-item-row').forEach(row => {
+      const qty   = parseFloat(row.querySelector('.sale-qty')?.value)   || 0;
+      const price = parseFloat(row.querySelector('.sale-unit-price')?.value) || 0;
+      total += qty * price;
+    });
+    return total;
+  }
+
+  function updateAmountPaid() {
+    const total = getTotal();
+    amountPaidInput.value = total > 0 ? Math.round(total) : '';
+  }
+
+  function updateCreditRequirement() {
+    const total = getTotal();
+    const paid  = parseFloat(amountPaidInput.value) || 0;
+    const isCredit = total > 0 && paid < total;
+
+    clientNameInput.required    = isCredit;
+    clientContactInput.required = isCredit;
+    clientNameOpt.textContent    = isCredit ? '' : '(Optional)';
+    clientContactOpt.textContent = isCredit ? '' : '(Optional)';
+  }
+
+  function updateUnitPrice(row) {
+    const select     = row.querySelector('.sale-item-select');
+    const priceInput = row.querySelector('.sale-unit-price');
+    const idInput    = row.querySelector('.sale-item-id');
+
+    const option = select.options[select.selectedIndex];
+    const price  = option?.dataset.price || '';
+
+    priceInput.value = price ? parseFloat(price).toFixed(0) : '';
+    idInput.value    = select.value || '';
+  }
+
+  function attachRowListeners(row) {
+    const select = row.querySelector('.sale-item-select');
+    const qty    = row.querySelector('.sale-qty');
+
+    select.addEventListener('change', () => {
+      updateUnitPrice(row);
+      updateAmountPaid();
+      updateCreditRequirement();
+    });
+
+    qty.addEventListener('input', () => {
+      updateAmountPaid();
+      updateCreditRequirement();
+    });
+
+    // Initial population
+    updateUnitPrice(row);
+  }
+
+  // ─── Add manual row ───────────────────────────────────────────
+  addBtn.addEventListener('click', () => {
+    const template = container.querySelector('.sale-item-row');
+    if (!template) return;
+
+    const newRow = template.cloneNode(true);
+
+    newRow.querySelectorAll('select, input').forEach(el => {
+      if (el.tagName === 'SELECT') el.selectedIndex = 0;
+      else if (el.type === 'number') el.value = el.classList.contains('sale-qty') ? '1' : '';
+      else el.value = '';
+    });
+
+    attachRowListeners(newRow);
+    container.appendChild(newRow);
+    updateAmountPaid();
+    updateCreditRequirement();
+  });
+
+  // ─── Remove last row ──────────────────────────────────────────
+  removeBtn.addEventListener('click', () => {
+    const rows = container.querySelectorAll('.sale-item-row');
+    if (rows.length <= 1) return;
+    rows[rows.length - 1].remove();
+    updateAmountPaid();
+    updateCreditRequirement();
+  });
+
+// ─── Barcode scanner logic ────────────────────────────────────────
+// Fast scanner input → auto match after short silence
+// Slow typing → only match when pressing Enter
+
+let barcodeBuffer = '';
+let lastKeyTime = 0;
+
+const SCAN_CHAR_INTERVAL_MAX = 80;      // typical scanner: < 50–70 ms between chars
+const AUTO_COMMIT_DELAY     = 150;      // wait this long after last char to auto-match
+
+function tryMatchBarcode(value) {
+  if (!value.trim()) return false;
+
+  let matchedOption = null;
+
+  container.querySelectorAll('.sale-item-select').forEach(select => {
+    if (matchedOption) return;
+    for (const opt of select.options) {
+      if (opt.dataset.barcode && opt.dataset.barcode === value) {
+        matchedOption = opt;
+        break;
+      }
+    }
+  });
+
+  if (!matchedOption) {
+    barcodeInput.style.backgroundColor = '#fff0f0';
+    setTimeout(() => { barcodeInput.style.backgroundColor = ''; }, 400);
+    return false;
+  }
+
+  // Prefer filling an existing empty row
+  let targetRow = null;
+  const allRows = container.querySelectorAll('.sale-item-row');
+  for (const row of allRows) {
+    const select = row.querySelector('.sale-item-select');
+    if (select && select.value === '') {
+      targetRow = row;
+      break;
+    }
+  }
+
+  // If no empty row → create new
+  if (!targetRow) {
+    const template = container.querySelector('.sale-item-row');
+    if (!template) return false;
+
+    targetRow = template.cloneNode(true);
+
+    targetRow.querySelectorAll('select, input').forEach(el => {
+      if (el.tagName === 'SELECT') {
+        el.selectedIndex = 0;
+      } else if (el.type === 'number') {
+        el.value = el.classList.contains('sale-qty') ? '1' : '';
+      } else {
+        el.value = '';
+      }
+    });
+
+    attachRowListeners(targetRow);
+    container.appendChild(targetRow);
+  }
+
+  // Populate the row
+  const targetSelect = targetRow.querySelector('.sale-item-select');
+  targetSelect.value = matchedOption.value;
+  targetSelect.dispatchEvent(new Event('change', { bubbles: true }));
+
+  updateUnitPrice(targetRow);
+  updateAmountPaid();
+  updateCreditRequirement();
+
+  // Visual feedback
+  barcodeInput.style.backgroundColor = '#e6ffe6';
+  setTimeout(() => { barcodeInput.style.backgroundColor = ''; }, 300);
+
+  barcodeInput.value = '';
+  barcodeInput.focus();
+
+  return true;
+}
+
+// ── Main input handler ────────────────────────────────────────────
+barcodeInput.addEventListener('input', e => {
+  const now = Date.now();
+
+  // If typing is too slow → treat as new manual entry (reset buffer)
+  if (barcodeBuffer && now - lastKeyTime > SCAN_CHAR_INTERVAL_MAX) {
+    barcodeBuffer = '';
+  }
+
+  // Accumulate characters (works for typing, pasting, scanners)
+  if (e.data) {
+    barcodeBuffer += e.data;
+  }
+
+  lastKeyTime = now;
+
+  // Auto-commit after short silence (scanner behavior)
+  clearTimeout(window.barcodeTimeout);
+  window.barcodeTimeout = setTimeout(() => {
+    if (barcodeBuffer.trim()) {
+      tryMatchBarcode(barcodeBuffer.trim());
+      barcodeBuffer = '';
+    }
+  }, AUTO_COMMIT_DELAY);
+});
+
+// ── Enter key → force match for manual/slow typing ───────────────
+barcodeInput.addEventListener('keydown', e => {
+  if (e.key === 'Enter') {
+    e.preventDefault(); // stop form submission
+
+    const valueToCheck = barcodeBuffer.trim() || barcodeInput.value.trim();
+
+    if (valueToCheck) {
+      tryMatchBarcode(valueToCheck);
+      barcodeBuffer = '';
+    }
+  }
+});
+
+// ── Global form-level Enter prevention (only when in barcode field) ──
+form.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.activeElement === barcodeInput) {
+    e.preventDefault();
+  }
+});
+  
+
+  // ─── Form submit → collect items as JSON ──────────────────────
+  form.addEventListener('submit', e => {
+    const rows = container.querySelectorAll('.sale-item-row');
+    const items = [];
+
+    rows.forEach(row => {
+      const itemId    = row.querySelector('.sale-item-select')?.value;
+      const qty       = row.querySelector('.sale-qty')?.value;
+      const unitPrice = row.querySelector('.sale-unit-price')?.value;
+
+      if (itemId && qty && unitPrice) {
+        items.push({
+          item_id:   itemId,
+          quantity:  qty,
+          unit_price: unitPrice
+        });
+      }
+    });
+
+    hiddenItemsJson.value = JSON.stringify(items);
+  });
+
+  // ─── Initialize ───────────────────────────────────────────────
+  const initialRow = container.querySelector('.sale-item-row');
+  if (initialRow) attachRowListeners(initialRow);
+
+  amountPaidInput.addEventListener('input', updateCreditRequirement);
+
+  // Auto-focus barcode when modal opens
+  document.getElementById('newSaleModal')
+    .addEventListener('shown.bs.modal', () => {
+      barcodeInput.focus();
+      updateAmountPaid();
+      updateCreditRequirement();
+    });
+
+  // Initial update
+  updateAmountPaid();
+  updateCreditRequirement();
+
+  // Watch container changes (removals)
+  new MutationObserver(() => {
+    updateAmountPaid();
+    updateCreditRequirement();
+  }).observe(container, { childList: true, subtree: true });
+});
+</script>
+
+
 
 <!-- New Expense Modal -->
 <div class="modal fade" id="newExpenseModal" tabindex="-1" aria-labelledby="newExpenseModalLabel" aria-hidden="true">
