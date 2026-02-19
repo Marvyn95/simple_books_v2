@@ -26,7 +26,7 @@
   <div style="max-height: calc(100vh - 250px);" class="overflow-y-auto">
     <table class="table table-hover table-sm table-borderless align-middle small mb-0" style="font-size:.8rem;">
       <thead class="table-primary position-sticky" style="top:0; z-index:10;">
-      <tr>
+      <tr style="height: 2rem;">
       <th>Date</th>
       <th>Type</th>
       <th class="d-none d-sm-table-cell">User</th>
@@ -39,7 +39,7 @@
       <tbody>
       {% if transactions and transactions|length > 0 %}
       {% for tx in transactions %}
-      <tr class="border-bottom">
+      <tr class="border-bottom" style="height: 2rem;">
       <td class="text-truncate" style="max-width:90px; overflow:hidden;">{{ tx.date.strftime('%d %b %Y') }}</td>
       <td class="text-truncate {% if tx.type=='Sale' %}text-success{% else %}text-danger{% endif %}" style="max-width:60px; overflow:hidden;">
       <a href="#" data-bs-toggle="modal" data-bs-target="#transactionModal_{{ tx._id }}" style="text-decoration:none; color:inherit;">
@@ -105,7 +105,7 @@
       </tr>
       {% endfor %}
       {% else %}
-      <tr>
+      <tr style="height: 2.5rem;">
       <td colspan="8" class="text-center text-muted fst-italic py-4">No transactions found.</td>
       </tr>
       {% endif %}
