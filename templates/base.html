@@ -24,14 +24,14 @@
   </style>
 </head>
 <body class="bg-light d-flex justify-content-center align-items-center vh-100">
-  <div id="flash-messages" style="position:fixed; top:24px; right:24px; z-index:20000; min-width:220px;">
+  <div id="flash-messages" style="position:fixed; top:20px; left:50%; transform:translateX(-50%); z-index:20000; min-width:220px;">
     {% with messages = get_flashed_messages(with_categories=true) %}
       {% if messages %}
         {% for category, message in messages %}
-            <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show py-1 px-2 small mb-2" role="alert" style="border-radius:0.5rem; box-shadow:0 2px 8px rgba(0,0,0,0.07);">
+          <div class="alert alert-{{ 'danger' if category == 'error' else category }} alert-dismissible fade show py-1 px-2 small mb-2" role="alert" style="border-radius:0.5rem; box-shadow:0 2px 8px rgba(0,0,0,0.07); text-align: center;">
             {{ message }}
             <button type="button" class="btn-close btn-close-white btn-sm d-none" data-bs-dismiss="alert" aria-label="Close" style="top:2px;right:2px;"></button>
-            </div>
+          </div>
         {% endfor %}
       {% endif %}
     {% endwith %}
@@ -47,7 +47,7 @@
       }, 3000);
     });
   </script>
-  <div class="card bg-light shadow rounded-4 mx-4 w-100 d-flex flex-row position-relative" style="max-width: 1200px; height: 90vh;">
+  <div class="card bg-light shadow rounded-4 mx-4 w-100 d-flex flex-row position-relative" style="max-width: 1500px; height: 95vh;">
     <!-- Sidebar Toggle Button (visible on small screens) -->
     <button class="sidebar-toggle-btn btn d-lg-none bg-indigo text-white rounded" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
       <i class="bi bi-list fs-4"></i>

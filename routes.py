@@ -688,6 +688,10 @@ def transactions():
         expenses = list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}).sort("date", -1))[:300]
         stock_items = list(db.Stock.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}).sort("name", 1))
 
+    for item in stock_items:
+        item['_id'] = str(item['_id'])
+        item['organization_id'] = str(item['organization_id'])
+
     for sale in sales:
         sale["type"] = "Sale"
         sale["user_name"] = next((emp.get("username") for emp in employees if str(emp.get("_id")) == str(sale.get("user_id"))), "Unknown")
