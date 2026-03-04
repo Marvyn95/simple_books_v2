@@ -741,6 +741,7 @@ def new_sale():
     amount_paid = float(request.form.get('amount_paid', 0))
     client_name = request.form.get('client_name') or None
     client_contact = request.form.get('client_contact') or None
+    client_location = request.form.get('client_location') or None
 
     sale_items = json.loads(sale_items)
     total = int(sum(float(i.get('quantity', 0)) * float(i.get('unit_price', 0)) for i in sale_items))
@@ -753,6 +754,7 @@ def new_sale():
         "sale_items": sale_items,
         "client_name": client_name,
         "client_contact": client_contact,
+        "client_location": client_location,
         "payment_details": {
             "status": "paid" if amount_paid >= total else "credit",
             "amount_left": total - amount_paid,
@@ -779,7 +781,7 @@ def edit_sale():
     amount_paid = float(request.form.get('amount_paid', 0))
     client_name = request.form.get('client_name') or None
     client_contact = request.form.get('client_contact') or None
-
+    client_location = request.form.get('client_location') or None
     sale_items = json.loads(sale_items)
     total = int(sum(float(i.get('quantity', 0)) * float(i.get('unit_price', 0)) for i in sale_items))
 
@@ -799,6 +801,7 @@ def edit_sale():
         "sale_items": sale_items,
         "client_name": client_name,
         "client_contact": client_contact,
+        "client_location": client_location,
         "payment_details": {
             "status": "paid" if amount_paid >= total else "credit",
             "amount_left": total - amount_paid,
@@ -865,54 +868,70 @@ def print_receipt():
 
     #document set up and printing
     c.setFont("Helvetica", 11)
-    line(str(organization.get("organization", "")).upper() + " - RECEIPT")
-    line("Branch / Location: " + (branch.get('branch', '') if branch else ''))
-
-    c.line(15*mm, y, w - 15*mm, y)
+    c.setFont("Helvetica-Bold", 14)
+    org_text = str(organization.get("organization", "")).upper()
+    c.drawCentredString(w/2, y, org_text)
+    y -= 6*mm
+    c.drawCentredString(w/2, y, "RECEIPT")
     y -= 6*mm
     c.setFont("Helvetica-Oblique", 11)
+    line("Branch / Location: " + (branch.get('branch', '') if branch else ''))
+    y -= 1*mm
+    c.setFont("Helvetica-Oblique", 11)
     line("Date:    " + date)
+
+    c.line(15*mm, y, w - 15*mm, y)
+
 
     c.setFont("Helvetica", 11)
     c.setDash(3, 2)
     c.line(15*mm, y, w - 15*mm, y)
-    y -= 6*mm
+    y -= 4*mm
 
+    c.setFont("Helvetica", 10)
+    col_widths = [60*mm, 30*mm, 40*mm]
+    x_positions = [15*mm, 75*mm, 105*mm]
+    headers = ["Item", "Quantity", "Unit Price"]
+    
+    # Draw table header
+    for i, header in enumerate(headers):
+        c.drawString(x_positions[i], y, header)
+    y -= 3*mm
+    c.line(15*mm, y, w - 15*mm, y)
+    y -= 2*mm
+    y -= 2*mm
+    y -= 2*mm
+
+    
+    # Draw table rows
     for k in sale_items:
         item_name = next((stock_item.get("name") for stock_item in stock_items if str(stock_item.get("_id")) == str(k.get("item_id"))), "Unknown Item")
-        item_str = f"Item: {item_name}        Quantity: {k.get('quantity', 'N/A')}        Unit Price: {'{:,}'.format(int(k.get('unit_price', 0)))}"
-        line(item_str)
-        y -= 4*mm
-
-    c.line(15*mm, y, w - 15*mm, y)
-    y -= 6*mm
-    line("Payment Details:")
-    for payment in transaction.get("payment_details", {}).get("clearance_history", []):
-        line("    Date:    " + datetime.datetime.strftime(payment.get("date", ""), "%d %b %Y") + ",    Amount Paid:    " + "{:,}".format(payment.get("amount_paid", 0)))
+        c.drawString(x_positions[0], y, item_name[:30])
+        c.drawString(x_positions[1], y, str(k.get('quantity', 'N/A')))
+        c.drawString(x_positions[2], y, "{:,}".format(int(k.get('unit_price', 0))))
+        y -= 6*mm
     
     c.line(15*mm, y, w - 15*mm, y)
-    y -= 6*mm
-    line("Amount Left:    " + str(transaction.get("payment_details", {}).get("amount_left", 0)))
 
     c.line(15*mm, y, w - 15*mm, y)
     y -= 6*mm
-    line("Client:    " + (client_name if client_name else "N/A"))
-    line("Contact:    " + (client_contact if client_contact else "N/A"))
+    for payment in transaction.get("payment_details", {}).get("clearance_history", []):
+        line("Total Paid:    " + "{:,}".format(payment.get("amount_paid", 0)) + "               " + datetime.datetime.strftime(payment.get("date", ""), "%d %b %Y"))
+    
+    line("Balance:    "+ "{:,}".format(transaction.get("payment_details", {}).get("amount_left", 0)))
+
     c.line(15*mm, y, w - 15*mm, y)
     y -= 6*mm
-    line("Seller:    " + seller if seller else "N/A")
+    line("Client:"+ "               " + (client_name if client_name else "N/A"))
+    line("Contact:"+ "              " + (client_contact if client_contact else "N/A"))
+    line("Seller:" + "              " + (seller if seller else "N/A"))
 
     c.setFont("Helvetica-Oblique", 11)
-    c.line(15*mm, y, w - 15*mm, y)
-    y -= 6*mm
-    line("Receipt ID:    " + str(tx_id))
-    # line("Organization ID    :" + str(organization_id))
 
     c.setDash()
-    c.line(15*mm, y, w - 15*mm, y)
-    y -= 6*mm
     c.setFont("Helvetica-Oblique", 10)
-    line("Thank you for your business!, come again.")
+    c.drawCentredString(w/2, 10*mm, f"Receipt ID: {str(tx_id)}")
+    c.drawCentredString(w/2, 15*mm, "Thank you for your business. We look forward to serving you again.")
 
     c.showPage()
     c.save()
@@ -921,7 +940,7 @@ def print_receipt():
     return send_file(
         buf,
         as_attachment=False,
-        download_name=f"receipt-{tx_id}.pdf",
+        # download_name=f"receipt-{tx_id}.pdf",
         mimetype="application/pdf"
     )
 

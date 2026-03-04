@@ -23,7 +23,7 @@
   </div>
 
   <!-- Transactions Table -->
-  <div style="max-height: calc(100vh - 250px);" class="overflow-y-auto">
+  <div style="max-height: calc(100vh - 300px);" class="overflow-y-auto">
     <table class="table table-hover table-sm table-borderless align-middle small mb-0" style="font-size:.8rem;">
       <thead class="table-primary position-sticky" style="top:0; z-index:10;">
       <tr style="height: 2rem;">
@@ -256,8 +256,8 @@
           </div>
 
           <!-- Payment & Customer Info -->
-          <div class="row g-3 mt-5">
-            <div class="col-md-4">
+          <div class="row g-3 mt-4">
+            <div class="col-md-12">
               <label class="form-label fw-semibold text-dark">Total Payment (UGX)</label>
               <input type="number" name="amount_paid" id="amountPaid" class="form-control form-control-sm"
                      min="0" step="1" required>
@@ -273,6 +273,12 @@
                 Client Contact <span class="text-muted" id="clientContactOptional">(Optional)</span>
               </label>
               <input type="text" name="client_contact" id="clientContact" class="form-control form-control-sm">
+            </div>
+            <div class="col-md-4">
+              <label class="form-label text-dark">
+              Client Location / Address <span class="text-muted" id="clientLocationOptional">(Optional)</span>
+              </label>
+              <input type="text" name="client_location" id="clientLocation" class="form-control form-control-sm">
             </div>
           </div>
 
@@ -1046,6 +1052,10 @@ document.addEventListener('click', (e) => {
               <label class="form-label text-dark" style="font-size:0.72rem;">Client Contact <span class="text-muted" id="editSaleClientContactOpt_{{ tx._id }}" style="font-size:0.72rem;">(Optional)</span></label>
               <input type="text" name="client_contact" id="editSaleClientContact_{{ tx._id }}" class="form-control form-control-sm" value="{{ tx.client_contact or '' }}" style="font-size:0.72rem;">
             </div>
+            <div class="mb-2">
+              <label class="form-label text-dark" style="font-size:0.72rem;">Client Location / Address <span class="text-muted" id="editSaleClientLocationOpt_{{ tx._id }}" style="font-size:0.72rem;">(Optional)</span></label>
+              <input type="text" name="client_location" id="editSaleClientLocation_{{ tx._id }}" class="form-control form-control-sm" value="{{ tx.client_location or '' }}" style="font-size:0.72rem;">
+            </div>
             <div class="modal-footer py-2">
               <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal" style="font-size:0.72rem;">Cancel</button>
               <button type="submit" class="btn btn-sm btn-success" style="font-size:0.72rem;">Save Sale</button>
@@ -1160,7 +1170,7 @@ document.addEventListener('click', (e) => {
   {% endif %}
 {% endfor %}
 
-<div class="d-flex justify-content-center mt-0" style="position: sticky; bottom: 0; background-color: #fff; padding: 0; z-index: 10; border-top: 1px solid #dee2e6;">
+<div class="d-flex justify-content-center mt-3" style="position: sticky; bottom: 0; background-color: #fff; padding: 0; z-index: 10; border-top: 1px solid #dee2e6;">
   <nav>
     <ul class="pagination pagination-sm mb-0">
       <li class="page-item {% if page <= 1 %}disabled{% endif %}">
