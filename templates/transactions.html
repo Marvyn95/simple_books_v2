@@ -1,10 +1,10 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="">
+<div class = '' style="display: flex; flex-direction: column; gap: 0; height: 100%;">
 
   <!-- Action Tiles -->
-  <div class="d-flex justify-content-between align-items-center mb-3">
+  <div class="d-flex justify-content-between align-items-center" style="flex: 0 0 auto; padding: 0.5rem 1rem; border-bottom: 1px solid #e0e0e0;">
     <!-- Heading on the left -->
     <h4 class="mb-0 fw-bold d-none d-sm-block" style="letter-spacing:0.5px; color: indigo;">Transactions</h4>
     <!-- Buttons on the right -->
@@ -23,16 +23,16 @@
   </div>
 
   <!-- Transactions Table -->
-  <div style="max-height: calc(100vh - 300px);" class="overflow-y-auto">
-    <table class="table table-hover table-sm table-borderless align-middle small mb-0" style="font-size:.8rem;">
+  <div style="flex: 1 1 auto; overflow-y: auto; padding: 0 1rem;">
+    <table class="table table-hover table-sm table-borderless align-middle small mb-0" style="font-size:0.8rem; width:100%;">
       <thead class="table-primary position-sticky" style="top:0; z-index:10;">
       <tr style="height: 2rem;">
       <th>Date</th>
       <th>Type</th>
       <th class="d-none d-sm-table-cell">User</th>
       <th>Description</th>
-      <th>Amount (UGX)</th>
-      <th>Status</th>
+      <th>Amount</th>
+      <th class="d-none d-sm-table-cell">Status</th>
       <th class="d-none d-sm-table-cell">Actions</th>
       </tr>
       </thead>
@@ -49,7 +49,7 @@
       <td class="text-muted text-truncate d-none d-sm-table-cell" style="max-width:100px; overflow:hidden;">{{ tx.user_name }}</td>
       <td class="text-truncate" style="color: indigo; max-width:140px; overflow:hidden;" title="{{ tx.description }}">{{ tx.description }}</td>
       <td class="text-truncate" style="max-width:90px; overflow:hidden;">{{ "{:,.0f}".format(tx.amount) }}</td>
-      <td class="text-truncate {% if tx.status=='paid' %}status-paid{% elif tx.status=='credit' %}status-credit{% else %}status-other{% endif %}" style="max-width:60px; overflow:hidden;">
+      <td class="text-truncate {% if tx.status=='paid' %}status-paid{% elif tx.status=='credit' %}status-credit{% else %}status-other{% endif %} d-none d-sm-table-cell" style="max-width:60px; overflow:hidden;">
       {{ tx.status|capitalize if tx.status else '—' }}
       </td>
       <td class="text-truncate d-none d-sm-table-cell" style="max-width:90px; overflow:hidden;">
@@ -149,6 +149,41 @@
     </div>
     {% endif %}
   {% endfor %}
+
+  <div class="d-flex justify-content-center mt-2">
+  <nav>
+    <ul class="pagination pagination-sm mb-0">
+      <li class="page-item {% if page <= 1 %}disabled{% endif %}">
+        <a class="page-link" href="?page={{ page - 1 }}">«</a>
+      </li>
+      {% set start_page = page - 2 if page - 2 > 1 else 1 %}
+      {% set end_page = start_page + 5 if start_page + 5 < total_pages else total_pages %}
+      {% if end_page - start_page < 5 %}
+        {% set start_page = end_page - 5 if end_page - 5 > 1 else 1 %}
+      {% endif %}
+      {% if start_page > 1 %}
+        <li class="page-item"><a class="page-link" href="?page=1">1</a></li>
+        {% if start_page > 2 %}
+          <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+      {% endif %}
+      {% for p in range(start_page, end_page + 1) %}
+        <li class="page-item {% if p == page %}active{% endif %}">
+          <a class="page-link" href="?page={{ p }}">{{ p }}</a>
+        </li>
+      {% endfor %}
+      {% if end_page < total_pages %}
+        {% if end_page < total_pages - 1 %}
+          <li class="page-item disabled"><span class="page-link">…</span></li>
+        {% endif %}
+        <li class="page-item"><a class="page-link" href="?page={{ total_pages }}">{{ total_pages }}</a></li>
+      {% endif %}
+      <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
+        <a class="page-link" href="?page={{ page + 1 }}">»</a>
+      </li>
+    </ul>
+  </nav>
+</div>
 
 </div>
 
@@ -294,7 +329,6 @@
     </form>
   </div>
 </div>
-
 
 <!-- ──────────────────────────────────────────────── -->
 <!-- JavaScript ────────────────────────────────────── -->
@@ -720,7 +754,6 @@ document.addEventListener('click', (e) => {
   }
 });
 
-
 });
 
 </script>
@@ -806,7 +839,7 @@ document.addEventListener('click', (e) => {
               <div class="col-6"><strong>Client:</strong> {{ tx.client_name or 'Not recorded' }}</div>
               <div class="col-6"><strong>Contact:</strong> {{ tx.client_contact or 'Not recorded' }}</div>
               <div class="col-6"><strong>Status:</strong>
-          <span style="{% if tx.status=='paid' %}color:green;{% elif tx.status=='credit' %}color:red;{% else %}color:gray;{% endif %}">
+          <span class="{% if tx.status=='paid' %}text-success{% elif tx.status=='credit' %}text-danger{% else %}text-secondary{% endif %}">
             {{ tx.status|capitalize }}
           </span>
               </div>
@@ -885,6 +918,7 @@ document.addEventListener('click', (e) => {
                 <i class="bi bi-dash-circle"></i> Remove last item
                 </button>
               </div>
+
             <script>
             document.addEventListener("DOMContentLoaded", function() {
               const container = document.getElementById("editSaleItemsContainer_{{ tx._id }}");
@@ -1039,6 +1073,7 @@ document.addEventListener('click', (e) => {
               const observer = new MutationObserver(updateTotalAmount);
               observer.observe(container, { childList: true });
             });
+
             </script>
             <div class="mb-2">
               <label class="form-label fw-semibold text-dark" style="font-size:0.72rem;">Amount Paid (UGX)</label>
@@ -1169,40 +1204,5 @@ document.addEventListener('click', (e) => {
 
   {% endif %}
 {% endfor %}
-
-<div class="d-flex justify-content-center mt-3" style="position: sticky; bottom: 0; background-color: #fff; padding: 0; z-index: 10; border-top: 1px solid #dee2e6;">
-  <nav>
-    <ul class="pagination pagination-sm mb-0">
-      <li class="page-item {% if page <= 1 %}disabled{% endif %}">
-        <a class="page-link" href="?page={{ page - 1 }}">«</a>
-      </li>
-      {% set start_page = page - 2 if page - 2 > 1 else 1 %}
-      {% set end_page = start_page + 5 if start_page + 5 < total_pages else total_pages %}
-      {% if end_page - start_page < 5 %}
-        {% set start_page = end_page - 5 if end_page - 5 > 1 else 1 %}
-      {% endif %}
-      {% if start_page > 1 %}
-        <li class="page-item"><a class="page-link" href="?page=1">1</a></li>
-        {% if start_page > 2 %}
-          <li class="page-item disabled"><span class="page-link">…</span></li>
-        {% endif %}
-      {% endif %}
-      {% for p in range(start_page, end_page + 1) %}
-        <li class="page-item {% if p == page %}active{% endif %}">
-          <a class="page-link" href="?page={{ p }}">{{ p }}</a>
-        </li>
-      {% endfor %}
-      {% if end_page < total_pages %}
-        {% if end_page < total_pages - 1 %}
-          <li class="page-item disabled"><span class="page-link">…</span></li>
-        {% endif %}
-        <li class="page-item"><a class="page-link" href="?page={{ total_pages }}">{{ total_pages }}</a></li>
-      {% endif %}
-      <li class="page-item {% if page >= total_pages %}disabled{% endif %}">
-        <a class="page-link" href="?page={{ page + 1 }}">»</a>
-      </li>
-    </ul>
-  </nav>
-</div>
 
 {% endblock %}

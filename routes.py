@@ -350,6 +350,7 @@ def edit_item():
     branch_id = request.form.get('branch_id')
     name = request.form.get('name').strip()
     price = int(request.form.get('price'))
+    quantity = int(request.form.get('quantity'))
     barcode = request.form.get('barcode').strip() if request.form.get('barcode') else None
 
     item = db.Stock.find_one({"barcode": barcode, "branch_id": branch_id, "organization_id": ObjectId(organization_id)}) if barcode else None
@@ -360,7 +361,7 @@ def edit_item():
 
     db.Stock.update_one(
         {"_id": ObjectId(item_id)},
-        {"$set": {"name": name, "branch_id": branch_id, "price": price, "barcode": barcode}}
+        {"$set": {"name": name, "branch_id": branch_id, "price": price, "quantity": quantity, "barcode": barcode}}
     )
 
     flash('Item updated successfully!', 'success')
@@ -995,7 +996,7 @@ def delete_transaction():
     if tx_type == "Sale":
         tx = db.Sales.find_one({"_id": ObjectId(tx_id)})
         for item in tx.get("sale_items", []):
-            db.Stock.update_one({"_id": ObjectId(item.get("item_id"))}, {"$inc": {"quantity": item.get("quantity", 0)}})
+            db.Stock.update_one({"_id": ObjectId(item.get("item_id"))}, {"$inc": {"quantity": int(item.get("quantity"), 0)}})
         db.Sales.delete_one({"_id": ObjectId(tx_id)})
     else:
         db.Expenses.delete_one({"_id": ObjectId(tx_id)})
@@ -1046,7 +1047,7 @@ def performance():
         sales_total = monthly_sales.get(month, 0)
         expenses_total = monthly_expenses.get(month, 0)
         stock_cost_total = monthly_stock_cost.get(month, 0)
-        profit = sales_total - expenses_total - stock_cost_total
+        profit = sales_total - expenses_total
         profit_margin = (profit / sales_total)*100 if sales_total != 0 else 0
         performance_data.append({
             "month": month,

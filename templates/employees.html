@@ -1,134 +1,137 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div style="font-size: 0.95rem;">
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="mb-3 fw-bold" style="color: indigo;">Employees</h4>
-<button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
-  <i class="bi bi-person-plus me-1"></i> Add Employee
-</button>
+
+
+<div class = '' style="display: flex; flex-direction: column; gap: 0; height: 100%;">
+  <div class="d-flex justify-content-between align-items-center mb-1 mx-3" style="flex: 0 0 10%;">
+    <h4 class="mb-3 fw-semibold " style="color: indigo;">Employees</h4>
+    <button class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;" data-bs-toggle="modal" data-bs-target="#addEmployeeModal">
+      <i class="bi bi-person-plus me-1"></i> Add Employee
+    </button>
   </div>
 
   <!-- Employees Table -->
-  <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
-    <table class="table table-hover align-middle small" style="margin-bottom: 0; font-size:0.85rem;">
+  <div class="table-responsive mb-3 mx-3" style="flex: 1 1 auto; overflow-y: auto;">
+    <table class="table table-hover align-middle small" style="margin-bottom: 0; font-size:0.75rem;">
       <thead class="table-primary" style="position: sticky; top: 0; z-index: 2; background: #f8f9fa;">
         <tr>
           <th>Username</th>
           <th>Role</th>
-          <th>Branch</th>
+          <th class="d-none d-sm-table-cell">Branch</th>
           <th class="d-none d-sm-table-cell">Actions</th>
         </tr>
       </thead>
+      
       <tbody>
         {% for employee in employees %}
         <tr style="height:24px;">
-            <td class="py-1" style="max-width: 120px;">
+          <td class="py-1 text-truncate" style="max-width: 120px;">
             <div class="text-start">
-              <button class="btn btn-link p-0 text-decoration-none fw-semibold" style="color: indigo;" data-bs-toggle="modal" data-bs-target="#employeeDetailsModal{{ employee._id }}" title="View Employee Details">
+              <button class="btn btn-link p-0 text-decoration-none" style="font-size:0.75rem; color: indigo; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: inline-block; max-width: 100%;" data-bs-toggle="modal" data-bs-target="#employeeDetailsModal{{ employee._id }}" title="View Employee Details">
                 {{ employee.username }}
               </button>
             </div>
 
-<!-- Employee Details Modal -->
-<div class="modal fade" id="employeeDetailsModal{{ employee._id }}" tabindex="-1" aria-labelledby="employeeDetailsLabel{{ employee._id }}" aria-hidden="true">
-  <div class="modal-dialog" style="max-width: 600px;">
-    <div class="modal-content" style="background-color:#f8f9ff; font-size:.8rem; border-radius:.75rem;">
-      <div class="modal-header border-bottom py-2">
-        <h6 class="modal-title fw-semibold" id="employeeDetailsLabel{{ employee._id }}" style="color: indigo;">
-          <i class="bi bi-info-circle-fill me-2" style="color: indigo;"></i>Employee Details - {{ employee.username }}
-        </h6>
-        <button type="button" class="btn-close" data-bs-dismiss="modal" style="transform:scale(.8);" aria-label="Close"></button>
-      </div>
-      <div class="modal-body px-3 py-2">
-        <!-- Employee Details -->
-        <div class="mb-3">
-          <div class="mb-2">
-            <small style="color: indigo;">Username</small><br>
-            <span class="fw-semibold text-dark">{{ employee.username }}</span>
+    <!-- Employee Details Modal -->
+    <div class="modal fade" id="employeeDetailsModal{{ employee._id }}" tabindex="-1" aria-labelledby="employeeDetailsLabel{{ employee._id }}" aria-hidden="true">
+      <div class="modal-dialog" style="max-width: 600px;">
+        <div class="modal-content" style="background-color:#f8f9ff; font-size:.8rem; border-radius:.75rem;">
+          <div class="modal-header border-bottom py-2">
+            <h6 class="modal-title fw-semibold" id="employeeDetailsLabel{{ employee._id }}" style="color: indigo;">
+              <i class="bi bi-info-circle-fill me-2" style="color: indigo;"></i>Employee Details - {{ employee.username }}
+            </h6>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" style="transform:scale(.8);" aria-label="Close"></button>
           </div>
-          <div class="d-flex flex-wrap gap-3">
-            <div>
-              <small style="color: indigo;">Role</small><br>
-              <span class="fw-semibold">{{ employee.role }}</span>
+          <div class="modal-body px-3 py-2">
+            <!-- Employee Details -->
+            <div class="mb-3">
+              <div class="mb-2">
+                <small style="color: indigo;">Username</small><br>
+                <span class="fw-semibold text-dark">{{ employee.username }}</span>
+              </div>
+              <div class="d-flex flex-wrap gap-3">
+                <div>
+                  <small style="color: indigo;">Role</small><br>
+                  <span class="fw-semibold">{{ employee.role }}</span>
+                </div>
+                <div>
+                  <small style="color: indigo;">Branch</small><br>
+                  <span class="fw-semibold">{{ employee.branch }}</span>
+                </div>
+                <div>
+                  <small style="color: indigo;">Email</small><br>
+                  <span class="fw-semibold">{{ employee.email }}</span>
+                </div>
+              </div>
             </div>
-            <div>
-              <small style="color: indigo;">Branch</small><br>
-              <span class="fw-semibold">{{ employee.branch }}</span>
-            </div>
-            <div>
-              <small style="color: indigo;">Email</small><br>
-              <span class="fw-semibold">{{ employee.email }}</span>
-            </div>
-          </div>
-        </div>
 
-        <!-- Employee Transactions -->
-        <div class="mt-3">
-          <h6 class="fw-semibold mb-2" style="font-size:.8rem; color: indigo;">
-            <i class="bi bi-clock-history me-1" style="color: indigo;"></i>Transaction History
-          </h6>
-          <div class="table-responsive" style="max-height:180px; overflow-y:auto;">
-            <table class="table table-sm table-borderless mb-0">
-              <thead class="border-bottom" style="color: indigo;">
-                <tr>
-                  <th style="width:30%;">Date</th>
-                  <th style="width:30%;">Type</th>
-                  <th style="width:20%;">Description</th>
-                  <th style="width:20%;">Amount</th>
-                </tr>
-              </thead>
-              <tbody>
-                {% set has_transactions = false %}
-                {% for transaction in transactions %}
-                  {% if transaction.user_id|string == employee._id|string %}
-                    {% set has_transactions = true %}
-                    <tr style="border-bottom:1px solid #e2e6ea;">
-                      <td>
-                          {{ transaction.date.strftime('%d %b %Y') }}
-                      </td>
-                      <td>{{ transaction.type }}</td>
-                      <td>{{ transaction.desc }}</td>
-                      <td>ugx {{ "{:,.0f}".format(transaction.amount) }}</td>
+            <!-- Employee Transactions -->
+            <div class="mt-3">
+              <h6 class="fw-semibold mb-2" style="font-size:.8rem; color: indigo;">
+                <i class="bi bi-clock-history me-1" style="color: indigo;"></i>Transaction History
+              </h6>
+              <div class="table-responsive" style="max-height:180px; overflow-y:auto;">
+                <table class="table table-sm table-borderless mb-0">
+                  <thead class="border-bottom" style="color: indigo;">
+                    <tr>
+                      <th style="width:30%;">Date</th>
+                      <th style="width:30%;">Type</th>
+                      <th style="width:20%;">Description</th>
+                      <th style="width:20%;">Amount</th>
                     </tr>
-                  {% endif %}
-                {% endfor %}
-                {% if has_transactions %}
-                  <tr>
-                    <td colspan="4" class="text-center text-muted fst-italic py-2">No transactions available.</td>
-                  </tr>
-                {% endif %}
-              </tbody>
-            </table>
+                  </thead>
+                  <tbody>
+                    {% set has_transactions = false %}
+                    {% for transaction in transactions %}
+                      {% if transaction.user_id|string == employee._id|string %}
+                        {% set has_transactions = true %}
+                        <tr style="border-bottom:1px solid #e2e6ea;">
+                          <td>
+                              {{ transaction.date.strftime('%d %b %Y') }}
+                          </td>
+                          <td>{{ transaction.type }}</td>
+                          <td>{{ transaction.desc }}</td>
+                          <td>ugx {{ "{:,.0f}".format(transaction.amount) }}</td>
+                        </tr>
+                      {% endif %}
+                    {% endfor %}
+                    {% if has_transactions %}
+                      <tr>
+                        <td colspan="4" class="text-center text-muted fst-italic py-2">No transactions available.</td>
+                      </tr>
+                    {% endif %}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </div>
+          <div class="modal-footer py-2">
+            <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
           </div>
         </div>
-      </div>
-      <div class="modal-footer py-2">
-        <button type="button" class="btn btn-sm btn-secondary" data-bs-dismiss="modal">Close</button>
       </div>
     </div>
-  </div>
-</div>
 
             </td>
           <td class="py-1 text-truncate" style="max-width: 100px;" title="{{ employee.role }}">{{ employee.role }}</td>
-          <td class="py-1 text-truncate" style="max-width: 120px;" title="{{ employee.branch }}">{{ employee.branch }}</td>
-          <td class="py-0" style="max-width:220px;">
+          <td class="py-1 text-truncate d-none d-sm-table-cell" style="max-width: 120px;" title="{{ employee.branch }}">{{ employee.branch }}</td>
+          <td class="py-0 d-none d-sm-table-cell" style="max-width:220px;">
             <div class="d-flex gap-2 justify-content-start align-items-center flex-wrap d-none d-sm-flex">
           
           {% if user.role in ["Manager", "Admin"] or user.role == "Branch Manager" or employee._id|string == user._id|string %}
           <button class="btn btn-sm px-2 py-1 border-0 shadow-sm"
-            style="color: indigo; background: #e0e7ff; border-radius: .35rem; min-width: 38px;"
+            style="color: indigo; border-radius: .35rem; min-width: 38px;"
             data-bs-toggle="modal" data-bs-target="#editEmployeeModal{{ employee._id }}"
             title="Edit Employee">
             <i class="bi bi-pencil"></i>
-            <span class="ms-1 fw-semibold" style="font-size:.78rem; color: indigo;">Edit</span>
+            <!-- <span class="ms-1 fw-semibold" style="font-size:.78rem; color: indigo;">Edit</span> -->
           </button>
           {% endif %}
 
           {% if user.role in ["Manager", "Admin"] or user.role == "Branch Manager" %}
           <button class="btn btn-sm px-2 py-1 border-0 shadow-sm"
-            style="color: #ffc107; background: #fff9e0; border-radius: .35rem; min-width: 38px;"
+            style="color: #ffc107; border-radius: .35rem; min-width: 38px;"
             data-bs-toggle="modal" data-bs-target="#editPasswordModal{{ employee._id }}"
             title="Change Password">
             <i class="bi bi-key" style="color: indigo;"></i>
@@ -137,10 +140,11 @@
 
           {% if employee._id|string != user._id|string and user.role in ["Manager", "Branch Manager", "Admin"] %}
           <button class="btn btn-sm px-2 py-1 border-0 shadow-sm"
-            style="color: #dc3545; background: #ffe0e0; border-radius: .35rem; min-width: 38px;"
+            style="color: #dc3545; border-radius: .35rem; min-width: 38px;"
             data-bs-toggle="modal" data-bs-target="#deleteEmployeeModal{{ employee._id }}"
             title="Delete Employee">
-            <span class="ms-1 fw-semibold" style="font-size:.78rem; color: #dc3545;">Delete</span>
+            <i class="bi bi-trash"></i>
+            <!-- <span class="ms-1 fw-semibold" style="font-size:.78rem; color: #dc3545;">Delete</span> -->
           </button>
           {% endif %}
 
@@ -253,10 +257,12 @@
       <form method="POST" action="{{ url_for('add_employee') }}">
         <input type="hidden" name="organization_id" value="{{ user.organization_id }}">
         <div class="modal-content">
+
           <div class="modal-header">
             <h5 class="modal-title fs-5" id="addEmployeeLabel">Add New Employee</h5>
             <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
           </div>
+
           <div class="modal-body">
             <div class="mb-2">
               <label class="form-label">Username</label>
@@ -273,6 +279,7 @@
                 Passwords do not match.
               </div>
             </div>
+
             <script>
               document.addEventListener('DOMContentLoaded', function() {
                 var password = document.getElementById('addPassword');
@@ -288,28 +295,33 @@
                 confirm.addEventListener('input', validate);
               });
             </script>
-<div class="mb-2">
-  <label class="form-label">Role</label>
-  <select name="role" class="form-select form-select-sm" required>
-    <option value="Manager">Manager</option>
-    <option value="Branch Manager">Branch Manager</option>
-    <option value="Sales Person">Sales Person</option>
-  </select>
-</div>
-<div class="mb-2">
-  <label class="form-label">Branch</label>
-  <select name="branch_id" class="form-select form-select-sm" required>
-    {% for branch in organization['branches'] %}
-      <option value="{{ branch['_id'] }}">{{ branch['branch'] }}</option>
-    {% endfor %}
-  </select>
-</div>
+
+            <div class="mb-2">
+              <label class="form-label">Role</label>
+              <select name="role" class="form-select form-select-sm" required>
+                <option value="Manager">Manager</option>
+                <option value="Branch Manager">Branch Manager</option>
+                <option value="Sales Person">Sales Person</option>
+              </select>
+            </div>
+
+            <div class="mb-2">
+              <label class="form-label">Branch</label>
+              <select name="branch_id" class="form-select form-select-sm" required>
+                {% for branch in organization['branches'] %}
+                  <option value="{{ branch['_id'] }}">{{ branch['branch'] }}</option>
+                {% endfor %}
+              </select>
+            </div>
+
           </div>
+
           <div class="modal-footer">
-<button type="submit" class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;">
-  Add Employee
-</button>
+            <button type="submit" class="btn btn-sm px-3 fw-semibold shadow-sm" style="background: indigo; color: #fff; border-radius: 0.4rem; border: 1.5px solid indigo;">
+              Add Employee
+            </button>
           </div>
+
         </div>
       </form>
     </div>

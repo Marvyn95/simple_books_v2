@@ -1,7 +1,7 @@
 {% extends "base.html" %}
 
 {% block content %}
-  <div class="container-lg py-4">
+  <div class="container-lg py-4" style="height: 100vh; display: flex; flex-direction: column; overflow-y: auto;">
     <!-- Header Section -->
     <div class="mb-4">
       <div class="d-flex justify-content-between align-items-center">
@@ -20,14 +20,14 @@
     <!-- Profile Info Card -->
     <div class="card border-0 shadow-sm mb-4">
       <div class="card-body">
-        <div class="row g-4">
+        <div class="row g-2 g-md-4">
           <div class="col-md-4">
             <p class="text-muted mb-1 small">Username</p>
-            <p class="fw-semibold" style="color: #4B0082;">{{ user.username }}</p>
+            <p class="fw-semibold mb-3 mb-md-0" style="color: #4B0082;">{{ user.username }}</p>
           </div>
           <div class="col-md-4">
             <p class="text-muted mb-1 small">Role</p>
-            <p class="fw-semibold" style="color: #4B0082;">
+            <p class="fw-semibold mb-3 mb-md-0" style="color: #4B0082;">
               <span class="badge bg-indigo">{{ user.role }}</span>
             </p>
           </div>

@@ -1,23 +1,24 @@
 {% extends "base.html" %}
 
 {% block content %}
-<div class="container-fluid" style="font-size:.9rem;">
+<div class = '' style="display: flex; flex-direction: column; gap: 0; height: 100%;">
 
-  <div class="d-flex justify-content-between align-items-center mb-3">
-    <h4 class="fw-bold mb-0" style="color: indigo;">Stock Movement</h5>
+  <div class="d-flex justify-content-between align-items-center mb-0 mx-3" style="flex: 0 0 10%;">
+    <h4 class="fw-bold mb-0" style="color: indigo;">Stock Movement</h4>
     <!-- Optional: trigger to refresh or add filters -->
     <button class="btn btn-sm btn-outline-secondary" onclick="location.reload()" hidden>Refresh</button>
   </div>
 
-  <div class="table-responsive" style="max-height: 400px; overflow-y: auto;">
+  <div class="table-responsive mb-3 mx-3" style="flex: 1 1 auto; overflow: hidden; display: flex; flex-direction: column;">
+    <div style="overflow-y: auto; flex: 1 1 auto;">
     <table class="table table-hover align-middle small" style="margin-bottom: 0; font-size:0.85rem;">
       <thead class="table-primary" style="position: sticky; top: 0; z-index: 2; background:#f8f9fa;">
         <tr>
             <th>Date</th>
             <th class="d-none d-md-table-cell">Updater</th>
-            <th>Branch</th>
+            <th class="d-none d-lg-table-cell">Branch</th>
             <th>Item</th>
-            <th>Quantity</th>
+            <th>Qty</th>
             <th>Unit Cost</th>
             <th class="d-none d-md-table-cell">Actions</th>
         </tr>
@@ -27,25 +28,25 @@
         <tr style="height:24px; font-size:0.78rem;">
           <td class="py-0 text-truncate">{{ movement.date.strftime('%d %b %Y') }}</td>
           <td class="py-0 text-truncate d-none d-md-table-cell">{{ movement.updater }}</td>
-          <td class="py-0 text-truncate">{{ movement.branch }}</td>
-          <td class="py-0 text-truncate">{{ movement.item }}</td>
+          <td class="py-0 text-truncate d-none d-lg-table-cell">{{ movement.branch }}</td>
+          <td class="py-0 text-truncate" style="white-space:nowrap; max-width:140px; overflow:hidden; text-overflow:ellipsis;">{{ movement.item }}</td>
           <td class="py-0 text-truncate">{{ movement.quantity_updated }}</td>
           <td class="py-0 text-truncate">{{ "{:,.0f}".format(movement.unit_cost) }}</td>
           <td class="py-0 d-none d-md-table-cell">
             {% if user.role in ["Manager", "Branch Manager", "Admin"] %}
-            <div class="d-flex gap-1">
-              <button class="btn btn-sm px-2 py-1 border-0 shadow-sm"
+            <div class="d-flex gap-1 d-none d-md-flex">
+              <button class="btn btn-sm px-2 py-1"
           style="color: #0a58ca; border-radius: .35rem;"
           data-bs-toggle="modal" data-bs-target="#editStockMovementModal_{{ movement._id }}"
           title="Update Movement">
           <span class="ms-1 fw-semibold" style="font-size:.78rem;">edit</span>
               </button>
-              <button class="btn btn-sm px-2 py-1 border-0 shadow-sm"
+              <button class="btn btn-sm px-2 py-1"
           style="color: #dc3545; border-radius: .35rem;"
           data-bs-toggle="modal" data-bs-target="#deleteStockMovementModal_{{ movement._id }}"
           title="Delete Movement">
-          <i class="bi bi-x-circle"></i>
-          <span class="ms-1 fw-semibold" style="font-size:.78rem;">Delete</span>
+          <i class="bi bi-trash"></i>
+          <!-- <span class="ms-1 fw-semibold" style="font-size:.78rem;">Delete</span> -->
               </button>
             </div>
             {% else %}

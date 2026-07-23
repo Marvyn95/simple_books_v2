@@ -47,14 +47,15 @@
       }, 3000);
     });
   </script>
+  
   <div class="card bg-light shadow rounded-4 position-relative d-flex flex-row" style="width: 95vw; height: 95vh; overflow:hidden;">
-    <!-- Sidebar Toggle Button (visible on small screens) -->
-    <button class="sidebar-toggle-btn btn d-lg-none bg-indigo text-white rounded" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
-      <i class="bi bi-list fs-4"></i>
+    <!-- Sidebar Toggle Button (visible on small and medium screens) -->
+    <button class="sidebar-toggle-btn btn d-xl-none text-dark fw-bold rounded" type="button" data-bs-toggle="offcanvas" data-bs-target="#sidebarOffcanvas" aria-controls="sidebarOffcanvas">
+      <i class="bi bi-list fs-3"></i>
     </button>
     <div class="card-body d-flex p-3 h-100 flex-row flex-wrap">
       <!-- Sidebar for larger screens -->
-      <div class="card shadow rounded-4 d-flex flex-column justify-content-between flex-shrink-0 me-4 d-none d-lg-flex bg-indigo" style="width: 200px;">
+      <div class="card shadow rounded-4 d-flex flex-column justify-content-between flex-shrink-0 me-4 d-none d-xl-flex bg-indigo" style="width: 200px;">
         <div class="card-body px-2 pt-3 pb-2 d-flex flex-column justify-content-start h-100">
           <h5 class="text-center mb-3 fw-bold">
             <i class="bi bi-book me-2"></i>Simple Books
@@ -162,16 +163,16 @@
       <div class="flex-grow-1 d-flex flex-column h-100">
 
 <!-- Top Bar: Responsive User Info -->
-<div class="mb-3  p-2 d-flex flex-wrap align-items-center gap-3">
+<div class="mb-3 p-2 d-flex flex-wrap align-items-center gap-2 gap-sm-3">
 
   <!-- Organization Selector -->
-  <div class="d-flex align-items-center gap-2">
+  <div class="d-flex align-items-center gap-2 gap-sm-1 mt-3 mt-lg-0">
     <i class="bi bi-building" style="color:#4338ca; font-size:1.1rem;"></i>
     {% if user.role == 'Admin' %}
       <form method="POST" action="{{ url_for('change_organization') }}" class="d-inline-block m-0">
         <select name="organization_id" 
                 class="form-select form-select-sm d-inline-block w-auto" 
-                style="min-width:120px; max-width:250px; border: none; background-color: transparent; border-bottom: 2px solid #4338ca; border-radius: 0; padding: 0.25rem 0.5rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease;" 
+                style="min-width:200px; max-width:400px; border: none; background-color: transparent; border-bottom: 2px solid #4338ca; border-radius: 0; padding: 0.25rem 0.5rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease;" 
                 onchange="this.form.submit()">
           {% for org in organizations %}
             <option value="{{ org['_id'] }}" 
@@ -193,8 +194,8 @@
       <form method="POST" action="{{ url_for('change_branch') }}" class="d-inline-block m-0">
         <input type="hidden" name="organization_id" value="{{ user.organization_id }}">
         <select name="branch_id" 
-                class="form-select form-select-sm d-inline-block w-auto" 
-                style="min-width:120px; max-width:200px; border: none; background-color: transparent; border-bottom: 2px solid #4338ca; border-radius: 0; padding: 0.25rem 0.5rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease;" 
+                class="form-select form-select-sm d-inline-block" 
+                style="min-width:200px; max-width:300px; border: none; background-color: transparent; border-bottom: 2px solid #4338ca; border-radius: 0; padding: 0.25rem 0.5rem; font-weight: 500; cursor: pointer; transition: all 0.3s ease;" 
                 onchange="this.form.submit()">
           <option value="">All branches</option>
           {% for branch in organization['branches'] %}
@@ -210,8 +211,8 @@
     {% endif %}
   </div>
 
-  <!-- User Profile (pushed to right) -->
-  <div class="ms-auto">
+  <!-- User Profile (pushed to right on large screens, left on small screens) -->
+  <div class="ms-lg-auto">
     <a class="nav-link fw-semibold d-flex align-items-center py-2 px-3 gap-2" 
        href="{{ url_for('profile') }}" 
        style="color:indigo; border-radius:0.4rem;">
@@ -227,7 +228,7 @@
 
         
         <!-- Main Content Card -->
-        <div class="card flex-grow-1 shadow p-4 rounded-4 bg-light d-flex flex-column overflow-auto h-100 w-100" style="scrollbar-width: none; -ms-overflow-style: none;">
+        <div class="card flex-grow-1 shadow p-2 rounded-4 bg-light overflow-auto h-100 w-100" style="scrollbar-width: none; -ms-overflow-style: none;">
           <style>
             .card.flex-grow-1::-webkit-scrollbar { display: none; }
           </style>
@@ -235,6 +236,8 @@
           <!-- Main content goes here -->
           {% endblock %}
         </div>
+
+        
       </div>
     </div>
   </div>
