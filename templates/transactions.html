@@ -217,7 +217,7 @@
             {% if user.role in ['Manager', 'Admin'] %}
               <div class="col-md-6">
                 <label class="form-label fw-semibold text-dark">Branch</label>
-                <select name="branch_id" class="form-select form-select-sm" required>
+                <select name="branch_id" class="form-select form-select-sm" id="branch_select_field" required>
                   <option value="" disabled selected>Select Branch</option>
                   {% for branch in organization.branches %}
                     <option value="{{ branch._id }}"
@@ -347,6 +347,28 @@ document.addEventListener('DOMContentLoaded', () => {
   const clientContactOpt   = document.getElementById('clientContactOptional');
   const hiddenItemsJson    = document.getElementById('hiddenSaleItemsJson');
   const barcodeInput       = document.getElementById('barcodeInput');
+  const branchSelect       = document.getElementById('branch_select_field');
+
+
+  // ─── Clear items when branch changes ──────────────────────────
+  if (branchSelect) {
+    branchSelect.addEventListener('change', () => {
+      rows = container.querySelectorAll('.sale-item-row');
+      for (let i = rows.length - 1; i > 0; i--) {
+        rows[i].remove();
+      }
+
+      // Empty all fields in the remaining row
+      const remainingRow = container.querySelector('.sale-item-row');
+      if (remainingRow) {
+        remainingRow.querySelectorAll('select, input').forEach(el => {
+          if (el.tagName === 'SELECT') el.selectedIndex = 0;
+          else el.value = '';
+        });
+      }
+    });
+  }
+  
 
   // ─── Core calculation helpers ────────────────────────────────
   function getTotal() {
@@ -434,136 +456,134 @@ document.addEventListener('DOMContentLoaded', () => {
     updateCreditRequirement();
   });
 
-// ─── Barcode scanner logic ────────────────────────────────────────
-// Fast scanner input → auto match after short silence
-// Slow typing → only match when pressing Enter
+  // ─── Barcode scanner logic ────────────────────────────────────────
+  // Fast scanner input → auto match after short silence
+  // Slow typing → only match when pressing Enter
 
-let barcodeBuffer = '';
-let lastKeyTime = 0;
+  let barcodeBuffer = '';
+  let lastKeyTime = 0;
 
-const SCAN_CHAR_INTERVAL_MAX = 80;      // typical scanner: < 50–70 ms between chars
-const AUTO_COMMIT_DELAY     = 150;      // wait this long after last char to auto-match
+  const SCAN_CHAR_INTERVAL_MAX = 80;      // typical scanner: < 50–70 ms between chars
+  const AUTO_COMMIT_DELAY     = 150;      // wait this long after last char to auto-match
 
-function tryMatchBarcode(value) {
-  if (!value.trim()) return false;
+  function tryMatchBarcode(value) {
+    if (!value.trim()) return false;
 
-  let matchedOption = null;
+    let matchedOption = null;
 
-  container.querySelectorAll('.sale-item-select').forEach(select => {
-    if (matchedOption) return;
-    for (const opt of select.options) {
-      if (opt.dataset.barcode && opt.dataset.barcode === value) {
-        matchedOption = opt;
+    container.querySelectorAll('.sale-item-select').forEach(select => {
+      if (matchedOption) return;
+      for (const opt of select.options) {
+        if (opt.dataset.barcode && opt.dataset.barcode === value) {
+          matchedOption = opt;
+          break;
+        }
+      }
+    });
+
+    if (!matchedOption) {
+      barcodeInput.style.backgroundColor = '#fff0f0';
+      setTimeout(() => { barcodeInput.style.backgroundColor = ''; }, 400);
+      return false;
+    }
+
+    // Prefer filling an existing empty row
+    let targetRow = null;
+    const allRows = container.querySelectorAll('.sale-item-row');
+    for (const row of allRows) {
+      const select = row.querySelector('.sale-item-select');
+      if (select && select.value === '') {
+        targetRow = row;
         break;
+      }
+    }
+
+    // If no empty row → create new
+    if (!targetRow) {
+      const template = container.querySelector('.sale-item-row');
+      if (!template) return false;
+
+      targetRow = template.cloneNode(true);
+
+      targetRow.querySelectorAll('select, input').forEach(el => {
+        if (el.tagName === 'SELECT') {
+          el.selectedIndex = 0;
+        } else if (el.type === 'number') {
+          el.value = el.classList.contains('sale-qty') ? '1' : '';
+        } else {
+          el.value = '';
+        }
+      });
+
+      attachRowListeners(targetRow);
+      container.appendChild(targetRow);
+    }
+
+    // Populate the row
+    const targetSelect = targetRow.querySelector('.sale-item-select');
+    targetSelect.value = matchedOption.value;
+    targetSelect.dispatchEvent(new Event('change', { bubbles: true }));
+
+    updateUnitPrice(targetRow);
+    updateAmountPaid();
+    updateCreditRequirement();
+
+    // Visual feedback
+    barcodeInput.style.backgroundColor = '#e6ffe6';
+    setTimeout(() => { barcodeInput.style.backgroundColor = ''; }, 300);
+
+    barcodeInput.value = '';
+    barcodeInput.focus();
+
+    return true;
+  }
+
+  // ── Main input handler ────────────────────────────────────────────
+  barcodeInput.addEventListener('input', e => {
+    const now = Date.now();
+
+    // If typing is too slow → treat as new manual entry (reset buffer)
+    if (barcodeBuffer && now - lastKeyTime > SCAN_CHAR_INTERVAL_MAX) {
+      barcodeBuffer = '';
+    }
+
+    // Accumulate characters (works for typing, pasting, scanners)
+    if (e.data) {
+      barcodeBuffer += e.data;
+    }
+
+    lastKeyTime = now;
+
+    // Auto-commit after short silence (scanner behavior)
+    clearTimeout(window.barcodeTimeout);
+    window.barcodeTimeout = setTimeout(() => {
+      if (barcodeBuffer.trim()) {
+        tryMatchBarcode(barcodeBuffer.trim());
+        barcodeBuffer = '';
+      }
+    }, AUTO_COMMIT_DELAY);
+  });
+
+  // ── Enter key → force match for manual/slow typing ───────────────
+  barcodeInput.addEventListener('keydown', e => {
+    if (e.key === 'Enter') {
+      e.preventDefault(); // stop form submission
+
+      const valueToCheck = barcodeBuffer.trim() || barcodeInput.value.trim();
+
+      if (valueToCheck) {
+        tryMatchBarcode(valueToCheck);
+        barcodeBuffer = '';
       }
     }
   });
 
-  if (!matchedOption) {
-    barcodeInput.style.backgroundColor = '#fff0f0';
-    setTimeout(() => { barcodeInput.style.backgroundColor = ''; }, 400);
-    return false;
-  }
-
-  // Prefer filling an existing empty row
-  let targetRow = null;
-  const allRows = container.querySelectorAll('.sale-item-row');
-  for (const row of allRows) {
-    const select = row.querySelector('.sale-item-select');
-    if (select && select.value === '') {
-      targetRow = row;
-      break;
+  // ── Global form-level Enter prevention (only when in barcode field) ──
+  form.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && document.activeElement === barcodeInput) {
+      e.preventDefault();
     }
-  }
-
-  // If no empty row → create new
-  if (!targetRow) {
-    const template = container.querySelector('.sale-item-row');
-    if (!template) return false;
-
-    targetRow = template.cloneNode(true);
-
-    targetRow.querySelectorAll('select, input').forEach(el => {
-      if (el.tagName === 'SELECT') {
-        el.selectedIndex = 0;
-      } else if (el.type === 'number') {
-        el.value = el.classList.contains('sale-qty') ? '1' : '';
-      } else {
-        el.value = '';
-      }
-    });
-
-    attachRowListeners(targetRow);
-    container.appendChild(targetRow);
-  }
-
-  // Populate the row
-  const targetSelect = targetRow.querySelector('.sale-item-select');
-  targetSelect.value = matchedOption.value;
-  targetSelect.dispatchEvent(new Event('change', { bubbles: true }));
-
-  updateUnitPrice(targetRow);
-  updateAmountPaid();
-  updateCreditRequirement();
-
-  // Visual feedback
-  barcodeInput.style.backgroundColor = '#e6ffe6';
-  setTimeout(() => { barcodeInput.style.backgroundColor = ''; }, 300);
-
-  barcodeInput.value = '';
-  barcodeInput.focus();
-
-  return true;
-}
-
-
-
-// ── Main input handler ────────────────────────────────────────────
-barcodeInput.addEventListener('input', e => {
-  const now = Date.now();
-
-  // If typing is too slow → treat as new manual entry (reset buffer)
-  if (barcodeBuffer && now - lastKeyTime > SCAN_CHAR_INTERVAL_MAX) {
-    barcodeBuffer = '';
-  }
-
-  // Accumulate characters (works for typing, pasting, scanners)
-  if (e.data) {
-    barcodeBuffer += e.data;
-  }
-
-  lastKeyTime = now;
-
-  // Auto-commit after short silence (scanner behavior)
-  clearTimeout(window.barcodeTimeout);
-  window.barcodeTimeout = setTimeout(() => {
-    if (barcodeBuffer.trim()) {
-      tryMatchBarcode(barcodeBuffer.trim());
-      barcodeBuffer = '';
-    }
-  }, AUTO_COMMIT_DELAY);
-});
-
-// ── Enter key → force match for manual/slow typing ───────────────
-barcodeInput.addEventListener('keydown', e => {
-  if (e.key === 'Enter') {
-    e.preventDefault(); // stop form submission
-
-    const valueToCheck = barcodeBuffer.trim() || barcodeInput.value.trim();
-
-    if (valueToCheck) {
-      tryMatchBarcode(valueToCheck);
-      barcodeBuffer = '';
-    }
-  }
-});
-
-// ── Global form-level Enter prevention (only when in barcode field) ──
-form.addEventListener('keydown', e => {
-  if (e.key === 'Enter' && document.activeElement === barcodeInput) {
-    e.preventDefault();
-  }
-});
+  });
   
 
   // ─── Form submit → collect items as JSON ──────────────────────
@@ -614,145 +634,145 @@ form.addEventListener('keydown', e => {
 
 
 
-// search function for barcode input
-const stockItems = {{ stock_items|tojson }};
-const suggestionsDiv = document.getElementById('searchSuggestions');
-let selectedSuggestionIndex = -1;
-let filteredItems = [];
+  // search function for barcode input
+  const stockItems = {{ stock_items|tojson }};
+  const suggestionsDiv = document.getElementById('searchSuggestions');
+  let selectedSuggestionIndex = -1;
+  let filteredItems = [];
 
-barcodeInput.addEventListener('input', (e) => {
-  const query = e.target.value.trim().toLowerCase();
-  
-  if (!query) {
+  barcodeInput.addEventListener('input', (e) => {
+    const query = e.target.value.trim().toLowerCase();
+    
+    if (!query) {
+      suggestionsDiv.style.display = 'none';
+      filteredItems = [];
+      selectedSuggestionIndex = -1;
+      return;
+    }
+
+    filteredItems = stockItems.filter(item => 
+      item.name.toLowerCase().includes(query) || 
+      (item.barcode && item.barcode.toLowerCase().includes(query))
+    );
+
+    if (filteredItems.length > 0) {
+      renderSuggestions();
+      suggestionsDiv.style.display = 'block';
+      selectedSuggestionIndex = -1;
+    } else {
+      suggestionsDiv.style.display = 'none';
+    }
+  });
+
+  function renderSuggestions() {
+    suggestionsDiv.innerHTML = filteredItems.map((item, index) => `
+      <div class="suggestion-item p-2 cursor-pointer ${index === selectedSuggestionIndex ? 'bg-primary text-white' : 'border-bottom'}"
+      style="padding: 8px 12px; cursor: pointer;">
+        ${item.name} ${item.price ? `| UGX ${parseFloat(item.price).toLocaleString()}` : ''}
+      </div>
+    `).join('');
+
+    document.querySelectorAll('.suggestion-item').forEach((el, index) => {
+      el.addEventListener('click', () => selectSuggestion(index));
+    });
+  }
+
+  function selectSuggestion(index) {
+    const item = filteredItems[index];
+    addItemToSale(item);
+    barcodeInput.value = '';
     suggestionsDiv.style.display = 'none';
     filteredItems = [];
     selectedSuggestionIndex = -1;
-    return;
   }
 
-  filteredItems = stockItems.filter(item => 
-    item.name.toLowerCase().includes(query) || 
-    (item.barcode && item.barcode.toLowerCase().includes(query))
-  );
-
-  if (filteredItems.length > 0) {
-    renderSuggestions();
-    suggestionsDiv.style.display = 'block';
-    selectedSuggestionIndex = -1;
-  } else {
-    suggestionsDiv.style.display = 'none';
-  }
-});
-
-function renderSuggestions() {
-  suggestionsDiv.innerHTML = filteredItems.map((item, index) => `
-    <div class="suggestion-item p-2 cursor-pointer ${index === selectedSuggestionIndex ? 'bg-primary text-white' : 'border-bottom'}"
-    style="padding: 8px 12px; cursor: pointer;">
-      ${item.name} ${item.price ? `| UGX ${parseFloat(item.price).toLocaleString()}` : ''}
-    </div>
-  `).join('');
-
-  document.querySelectorAll('.suggestion-item').forEach((el, index) => {
-    el.addEventListener('click', () => selectSuggestion(index));
-  });
-}
-
-function selectSuggestion(index) {
-  const item = filteredItems[index];
-  addItemToSale(item);
-  barcodeInput.value = '';
-  suggestionsDiv.style.display = 'none';
-  filteredItems = [];
-  selectedSuggestionIndex = -1;
-}
-
-function addItemToSale(item) {
-  // Prefer filling an existing empty row
-  let targetRow = null;
-  const allRows = container.querySelectorAll('.sale-item-row');
-  for (const row of allRows) {
-    const select = row.querySelector('.sale-item-select');
-    if (select && select.value === '') {
-      targetRow = row;
-      break;
-    }
-  }
-
-  // If no empty row → create new
-  if (!targetRow) {
-    const template = container.querySelector('.sale-item-row');
-    if (!template) return false;
-
-    targetRow = template.cloneNode(true);
-
-    targetRow.querySelectorAll('select, input').forEach(el => {
-      if (el.tagName === 'SELECT') {
-        el.selectedIndex = 0;
-      } else if (el.type === 'number') {
-        el.value = el.classList.contains('sale-qty') ? '1' : '';
-      } else {
-        el.value = '';
+  function addItemToSale(item) {
+    // Prefer filling an existing empty row
+    let targetRow = null;
+    const allRows = container.querySelectorAll('.sale-item-row');
+    for (const row of allRows) {
+      const select = row.querySelector('.sale-item-select');
+      if (select && select.value === '') {
+        targetRow = row;
+        break;
       }
-    });
+    }
 
-    attachRowListeners(targetRow);
-    container.appendChild(targetRow);
+    // If no empty row → create new
+    if (!targetRow) {
+      const template = container.querySelector('.sale-item-row');
+      if (!template) return false;
+
+      targetRow = template.cloneNode(true);
+
+      targetRow.querySelectorAll('select, input').forEach(el => {
+        if (el.tagName === 'SELECT') {
+          el.selectedIndex = 0;
+        } else if (el.type === 'number') {
+          el.value = el.classList.contains('sale-qty') ? '1' : '';
+        } else {
+          el.value = '';
+        }
+      });
+
+      attachRowListeners(targetRow);
+      container.appendChild(targetRow);
+    }
+
+    // Populate the row
+    const targetSelect = targetRow.querySelector('.sale-item-select');
+    targetSelect.value = item._id;
+    targetSelect.dispatchEvent(new Event('change', { bubbles: true }));
+
+    updateUnitPrice(targetRow);
+    updateAmountPaid();
+    updateCreditRequirement();
+
+    // Visual feedback
+    barcodeInput.style.backgroundColor = '#e6ffe6';
+    setTimeout(() => { barcodeInput.style.backgroundColor = ''; }, 300);
+
+    barcodeInput.focus();
+    return true;
   }
 
-  // Populate the row
-  const targetSelect = targetRow.querySelector('.sale-item-select');
-  targetSelect.value = item._id;
-  targetSelect.dispatchEvent(new Event('change', { bubbles: true }));
+  barcodeInput.addEventListener('keydown', (e) => {
+    if (filteredItems.length === 0) return;
 
-  updateUnitPrice(targetRow);
-  updateAmountPaid();
-  updateCreditRequirement();
-
-  // Visual feedback
-  barcodeInput.style.backgroundColor = '#e6ffe6';
-  setTimeout(() => { barcodeInput.style.backgroundColor = ''; }, 300);
-
-  barcodeInput.focus();
-  return true;
-}
-
-barcodeInput.addEventListener('keydown', (e) => {
-  if (filteredItems.length === 0) return;
-
-  if (e.key === 'ArrowDown') {
-    e.preventDefault();
-    selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, filteredItems.length - 1);
-    renderSuggestions();
-    document.querySelectorAll('.suggestion-item')[selectedSuggestionIndex]?.scrollIntoView({ block: 'nearest' });
-  } 
-  else if (e.key === 'ArrowUp') {
-    e.preventDefault();
-    selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, -1);
-    if (selectedSuggestionIndex === -1) {
-      renderSuggestions();
-    } else {
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      selectedSuggestionIndex = Math.min(selectedSuggestionIndex + 1, filteredItems.length - 1);
       renderSuggestions();
       document.querySelectorAll('.suggestion-item')[selectedSuggestionIndex]?.scrollIntoView({ block: 'nearest' });
+    } 
+    else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      selectedSuggestionIndex = Math.max(selectedSuggestionIndex - 1, -1);
+      if (selectedSuggestionIndex === -1) {
+        renderSuggestions();
+      } else {
+        renderSuggestions();
+        document.querySelectorAll('.suggestion-item')[selectedSuggestionIndex]?.scrollIntoView({ block: 'nearest' });
+      }
     }
-  }
-  else if (e.key === 'Enter') {
-    e.preventDefault();
-    if (selectedSuggestionIndex >= 0) {
-      selectSuggestion(selectedSuggestionIndex);
+    else if (e.key === 'Enter') {
+      e.preventDefault();
+      if (selectedSuggestionIndex >= 0) {
+        selectSuggestion(selectedSuggestionIndex);
+      }
     }
-  }
-  else if (e.key === 'Escape') {
-    suggestionsDiv.style.display = 'none';
-    filteredItems = [];
-    selectedSuggestionIndex = -1;
-  }
-});
+    else if (e.key === 'Escape') {
+      suggestionsDiv.style.display = 'none';
+      filteredItems = [];
+      selectedSuggestionIndex = -1;
+    }
+  });
 
-document.addEventListener('click', (e) => {
-  if (e.target !== barcodeInput && !suggestionsDiv.contains(e.target)) {
-    suggestionsDiv.style.display = 'none';
-  }
-});
+  document.addEventListener('click', (e) => {
+    if (e.target !== barcodeInput && !suggestionsDiv.contains(e.target)) {
+      suggestionsDiv.style.display = 'none';
+    }
+  });
 
 });
 

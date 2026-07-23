@@ -49,7 +49,7 @@
         <div class="mb-3">
           <label for="branchSelectReport" class="form-label fw-semibold text-secondary mb-1">Branch</label>
 
-            {% if user.role == "Manager" %}
+            {% if user.role in ["Manager", "Admin"] %}
             <select class="form-select form-select-sm" id="branchSelectReport" name="branch_id" required>
               <option value="all" {% if not selected_branch %}selected{% endif %}>All Branches</option>
               {% for branch in organization.branches %}
@@ -60,7 +60,7 @@
             </select>
             {% else %}
             <select class="form-select form-select-sm" id="branchSelectReport" name="branch_id" disabled>
-              {% if user.branch_id %}
+            {% if user.branch_id %}
               {% for branch in organization.branches %}
                 {% if branch._id | string == user.branch_id | string %}
                 <option value="{{ user.branch_id }}" selected>{{ branch.branch }}</option>
@@ -70,9 +70,9 @@
               <option value="" selected>No Branch</option>
               {% endif %}
             </select>
-            {% if user.branch_id %}
+
             <input type="hidden" name="branch_id" value="{{ user.branch_id }}">
-            {% endif %}
+
           {% endif %}
         </div>
 
