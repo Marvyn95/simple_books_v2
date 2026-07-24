@@ -279,18 +279,19 @@ def stock():
     organization = db.Organizations.find_one({"_id": ObjectId(user.get("organization_id"))})
     user['organization'] = organization.get('organization')
     selected_branch = session.get("branch")
-    branch = session.get("branch")
+    branch = next((b for b in organization.get("branches", []) if b.get("branch") == session.get("branch")), None)
 
+    three_months_ago = datetime.datetime.now() - datetime.timedelta(days=90)
     if selected_branch is None:
         stock = list(db.Stock.find({"organization_id": ObjectId(organization.get("_id"))}))
-        stock_history = list(db.Stock_movement.find({"organization_id": ObjectId(organization.get("_id"))}).limit(500))
+        stock_history = list(db.Stock_movement.find({"organization_id": ObjectId(organization.get("_id")), "date": {"$gte": three_months_ago}}))
         for item in stock:
             item['branch'] = next((b for b in organization.get("branches", []) if b.get("_id") == item.get("branch_id")), {}).get("branch")
         for item in stock_history:
             item['updater'] = db.Users.find_one({"_id": ObjectId(item.get("updater_id"))}).get("username") if db.Users.find_one({"_id": ObjectId(item.get("updater_id"))}) else "Unknown"
     else:
         stock = list(db.Stock.find({"organization_id": ObjectId(organization.get("_id")), "branch_id": branch.get("_id")}))
-        stock_history = list(db.Stock_movement.find({"organization_id": ObjectId(organization.get("_id")), "branch_id": branch.get("_id")}).limit(500))
+        stock_history = list(db.Stock_movement.find({"organization_id": ObjectId(organization.get("_id")), "branch_id": branch.get("_id"), "date": {"$gte": three_months_ago}}))
         for item in stock:
             item['branch'] = next((b for b in organization.get("branches", []) if b.get("_id") == item.get("branch_id")), {}).get("branch")
         for item in stock_history:
