@@ -683,13 +683,20 @@ def transactions():
     page = int(request.args.get('page', 1))
 
     if selected_branch is None:
-        sales = list(db.Sales.find({"organization_id": ObjectId(user.get("organization_id"))}).sort("date", -1))[:300]
-        expenses = list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id"))}).sort("date", -1))[:300]
-        stock_items = list(db.Stock.find({"organization_id": ObjectId(user.get("organization_id"))}).sort("name", 1))
+        sales = list(db.Sales.find({"organization_id": ObjectId(user.get("organization_id"))}))
+        expenses = list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id"))}))
+        stock_items = list(db.Stock.find({"organization_id": ObjectId(user.get("organization_id"))}))
     else:
-        sales = list(db.Sales.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}).sort("date", -1))[:300]
-        expenses = list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}).sort("date", -1))[:300]
-        stock_items = list(db.Stock.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}).sort("name", 1))
+        sales = list(db.Sales.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}))
+        expenses = list(db.Expenses.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}))
+        stock_items = list(db.Stock.find({"organization_id": ObjectId(user.get("organization_id")), "branch_id": selected_branch.get("_id")}))
+
+    two_months_ago = datetime.datetime.now() - timedelta(days=60)
+    sales = [s for s in sales if s.get("date", datetime.datetime.min) >= two_months_ago]
+    sales = sorted(sales, key=lambda x: x.get("date", datetime.datetime.min), reverse=True)
+
+    expenses = [e for e in expenses if e.get("date", datetime.datetime.min) >= two_months_ago]
+    expenses = sorted(expenses, key=lambda x: x.get("date", datetime.datetime.min), reverse=True)
 
     for item in stock_items:
         item['_id'] = str(item['_id'])
@@ -1025,6 +1032,10 @@ def performance():
         expenses = db.Expenses.find({"organization_id": organization.get("_id"), "branch_id": selected_branch.get("_id")})
         stock_movement = db.Stock_movement.find({"organization_id": organization.get("_id"), "branch_id": selected_branch.get("_id")})
 
+    twenty_four_months_ago = datetime.datetime.now() - timedelta(days=730)
+    sales = [s for s in sales if s.get("date", datetime.datetime.min) >= twenty_four_months_ago]
+    expenses = [e for e in expenses if e.get("date", datetime.datetime.min) >= twenty_four_months_ago]
+
     
     monthly_sales = defaultdict(float)
     for sale in sales:
@@ -1139,7 +1150,7 @@ def generate_report():
                 "date": i.get("date").date().strftime("%d %B %Y"),
                 "sales person": next((u["username"] for u in users if str(u["_id"]) == str(i["user_id"])), "Unknown"),
                 "products/services": items,
-                "amount paid": sum(float(k["amount_paid"]) for k in  i.get("payment_details", {}).get("clearance_history", [])),
+                "amount paid": sum(float(k.get("quantity", 0)) * float(k.get("unit_price", 0)) for k in i.get("sale_items", [])),
                 "status": i.get("payment_details", {}).get("status"),
                 "client name": i.get("client_name"),
                 "client contact": i.get("client_contact")
